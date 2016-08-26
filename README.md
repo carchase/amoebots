@@ -3,8 +3,11 @@ Senior Capstone Project August 2016 to May 2017
 
 # Team
 Mastermind:        Carter Chase
+
 Augmentor:         Ben Smith
+
 Better Augmentor:  Jeff Ross
+
 Roboteer:          Trevor Seitz 
 
 Faculty Advisor:   Dr. John Licato

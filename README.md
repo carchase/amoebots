@@ -1,6 +1,14 @@
 # AmoeBots
 Senior Capstone Project August 2016 to May 2017
 
+# Team
+Mastermind:        Carter Chase
+Augmentor:         Ben Smith
+Better Augmentor:  Jeff Ross
+Roboteer:          Trevor Seitz 
+
+Faculty Advisor:   Dr. John Licato
+
 ## Background
 A senior project group in ECE has been creating a robot array consisting of
 several modular units that can reconfigure themselves into a wide variety of

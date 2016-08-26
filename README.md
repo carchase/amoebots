@@ -22,5 +22,3 @@ external funding proposal to be written by Dr. Licato, in collaboration with
 other ETCS Faculty (Drs. PomalzaARaez (ECE), Liu (ECE), and Bi (ME)). The
 robotics projects and code completed by the CS and ECE senior project teams
 will be used in future robotics courses here at IPFW.
-
-Donkey balls

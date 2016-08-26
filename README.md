@@ -1,5 +1,5 @@
 # AmoeBots
-Senior Project August 2016 to May 2017
+Senior Capstone Project August 2016 to May 2017
 
 ## Background
 A senior project group in ECE has been creating a robot array consisting of

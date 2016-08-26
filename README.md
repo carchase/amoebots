@@ -1,13 +1,5 @@
-# Autobot-AllSpark
+# AmoeBots
 Senior Project August 2016 to May 2017
-
-## Description
-An Autobot is a sentient machine that is capable of transforming itself.
-
-The AllSpark is the device that gave sentience to the Autobots.
-
-This project contains the code needed to run our "Autobots" and also the AI 
-logic that is their "AllSpark".
 
 ## Background
 A senior project group in ECE has been creating a robot array consisting of

@@ -26,6 +26,8 @@ class MyRobot (Robot):
       
     print 'Connected with ' + addr[0] + ':' + str(addr[1])
     
+    conn.send('Hello.\n')
+    
     conn.close()
     s.close()
     

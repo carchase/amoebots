@@ -1,0 +1,9 @@
+C:\Users\Trevor\Documents\2016 Fall\Senior Project\AmoeBots\scratch\Bluno Nano Idea\Bluno Nano Idea\bin\Debug\Bluno Nano Idea.exe.config
+C:\Users\Trevor\Documents\2016 Fall\Senior Project\AmoeBots\scratch\Bluno Nano Idea\Bluno Nano Idea\bin\Debug\Bluno Nano Idea.exe
+C:\Users\Trevor\Documents\2016 Fall\Senior Project\AmoeBots\scratch\Bluno Nano Idea\Bluno Nano Idea\bin\Debug\Bluno Nano Idea.pdb
+C:\Users\Trevor\Documents\2016 Fall\Senior Project\AmoeBots\scratch\Bluno Nano Idea\Bluno Nano Idea\obj\Debug\Bluno Nano Idea.csprojResolveAssemblyReference.cache
+C:\Users\Trevor\Documents\2016 Fall\Senior Project\AmoeBots\scratch\Bluno Nano Idea\Bluno Nano Idea\obj\Debug\Bluno_Nano_Idea.MainMenu.resources
+C:\Users\Trevor\Documents\2016 Fall\Senior Project\AmoeBots\scratch\Bluno Nano Idea\Bluno Nano Idea\obj\Debug\Bluno_Nano_Idea.Properties.Resources.resources
+C:\Users\Trevor\Documents\2016 Fall\Senior Project\AmoeBots\scratch\Bluno Nano Idea\Bluno Nano Idea\obj\Debug\Bluno Nano Idea.csproj.GenerateResource.Cache
+C:\Users\Trevor\Documents\2016 Fall\Senior Project\AmoeBots\scratch\Bluno Nano Idea\Bluno Nano Idea\obj\Debug\Bluno Nano Idea.exe
+C:\Users\Trevor\Documents\2016 Fall\Senior Project\AmoeBots\scratch\Bluno Nano Idea\Bluno Nano Idea\obj\Debug\Bluno Nano Idea.pdb

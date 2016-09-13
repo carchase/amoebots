@@ -10,29 +10,32 @@ Better Augmentor:  Jeff Ross
 
 Roboteer:          Trevor Seitz 
 
-Faculty Advisor:   Dr. John Licato
+Bossman:           Dr. John Licato
 
 ## Background
-A senior project group in Electrical + Computer Engineering (ECE) has been 
-creating a robot array consisting of several modular units that can reconfigure 
-themselves into a wide variety of possible arrangements. Ideally, the robots 
-would be able to form (for example): a bridge, stairs, a wall, etc. These robots 
-will communicate with each other using a well-known protocol such as WIFI or 
-Bluetooth. 
+A senior project group in Electrical + Computer Engineering (ECE) has been creating a robot array consisting 
+of several modular units that can reconfigure themselves into a wide variety of possible arrangements.  
+Ideally, the robots would be able to form (for example): a bridge, stairs, a wall, etc.  Additionally, the 
+engineers have produced a robotic arm capable of lifting and moving the robots.  All robots will communicate 
+with each other using a well-known protocol such as WIFI or Bluetooth.
 
-However, their artificial intelligence still needs to be programmed. Choosing 
-a possible shape to transform into is relatively easy, but actually designing a 
-step-by-step plan so that the robot modules can move into place without any human 
-assistance, is a more difficult AI problem. The CS senior design team will create 
-such algorithms, by first developing a simulation platform for transformations, 
-then implementing them on actual modular bots. 
+The artificial intelligence still needs to be programmed.  Choosing a possible shape to transform into is 
+relatively easy, but actually designing a step-by-step plan so that the robot modules can move into place 
+without any human assistance, is a more difficult AI problem.  Every robot will communicate with a central 
+server that handles the transformation algorithms.  This server will receive all sensor data, compute 
+actions, and send instructions to the modular bots.  The team will be responsible for creating both the high 
+level algorithms and the API for robot-server communication.
 
-In addition to working with Dr. Licato, the CS senior design team will work with 
-the ECE senior design groups in a first-ever collaboration between departments of 
-its type here at IPFW.
+Unfortunately, the CS senior design team will not have access to the final robots until midway through the 
+project.  To aid in development in the meantime, they will have access to the Webots 3D simulator.  The 
+team will first develop transformations for the simulation platform and then, once the robots are complete, 
+they will implement the algorithms on the actual modular bots.  The team will need to design the central 
+server’s API to be versatile enough to communicate with both the virtual robots and the real robots.
 
-Progress made in this project will be used as a launching point for at least one
-external funding proposal to be written by Dr. Licato, in collaboration with
-other ETCS Faculty (Drs. PomalzaARaez (ECE), Liu (ECE), and Bi (ME)). The
-robotics projects and code completed by the CS and ECE senior project teams
-will be used in future robotics courses here at IPFW.
+In addition to working with Dr. Licato, the CS senior design team will work with the ECE senior design 
+groups in a first-ever collaboration between departments here at IPFW.  Progress made in this project will 
+be used as a launching point for at least one external funding proposal to be written by Dr. Licato, in 
+collaboration with other ETCS Faculty (Drs. PomalzaARaez (ECE), Liu (ECE), and Bi (ME)).  The robotics 
+projects and code completed by the CS and ECE senior project teams will be used in future robotics courses 
+here at IPFW.
+

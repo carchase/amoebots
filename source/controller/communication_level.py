@@ -7,7 +7,7 @@ from multiprocessing import Process, Queue, Array
 from bot_listener import listener_main
 from time import sleep
 
-def com_level_main(TO_MAIN, FROM_MAIN, TO_COM_LEVEL, FROM_COM_LEVEL):
+def com_level_main(TO_MAIN, COM_INPUT_QUEUE, TO_MOVEMENT):
 
     #stores the ports 
     ports = Array()

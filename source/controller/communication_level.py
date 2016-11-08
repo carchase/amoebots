@@ -7,32 +7,20 @@ from multiprocessing import Process, Queue, Array
 from bot_listener import listener_main
 from time import sleep
 
-#checks that a port isn't already open
-def exists(addr):
-    
-    #checks for the current port in the port list
-    if addr in ports:
-        return True;
-    else:
-        return False;
-    
-def port_list(f):
-    print('Com-level:\t' + ', '.join(ports))
-    f(ports)
-    
-if __name__ == '__main__':
+def com_level_main(TO_MAIN, FROM_MAIN, TO_COM_LEVEL, FROM_COM_LEVEL):
+
     #stores the ports 
     ports = Array()
-    
+
     q_list = []
-    
+
     q = Queue()
     #create bot_listener process
     bot_listener = Process(target=listener_main, args=(q,ports))
-    
+
     #start bot_listener process
     bot_listener.start()
-    
+
     #infinite loop to keep checking the queue for information
     while(True):
         
@@ -72,3 +60,16 @@ if __name__ == '__main__':
             
         #sleep so that this is not constantly eating processing time
         sleep(5)
+
+#checks that a port isn't already open
+def exists(addr):
+    
+    #checks for the current port in the port list
+    if addr in ports:
+        return True;
+    else:
+        return False;
+    
+def port_list(f):
+    print('Com-level:\t' + ', '.join(ports))
+    f(ports)

@@ -1,7 +1,9 @@
 '''
-Created on Nov 1, 2016
+This file contains the code for the bot processes.  This process communicates with 
+a bot and funnels the messages to the controller.
 
-@author: Trevor
+Created on Nov 1, 2016
+View the full repository here https://github.com/car-chase/amoebots
 '''
 from time import sleep
 import serial

@@ -1,7 +1,8 @@
 '''
-Created on Nov 1, 2016
+This file contains the code for the connunication level.
 
-@author: Trevor
+Created on Nov 1, 2016
+View the full repository here https://github.com/car-chase/amoebots
 '''
 #from multiprocessing import Process, Queue, Lock as l
 #from bot_listener import listener_main

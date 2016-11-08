@@ -1,7 +1,9 @@
 '''
-Created on Nov 1, 2016
+This file contains the code for the bot listener.  This process scans for new 
+controller connections and spins off new processes to handle them.
 
-@author: Trevor
+Created on Nov 1, 2016
+View the full repository here https://github.com/car-chase/amoebots
 '''
 from time import sleep
 import serial

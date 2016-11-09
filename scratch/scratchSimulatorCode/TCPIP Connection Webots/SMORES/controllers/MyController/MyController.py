@@ -44,7 +44,7 @@ class MyController (Robot):
     # Enter here exit cleanup code
 
 # The main program starts from here
-TCP_IP = '192.168.2.80'
+TCP_IP = '192.168.2.81'
 TCP_Port = 4999
 BufferSize = 20
 
@@ -59,8 +59,9 @@ while 1:
     if not data:
         break
     print('received data: ', data)
-    conn.send(data) #echo
-conn.close()
+    #echo
+    conn.send(data)
+    conn.close()
 
 # This is the main program of your controller.
 # It creates an instance of your Robot subclass, launches its

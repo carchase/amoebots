@@ -7,10 +7,15 @@ from multiprocessing import Process, Queue, Array
 from bot_listener import listener_main
 from time import sleep
 
-def com_level_main(TO_MAIN, COM_INPUT_QUEUE, TO_MOVEMENT):
+def com_level_main(COM_INPUT, TO_MOVEMENT, TO_MAIN):
+    TO_MAIN.put({
+        'type': 'info',
+        'origin': 'com_level',
+        'message': 'Communication_level is running'
+    })
 
     #stores the ports 
-    ports = Array()
+    ports = []
 
     q_list = []
 
@@ -23,8 +28,6 @@ def com_level_main(TO_MAIN, COM_INPUT_QUEUE, TO_MOVEMENT):
 
     #infinite loop to keep checking the queue for information
     while(True):
-        
-        print('Communication_level is running')
         
         #get items from q until it's empty
         while not q.empty():
@@ -57,9 +60,13 @@ def com_level_main(TO_MAIN, COM_INPUT_QUEUE, TO_MOVEMENT):
                 
             else:
                 print('\t' + p)
+
+        # Get items from input queue until it is not empty
+        while not COM_INPUT.empty():
+            TO_MAIN.put(COM_INPUT.get()) # For now just parrot
             
         #sleep so that this is not constantly eating processing time
-        sleep(5)
+        sleep(1)
 
 #checks that a port isn't already open
 def exists(addr):

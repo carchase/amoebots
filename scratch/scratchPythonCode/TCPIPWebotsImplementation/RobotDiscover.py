@@ -18,11 +18,19 @@ class TCPHandler(SocketServer.BaseRequestHandler):
         print '{} wrote:'.format(self.client_address)
         #this prints out what the client sent.
         print(self.data)
-        #This sends the same info the client sent, back to the client.
-        self.request.sendall('localhost 4500')
+        #This sends the client the correct host ip and port number.
+
+        if (self.data[-1] == '1'):
+            self.request.sendall('localhost 1500')
+        elif(self.data[-1] == '2'):
+            self.request.sendall('localhost 2500')
+        else:
+            print 'The server did not find the client.'
+            #Do nothing. The server will keep working.
+            pass
 
 if __name__ == '__main__':
-    host, port = '192.168.2.81', 5000
+    host, port = 'localhost', 5000
 
     #create the server, binding the local host to 5000
     server = SocketServer.TCPServer((host, port), TCPHandler)

@@ -1,7 +1,7 @@
 import socket
 
 def main():
-    host, port = '192.168.2.81', 5000
+    host, port = 'localhost', 5000
     # data = 'My ID is: 1'.join(sys.argv[1:])
     data = 'My ID is: 1'
 
@@ -49,7 +49,10 @@ def StartServer(host, port):
         #So while there isn't a timeout with the client, receive the message from the client.
         while not timeout_hit:
             try:
+                #Here is the received message.
                 message = client(1024)
+                #The message is then passed to the APICommand function where there control of the robots will happen.
+                APICommand(message)
             except socket.error:
                 print 'There was a problem receiving the message from the client. \n' \
                       'Closing the server connection now...'

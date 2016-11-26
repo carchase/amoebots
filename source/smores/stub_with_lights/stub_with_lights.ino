@@ -15,6 +15,7 @@ void setup() {
   for(int i = 0; i < 5; i++){
     light[i] = false;
   }
+  Serial.println("Robot is Online");
   testLights();
   Serial.begin(9600);
 }

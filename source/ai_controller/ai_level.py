@@ -10,6 +10,7 @@ from time import sleep
 
 def ai_level_main(AI_INPUT, TO_MOVEMENT, TO_MAIN):
     TO_MAIN.put({
+        'destination': 'TO_MAIN',
         'type': 'info',
         'origin': 'ai__level',
         'message': 'AI_level is running'

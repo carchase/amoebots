@@ -12,6 +12,12 @@ from time import sleep
 Q_DICT = {}
 
 def com_level_main(COM_INPUT, TO_MOVEMENT, TO_MAIN):
+    
+    TO_MAIN.put({
+        'destination': 'TO_MAIN',
+        'origin': 'COM_INPUT',
+        'type': 'info',
+        'message': 'Com_level is running'})
 
     Q_DICT['COM_INPUT'] = COM_INPUT
     Q_DICT['TO_MOVEMENT'] = TO_MOVEMENT
@@ -24,12 +30,23 @@ def com_level_main(COM_INPUT, TO_MOVEMENT, TO_MAIN):
     #start bot_listener process
     BOT_LISTENER.start()
 
-    #infinite loop to keep checking the queue for information
-    while(True):
+    TO_MAIN.put({
+        'destination': 'TO_MAIN',
+        'origin': 'COM_INPUT',
+        'type': 'info',
+        'message': 'Bot_listener is running'})
 
-        LISTEN_INPUT.put({
-            'isDict': 'yes',
-            'Q_DICT':Q_DICT})
+    #infinite loop to keep checking the queue for information
+    while True:
+        TO_MAIN.put({
+            'destination': 'TO_MAIN',
+            'origin': 'COM_INPUT',
+            'type': 'info',
+            'message': 'Com_level is still running'})
+
+        #LISTEN_INPUT.put({
+        #    'isDict': 'yes',
+        #    'Q_DICT':Q_DICT})
 
         #get items from q until it's empty
         while not COM_INPUT.empty():

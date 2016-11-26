@@ -5,78 +5,87 @@ Created on Nov 1, 2016
 '''
 from multiprocessing import Process, Queue, Array
 from bot_listener import listener_main
+from bot_process import process_main
 from time import sleep
 
+#stores the ports
+Q_DICT = {}
+
 def com_level_main(COM_INPUT, TO_MOVEMENT, TO_MAIN):
-    TO_MAIN.put({
-        'type': 'info',
-        'origin': 'com_level',
-        'message': 'Communication_level is running'
-    })
 
-    #stores the ports 
-    ports = []
-
-    q_list = []
-
-    q = Queue()
+    Q_DICT['COM_INPUT'] = COM_INPUT
+    Q_DICT['TO_MOVEMENT'] = TO_MOVEMENT
+    Q_DICT['TO_MAIN'] = TO_MAIN
+    LISTEN_INPUT = Queue()
+    Q_DICT['listener'] = LISTEN_INPUT
     #create bot_listener process
-    bot_listener = Process(target=listener_main, args=(q,ports))
+    BOT_LISTENER = Process(target=listener_main, args=(COM_INPUT, LISTEN_INPUT))
 
     #start bot_listener process
-    bot_listener.start()
+    BOT_LISTENER.start()
 
     #infinite loop to keep checking the queue for information
     while(True):
-        
-        #get items from q until it's empty
-        while not q.empty():
-            
-            #print item to console
-            p = q.get()
-            if type(p) is list:
-                if p[1] == '0':
-        
-                    #adds the port to the port list if it doesn't already exist
-                    ports.append(p[0])
-                    q_list.addpend(p[3])
-                    print('\t\t' + p[0] + ' added')
-                
-                elif p[1] == '1':
-                    if exists(p[0]):
-                        ports.remove(p[0])
-                        q_list.remove(p[3])
-                        print('\t\t' + p[0] + ' removed')
-                    else:
-                        print('\t\t' + p[0] + ' failed to start')
-                    
-                elif p[1] == '-1':
-                    t = '\t\t[' + ', '.join(p) + ']'
-                    print(t)
-                    
-                else:
-                    t = '\t\t[' + ', '.join(p) + ']'
-                    print(t)
-                
-            else:
-                print('\t' + p)
 
-        # Get items from input queue until it is not empty
+        LISTEN_INPUT.put({
+            'isDict': 'yes',
+            'Q_DICT':Q_DICT})
+
+        #get items from q until it's empty
         while not COM_INPUT.empty():
-            TO_MAIN.put(COM_INPUT.get()) # For now just parrot
-            
+
+            #print item to console
+            RESPONSE = COM_INPUT.get()
+
+            #make sure the response is a list object
+            if isinstance(RESPONSE, dict):
+                
+                #if the item in index 1 is a '0',
+                #start a new bot_process
+                #add the new process to the Q_DICT
+                if RESPONSE['type'] == 'add':
+                    
+                    TO_MAIN.put({
+                        'destination': 'TO_MAIN',
+                        'origin': RESPONSE['origin'],
+                        'type': 'added',
+                        'message': 'the process was added'})
+
+                    NEW_Q = Queue()
+
+                    #start new process if the serial port is not already open
+                    BOT_PROCESS = Process(target=process_main, args=(RESPONSE['origin'], COM_INPUT, NEW_Q))
+                    BOT_PROCESS.start()
+                    
+
+                    Q_DICT[RESPONSE['origin']] = NEW_Q
+                    TO_MOVEMENT.put(RESPONSE)
+                    
+                    #comment out later
+                    TO_MAIN.put(RESPONSE)
+
+                #if the item in index 1 is a '1', remove the
+                #process from the Q_DICT
+                elif RESPONSE['type'] == 'failure':
+                    del Q_DICT[RESPONSE['origin']]
+                    TO_MOVEMENT.put(RESPONSE)
+
+                    #comment out later
+                    TO_MAIN.put(RESPONSE)
+                    
+                #relay message to destination
+                else:
+                    RELAY_TO = Q_DICT[RESPONSE['destination']]
+
+                    RELAY_TO.put(RESPONSE)
+
+
+            #un-handled message
+            else:
+
+                #send this un-handled message to main
+                #for raw output to the screen
+                TO_MAIN.put(RESPONSE)
+
         #sleep so that this is not constantly eating processing time
         sleep(1)
-
-#checks that a port isn't already open
-def exists(addr):
-    
-    #checks for the current port in the port list
-    if addr in ports:
-        return True;
-    else:
-        return False;
-    
-def port_list(f):
-    print('Com-level:\t' + ', '.join(ports))
-    f(ports)

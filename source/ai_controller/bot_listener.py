@@ -3,45 +3,56 @@ Created on Nov 1, 2016
 
 @author: Trevor
 '''
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 from time import sleep
-from bot_process import process_main
+from bot_process import process_listener
 import serial.tools.list_ports as ports_list
 
-port_list = ()
-
-#checks that a port isn't already open
-def exists(addr):
-    
-    #checks for the current port in the port list
-    if addr in port_list:
-        return True;
-    else:
-        return False;
-    
-def listener_main(q, a):
-    port_list = a
-    
+Q_DICT = None
+   
+def listener_main(COM_INPUT, LISTEN_INPUT):
     #main process loop
-    while(True):
-               
-        q.put('bot_listener is running')
+    while(True):   
+                 
+        #sleep so that this is not constantly eating processing time
+        sleep(10)
+                
+        #relay the response from 
+        while not LISTEN_INPUT.empty():
+            RESPONSE = LISTEN_INPUT.get()
+            
+            if RESPONSE['type'] == 'add':
+                COM_INPUT.put(RESPONSE)
+                
+            elif RESPONSE['isDict'] == 'yes':
+                Q_DICT = RESPONSE['Q_LIST']
+            
+            else:
+                COM_INPUT.put(RESPONSE)
+
+        #verify listener is running
+        #COM_INPUT.put({
+        #    'destination': 'TO_MAIN',
+        #    'origin': 'bot_listener',
+        #    'type': 'success',
+        #    'message': 'Bot_listener is running'})
     
         #grab a list of open serial ports
-        ports = list(ports_list.comports())
+        PORTS = list(ports_list.comports())
                 
-        q.put('\tPorts:\t' + ', '.join(port_list) + ']')
         #for each loop through all the open serial ports
-        for p in ports:
-            addr = p[0]
+        for p in PORTS:
             
-            #check that the port hasn't already been opened
-            if not exists(addr):
-                q.put('a new port is open')
+            COM_INPUT.put({
+                'destination': 'TO_MAIN',
+                'origin': 'bot_listener',
+                'type': 'success',
+                'message': p[0]})
+            
+            ADDRESS = p[0]
                 
-                #start new process if the serial port is not already open
-                bot_process = Process(target=process_main, args=(addr,q))
-                bot_process.start()
-                
-        #sleep so that this is not constantly eating processing time
-        sleep(5)
+            PROCESS_Q = Queue()
+
+            #start new process if the serial port is not already open
+            BOT_PROCESS = Process(target=process_listener, args=(ADDRESS, LISTEN_INPUT, PROCESS_Q))
+            BOT_PROCESS.start()

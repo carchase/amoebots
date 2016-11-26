@@ -32,27 +32,10 @@ def mainLoop():
 
     # Infinite loop to keep checking the queue for information
     while(True):
-
+        
         # Check the main input queue and display logs
         checkLogs(MAIN_INPUT_QUEUE)
-
-        # Write to child processes to test communication
-        AI_INPUT_QUEUE.put({
-            'type': 'info',
-            'origin': 'main_____',
-            'message': 'Parrot test to AI_level'
-        })
-        MOVEMENT_INPUT_QUEUE.put({
-            'type': 'info',
-            'origin': 'main_____',
-            'message': 'Parrot test to Movement_level'
-        })
-        COM_INPUT_QUEUE.put({
-            'type': 'info',
-            'origin': 'main_____',
-            'message': 'Parrot test to Communication_level'
-        })
-
+        
         sleep(1)
 
 def checkLogs(MAIN_INPUT_QUEUE):
@@ -60,8 +43,8 @@ def checkLogs(MAIN_INPUT_QUEUE):
         chunk = MAIN_INPUT_QUEUE.get()
         
         # Ensure that the message is a log message
-        if type(chunk) is dict and chunk.get('type') != None and chunk.get('message') != None and chunk.get('origin') != None:
-            print(chunk.get('origin'), chunk.get('type') + ':', chunk.get('message'))
+        if type(chunk) is dict and chunk.get('type') != None and chunk.get('message') != None and chunk.get('origin') != None and chunk.get('destination') != None:
+            print('To: ', chunk['destination'] + '\tFrom: ', chunk['origin'], chunk['type'] + ': ', chunk['message'])
         else:
             # Otherwise print out the raw data
             print('raw:', chunk)

@@ -13,6 +13,7 @@ from time import sleep
 
 def movement_level_main(MOVEMENT_INPUT, TO_COMMUNICATION, TO_AI, TO_MAIN):
     TO_MAIN.put({
+        'destination': 'TO_MAIN',
         'type': 'info',
         'origin': 'mov_level',
         'message': 'Movement_level is running'

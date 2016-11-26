@@ -4,15 +4,15 @@ Created on Nov 1, 2016
 @author: Trevor
 '''
 from time import sleep
-import timeout_decorator
+#import timeout_decorator
 import serial
 
 BAUD = '9600'
 replied = False
 
-@timeout_decorator.timeout(10)
-def listener_helper(PORT):
-    return PORT.readline()
+#@timeout_decorator.timeout(10)
+#def listener_helper(PORT):
+#    return PORT.readline()
 
 def process_listener(ADDRESS, LISTEN_INPUT, PROCESS_Q):
     #LISTEN_INPUT.put({
@@ -30,7 +30,7 @@ def process_listener(ADDRESS, LISTEN_INPUT, PROCESS_Q):
             #    'type': 'success',
             #    'message': 'Connection successful'})
             
-            PORT.write(str.encode(ADDRESS + " hello"))
+            PORT.write(str.encode("1"))
 
             RESPONSE = PORT.readline()
 
@@ -74,9 +74,9 @@ def process_main(ADDRESS, COM_INPUT, PROCESS_Q):
                 'type': 'success',
                 'message': 'connected to robot'})
         
-            while(True):
+            while True:
                 
-                PORT.write(str.encode(ADDRESS + " hello"))
+                PORT.write(str.encode("1"))
                             
                 RESPONSE = PORT.readline()
                 

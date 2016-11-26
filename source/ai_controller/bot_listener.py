@@ -7,12 +7,32 @@ from multiprocessing import Process, Queue
 from time import sleep
 from bot_process import process_listener
 import serial.tools.list_ports as ports_list
+#import socketserver
 
 Q_DICT = None
+HOST = 'localhost'
+PORT = 2424
    
 def listener_main(COM_INPUT, LISTEN_INPUT):
+    
+    COM_INPUT.put({
+        'destination': 'TO_MAIN',
+        'origin': 'COM_INPUT',
+        'type': 'info',
+        'message': 'Bot_listener is running'})
+    
+    #server = socketserver.TCPServer()
+   
     #main process loop
-    while(True):   
+    while True:   
+        
+        COM_INPUT.put({
+            'destination': 'TO_MAIN',
+            'origin': 'COM_INPUT',
+            'type': 'info',
+            'message': 'Bot_listener is running'})
+        
+        #data = server.request.recv(1024).strip()
                  
         #sleep so that this is not constantly eating processing time
         sleep(10)

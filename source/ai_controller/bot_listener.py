@@ -9,15 +9,16 @@ from bot_process import process_listener
 import serial.tools.list_ports as ports_list
 #import socketserver
 
-Q_DICT = None
+Q_LIST = None
 HOST = 'localhost'
-PORT = 2424
+PORT = 8080
+NEXT_PORT = 10000
    
 def listener_main(COM_INPUT, LISTEN_INPUT):
     
     COM_INPUT.put({
         'destination': 'TO_MAIN',
-        'origin': 'COM_INPUT',
+        'origin': 'LISTEN_INPUT',
         'type': 'info',
         'message': 'Bot_listener is running'})
     
@@ -25,27 +26,29 @@ def listener_main(COM_INPUT, LISTEN_INPUT):
    
     #main process loop
     while True:   
-        
-        COM_INPUT.put({
-            'destination': 'TO_MAIN',
-            'origin': 'COM_INPUT',
-            'type': 'info',
-            'message': 'Bot_listener is running'})
-        
-        #data = server.request.recv(1024).strip()
                  
         #sleep so that this is not constantly eating processing time
         sleep(10)
+        
+        COM_INPUT.put({
+            'destination': 'TO_MAIN',
+            'origin': 'LISTEN_INPUT',
+            'type': 'info',
+            'message': 'Bot_listener is still running'})
+        
+        #data = server.request.recv(1024).strip()
+        
+        
                 
         #relay the response from 
         while not LISTEN_INPUT.empty():
             RESPONSE = LISTEN_INPUT.get()
             
-            if RESPONSE['type'] == 'add':
+            if RESPONSE.get('type') == 'add':
                 COM_INPUT.put(RESPONSE)
                 
-            elif RESPONSE['isDict'] == 'yes':
-                Q_DICT = RESPONSE['Q_LIST']
+            elif RESPONSE.get('isList') == 'yes':
+                Q_LIST = RESPONSE['Q_DICT']
             
             else:
                 COM_INPUT.put(RESPONSE)
@@ -73,6 +76,7 @@ def listener_main(COM_INPUT, LISTEN_INPUT):
                 
             PROCESS_Q = Queue()
 
-            #start new process if the serial port is not already open
-            BOT_PROCESS = Process(target=process_listener, args=(ADDRESS, LISTEN_INPUT, PROCESS_Q))
-            BOT_PROCESS.start()
+            if ADDRESS not in Q_LIST:
+                #start new process if the serial port is not already open
+                BOT_PROCESS = Process(target=process_listener, args=(ADDRESS, LISTEN_INPUT, PROCESS_Q))
+                BOT_PROCESS.start()

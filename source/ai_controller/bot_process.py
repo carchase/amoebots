@@ -4,30 +4,25 @@ Created on Nov 1, 2016
 @author: Trevor
 '''
 from time import sleep
-#import timeout_decorator
 import serial
 
 BAUD = '9600'
 replied = False
 
-#@timeout_decorator.timeout(10)
-#def listener_helper(PORT):
-#    return PORT.readline()
-
-def process_listener(ADDRESS, LISTEN_INPUT, PROCESS_Q):
+def process_listener(ADDRESS, COM_INPUT, PROCESS_Q):
     #LISTEN_INPUT.put({
-    #    'destination': 'TO_MAIN',
+    #    'destination': 'MAIN_INPUT',
     #    'origin': ADDRESS,
-    #    'type': 'success',
+    #    'type': 'result',
     #    'message': 'Process_listener started'})
 
     try:
         with serial.Serial(ADDRESS, BAUD, timeout = 10) as PORT:
         
             #LISTEN_INPUT.put({
-            #    'destination': 'TO_MAIN',
+            #    'destination': 'MAIN_INPUT',
             #    'origin': ADDRESS,
-            #    'type': 'success',
+            #    'type': 'result',
             #    'message': 'Connection successful'})
             
             PORT.write(str.encode("1"))
@@ -36,42 +31,55 @@ def process_listener(ADDRESS, LISTEN_INPUT, PROCESS_Q):
 
             DECODED_RESPONSE = bytes.decode(RESPONSE)
 
-            if not DECODED_RESPONSE == None:
-                LISTEN_INPUT.put({
-                    'destination': 'TO_MAIN',
+            if not RESPONSE == b'':
+                COM_INPUT.put({
+                    'destination': 'MAIN_INPUT',
                     'origin': ADDRESS,
-                    'type': 'add',
-                    'message': DECODED_RESPONSE})
+                    'type': 'result',
+                    'message': 'add'})
+                
+                COM_INPUT.put({
+                    'destination': 'MAIN_INPUT',
+                    'origin': ADDRESS,
+                    'type': 'log',
+                    'message': RESPONSE})
+                
             else:
-                LISTEN_INPUT.put({
-                    'destination': 'TO_MAIN',
+                COM_INPUT.put({
+                    'destination': 'MAIN_INPUT',
                     'origin': ADDRESS,
-                    'type': 'failure',
-                    'message': 'the message timed out'})
+                    'type': 'command',
+                    'message': 'failure'})
+                
+                COM_INPUT.put({
+                    'destination': 'MAIN_INPUT',
+                    'origin': ADDRESS,
+                    'type': 'log',
+                    'message': RESPONSE})
             
     except:
-        LISTEN_INPUT.put({
-            'destination': 'TO_MAIN',
+        COM_INPUT.put({
+            'destination': 'MAIN_INPUT',
             'origin': ADDRESS,
-            'type': 'failure',
-            'message': 'exited process_listener'})
+            'type': 'command',
+            'message': 'failure'})
         
     return 0
 
 def process_main(ADDRESS, COM_INPUT, PROCESS_Q):
     COM_INPUT.put(({
-        'destination': 'TO_MAIN',
+        'destination': 'MAIN_INPUT',
         'origin': ADDRESS,
-        'type': 'success',
+        'type': 'result',
         'message': 'process_main is running'}))
     
     try:
         with serial.Serial(ADDRESS, BAUD, timeout = 10) as PORT:
         
             COM_INPUT.put({
-                'destination': 'TO_MAIN',
+                'destination': 'MAIN_INPUT',
                 'origin': ADDRESS,
-                'type': 'success',
+                'type': 'result',
                 'message': 'connected to robot'})
         
             while True:
@@ -81,24 +89,31 @@ def process_main(ADDRESS, COM_INPUT, PROCESS_Q):
                 RESPONSE = PORT.readline()
                 
                 DECODED_RESPONSE = bytes.decode(RESPONSE)
+                
+                if RESPONSE == b'':   
+                        
+                    COM_INPUT.put({
+                        'destination': 'MAIN_INPUT',
+                        'origin': ADDRESS,
+                        'type': 'command',
+                        'message': 'failure'})
+                    
+                    return 0;
+                
+                else:
             
-                COM_INPUT.put({
-                    'destination': 'TO_MAIN',
-                    'origin': ADDRESS,
-                    'type': 'running',
-                    'message': DECODED_RESPONSE})
+                    COM_INPUT.put({
+                        'destination': 'MAIN_INPUT',
+                        'origin': ADDRESS,
+                        'type': 'result',
+                        'message': DECODED_RESPONSE})
                 
-                sleep(2)
-                
-            COM_INPUT.put({
-                'destination': 'TO_MAIN',
-                'origin': ADDRESS,
-                'type': 'failure',
-                'message': 'exited proces_main'})
+                    sleep(2)
+                                
             
     except:
-        COM_INPUT.put({'destination': 'TO_MAIN',
+        COM_INPUT.put({'destination': 'MAIN_INPUT',
                            'origin': ADDRESS,
-                           'type': 'failure',
-                           'message': 'exited proces_main'})
+                           'type': 'command',
+                           'message': 'failure'})
     return 0

@@ -1,5 +1,3 @@
-int cmd = -1;
-int vel = -1;
 boolean dataFlag = false;
 boolean* light = new boolean[5];
 int fastPause = 100;
@@ -15,31 +13,21 @@ void setup() {
   for(int i = 0; i < 5; i++){
     light[i] = false;
   }
-  Serial.println("Robot is Online");
   testLights();
-  Serial.begin(9600);
-}
-
-void serialEvent(){
-  while(Serial.available()){
-    cmd = Serial.parseInt();//1,2,3,4,5,6-forward backward left right
-    vel = Serial.parseInt();//- stop standby, v range from 130-255
-    dataFlag = true;
-  }
+  Serial.begin(115200);
+  Serial.println("Robot is Online");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-   if(dataFlag == true){
-     handleInput();
-     cmd = -1;
-     vel = -1;
-     dataFlag = false;
-   }
-   delay(500);
+  while(Serial.available() > 0){
+    int cmd = Serial.parseInt();//1,2,3,4,5,6-forward backward left right
+    int vel = Serial.parseInt();//- stop standby, v range from 130-255
+    handleInput(cmd);
+  }
 }
 
-void handleInput(){
+void handleInput(int cmd){
   switch(cmd){
     case 1:
       Serial.println("Moving forward");

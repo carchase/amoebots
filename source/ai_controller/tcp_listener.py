@@ -5,9 +5,11 @@ Created on Nov 1, 2016
 '''
 import socketserver
 import json
+from multiprocessing import Queue
 
 SERVER_HOST = 'localhost'
 SERVER_PORT = 5000
+COM_INPUT_QUEUE = None
 
 '''
 The data should be an encided dictionary of the following
@@ -30,22 +32,33 @@ class TCPHandler(socketserver.BaseRequestHandler):
             if(self.data.get("type") == "SMORES"):
                 # assign the robot a port and inform the com level
                 self.request.send(bytes('{"port": ' + str(TCPHandler.nextPort) + '}', "utf-8"))
+                
+                global COM_INPUT_QUEUE
+
+                COM_INPUT_QUEUE.put({
+                    'destination': 'COM_INPUT',
+                    'origin': "TCP:" + str(TCPHandler.nextPort),
+                    'type': 'command',
+                    'message': 'add'})
+
                 TCPHandler.nextPort = TCPHandler.nextPort + 1
 
             else:
                 self.request.send(bytes("Unsupported robot type", "utf-8"))
         
-        except:
-            # exception occurred, must be unsupported data
-            self.request.send(bytes("Unsupported data type", "utf-8"))
+        # except:
+        #     # exception occurred, must be unsupported data
+        #     self.request.send(bytes("Unsupported data type", "utf-8"))
         
         finally:
             # close the socket
             self.request.close()
         
 
-def tcp_listener_main(COM_INPUT, PROCESS_QUEUE):    
-    COM_INPUT.put({
+def tcp_listener_main(COM_INPUT, PROCESS_QUEUE):
+    global COM_INPUT_QUEUE
+    COM_INPUT_QUEUE = COM_INPUT
+    COM_INPUT_QUEUE.put({
         'destination': 'MAIN_INPUT',
         'origin': 'TCP_LISTENER',
         'type': 'info',
@@ -56,6 +69,6 @@ def tcp_listener_main(COM_INPUT, PROCESS_QUEUE):
 
     while True:
         while not PROCESS_QUEUE.empty():
-            COM_INPUT.put(AI_INPUT.get())
+            COM_INPUT_QUEUE.put(PROCESS_QUEUE.get())
 
         server.handle_request()

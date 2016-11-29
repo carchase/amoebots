@@ -54,8 +54,6 @@ def com_level_main(COM_INPUT, MOV_INPUT, MAIN_INPUT):
                 #start a new bot_process
                 #add the new process to the Q_DICT
                 if RESPONSE.get('message') == 'add':
-                    
-                    MAIN_INPUT.put(RESPONSE)
 
                     PROCESS_QUEUE = None
 
@@ -73,10 +71,6 @@ def com_level_main(COM_INPUT, MOV_INPUT, MAIN_INPUT):
                     
 
                     CON_DICT[RESPONSE['origin']] = ['running', PROCESS_QUEUE, BOT_PROCESS]
-                    MOV_INPUT.put(RESPONSE)
-                    
-                    #comment out later
-                    MAIN_INPUT.put(RESPONSE)
 
                 #if the item in index 1 is a '1', remove the
                 #process from the Q_DICT
@@ -84,16 +78,15 @@ def com_level_main(COM_INPUT, MOV_INPUT, MAIN_INPUT):
                     
                     CON_DICT[RESPONSE['origin']][2].join()
                     del CON_DICT[RESPONSE['origin']]
-                    MOV_INPUT.put(RESPONSE)
-
-                    #comment out later
-                    MAIN_INPUT.put(RESPONSE)
                     
                 #relay message to destination
-                else:
+                if RESPONSE['destination'] != "COM_INPUT":
                     RELAY_TO = CON_DICT[RESPONSE['destination']][1]
 
                     RELAY_TO.put(RESPONSE)
+
+                else:
+                    MAIN_INPUT.put(RESPONSE)
 
 
             #un-handled message

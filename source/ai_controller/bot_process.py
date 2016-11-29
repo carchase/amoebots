@@ -5,115 +5,160 @@ Created on Nov 1, 2016
 '''
 from time import sleep
 import serial
+import socket
 
-BAUD = '9600'
+BAUD = '115200'
 replied = False
 
-def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_Q):
-    #LISTEN_INPUT.put({
-    #    'destination': 'MAIN_INPUT',
-    #    'origin': ADDRESS,
-    #    'type': 'result',
-    #    'message': 'Process_listener started'})
+def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
+    COM_INPUT.put({
+       'destination': 'MAIN_INPUT',
+       'origin': ADDRESS,
+       'type': 'info',
+       'message': 'Process_listener started'})
 
     try:
         with serial.Serial(ADDRESS, BAUD, timeout = 10) as PORT:
         
-            #LISTEN_INPUT.put({
+            #COM_INPUT.put({
             #    'destination': 'MAIN_INPUT',
             #    'origin': ADDRESS,
             #    'type': 'result',
             #    'message': 'Connection successful'})
             
-            PORT.write(str.encode("1"))
+            PORT.write(bytes("5 150", "utf-8"))
 
-            RESPONSE = PORT.readline()
+            RESPONSE = PORT.readline().strip().decode()
 
-            DECODED_RESPONSE = bytes.decode(RESPONSE)
-
-            if not RESPONSE == b'':
+            if not RESPONSE == '':
                 COM_INPUT.put({
-                    'destination': 'MAIN_INPUT',
+                    'destination': 'COM_INPUT',
                     'origin': ADDRESS,
-                    'type': 'result',
+                    'type': 'command',
                     'message': 'add'})
-                
-                COM_INPUT.put({
-                    'destination': 'MAIN_INPUT',
-                    'origin': ADDRESS,
-                    'type': 'log',
-                    'message': RESPONSE})
                 
             else:
                 COM_INPUT.put({
-                    'destination': 'MAIN_INPUT',
+                    'destination': 'COM_INPUT',
                     'origin': ADDRESS,
                     'type': 'command',
                     'message': 'failure'})
-                
-                COM_INPUT.put({
-                    'destination': 'MAIN_INPUT',
-                    'origin': ADDRESS,
-                    'type': 'log',
-                    'message': RESPONSE})
+            
+            PORT.close()
             
     except:
         COM_INPUT.put({
-            'destination': 'MAIN_INPUT',
+            'destination': 'COM_INPUT',
             'origin': ADDRESS,
             'type': 'command',
             'message': 'failure'})
         
     return 0
 
-def bot_process_main(ADDRESS, COM_INPUT, PROCESS_Q):
+def bot_process_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
     COM_INPUT.put(({
         'destination': 'MAIN_INPUT',
         'origin': ADDRESS,
-        'type': 'result',
-        'message': 'process_main is running'}))
-    
+        'type': 'info',
+        'message': 'bot_process is running'}))
+
+    # Determine if the bot is TCP or COM
     try:
-        with serial.Serial(ADDRESS, BAUD, timeout = 10) as PORT:
-        
-            COM_INPUT.put({
+        if ADDRESS[0:3] == "COM":
+            COM_INPUT.put(({
                 'destination': 'MAIN_INPUT',
                 'origin': ADDRESS,
-                'type': 'result',
-                'message': 'connected to robot'})
-        
-            while True:
-                
-                PORT.write(str.encode("1"))
-                            
-                RESPONSE = PORT.readline()
-                
-                DECODED_RESPONSE = bytes.decode(RESPONSE)
-                
-                if RESPONSE == b'':   
-                        
-                    COM_INPUT.put({
-                        'destination': 'MAIN_INPUT',
+                'type': 'info',
+                'message': 'bot is on a com port'}))
+            com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE)
+        elif ADDRESS[0:3] == "TCP":
+            COM_INPUT.put(({
+                'destination': 'MAIN_INPUT',
+                'origin': ADDRESS,
+                'type': 'info',
+                'message': 'bot is on a tcp port'}))
+            tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE)
+        else:
+            COM_INPUT.put({'destination': 'COM_INPUT',
+                'origin': ADDRESS,
+                'type': 'command',
+                'message': 'failure'})
+
+    except:
+        COM_INPUT.put({'destination': 'COM_INPUT',
                         'origin': ADDRESS,
                         'type': 'command',
                         'message': 'failure'})
-                    
-                    return 0;
-                
-                else:
-            
-                    COM_INPUT.put({
-                        'destination': 'MAIN_INPUT',
-                        'origin': ADDRESS,
-                        'type': 'result',
-                        'message': DECODED_RESPONSE})
-                
-                    sleep(2)
-                                
-            
-    except:
-        COM_INPUT.put({'destination': 'MAIN_INPUT',
-                           'origin': ADDRESS,
-                           'type': 'command',
-                           'message': 'failure'})
     return 0
+
+def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
+    with serial.Serial(ADDRESS, BAUD, timeout = 10) as PORT:
+        
+        COM_INPUT.put({
+            'destination': 'MAIN_INPUT',
+            'origin': ADDRESS,
+            'type': 'info',
+            'message': 'connected to robot'})
+    
+        while True:
+            
+            PORT.write(bytes("1 150", "utf-8"))
+            
+            sleep(5)
+                        
+            RESPONSE = PORT.readline().strip().decode()
+            
+            if RESPONSE == '':   
+                    
+                COM_INPUT.put({
+                    'destination': 'MAIN_INPUT',
+                    'origin': ADDRESS,
+                    'type': 'command',
+                    'message': 'failure'})
+                
+                return 0;
+            
+            else:
+        
+                COM_INPUT.put({
+                    'destination': 'MAIN_INPUT',
+                    'origin': ADDRESS,
+                    'type': 'result',
+                    'message': RESPONSE})
+
+def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as SOCKET:
+        
+        SOCKET.connect(("localhost", ADDRESS[4:]))
+
+        COM_INPUT.put({
+            'destination': 'MAIN_INPUT',
+            'origin': ADDRESS,
+            'type': 'info',
+            'message': 'connected to socket'})
+    
+        while True:
+            
+            SOCKET.send(bytes("1 150", "utf-8"))
+            
+            sleep(5)
+                        
+            RESPONSE = SOCKET.recv(1024).strip().decode()
+            
+            if RESPONSE == '':   
+                    
+                COM_INPUT.put({
+                    'destination': 'COM_INPUT',
+                    'origin': ADDRESS,
+                    'type': 'command',
+                    'message': 'failure'})
+                
+                return 0;
+            
+            else:
+        
+                COM_INPUT.put({
+                    'destination': 'COM_INPUT',
+                    'origin': ADDRESS,
+                    'type': 'result',
+                    'message': DECODED_RESPONSE})

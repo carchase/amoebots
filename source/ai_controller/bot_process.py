@@ -9,7 +9,7 @@ import serial
 BAUD = '9600'
 replied = False
 
-def process_listener(ADDRESS, COM_INPUT, PROCESS_Q):
+def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_Q):
     #LISTEN_INPUT.put({
     #    'destination': 'MAIN_INPUT',
     #    'origin': ADDRESS,
@@ -66,7 +66,7 @@ def process_listener(ADDRESS, COM_INPUT, PROCESS_Q):
         
     return 0
 
-def process_main(ADDRESS, COM_INPUT, PROCESS_Q):
+def bot_process_main(ADDRESS, COM_INPUT, PROCESS_Q):
     COM_INPUT.put(({
         'destination': 'MAIN_INPUT',
         'origin': ADDRESS,

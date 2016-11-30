@@ -36,7 +36,7 @@ def mainLoop():
         # Check the main input queue and display logs
         checkLogs(MAIN_INPUT_QUEUE)
         
-        sleep(1)
+        sleep(.5)
 
 def checkLogs(MAIN_INPUT_QUEUE):
     while not MAIN_INPUT_QUEUE.empty():

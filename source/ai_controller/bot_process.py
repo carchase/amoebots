@@ -128,7 +128,7 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                 
                         PORT.write(bytes(message.get('message'), "utf-8"))
                         
-                        sleep(5)
+                        sleep(2.5)
                         
                         RESPONSE = ""
                         while PORT.inWaiting() > 0:
@@ -151,40 +151,38 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                                 'message': RESPONSE.replace('\r\n', ' ')})
 
 def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as SOCKET:
-                
-        # get the connection data
-        data = PROCESS_QUEUE.get()
+    # get the connection data
+    data = PROCESS_QUEUE.get()
     
-        SOCKET.connect((data.get('ip'), int(ADDRESS[4:])))
-        
-        while True:
-            waitForCommands(.5, PROCESS_QUEUE)
+    while True:
+        waitForCommands(.5, PROCESS_QUEUE)
 
-            # there is data in the queue
-            while not PROCESS_QUEUE.empty():
-                message = PROCESS_QUEUE.get()
+        # there is data in the queue
+        while not PROCESS_QUEUE.empty():
+            message = PROCESS_QUEUE.get()
 
-                # check if the message is a command
-                if message.get('type') == 'command':
-                    
-                    COM_INPUT.put({
-                        'destination': 'MAIN_INPUT',
-                        'origin': ADDRESS,
-                        'type': 'info',
-                        'message': 'given command ' + message.get('message')})
+            # check if the message is a command
+            if message.get('type') == 'command':
+                
+                COM_INPUT.put({
+                    'destination': 'MAIN_INPUT',
+                    'origin': ADDRESS,
+                    'type': 'info',
+                    'message': 'given command ' + message.get('message')})
 
-                    # open a socket
-                    
-                    SOCKET.send(bytes(message.get('message'), "utf-8"))
-                    
-                    RESPONSE = SOCKET.recv(1024).strip().decode()
+                # open a socket
+                SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                SOCKET.connect((data.get('ip'), int(ADDRESS[4:])))
+                SOCKET.send(bytes(message.get('message'), "utf-8"))
+                RESPONSE = SOCKET.recv(1024).strip().decode()
+                SOCKET.close()
+                sleep(3)
 
-                    COM_INPUT.put({
-                        'destination': 'COM_INPUT',
-                        'origin': ADDRESS,
-                        'type': 'result',
-                        'message': RESPONSE})
+                COM_INPUT.put({
+                    'destination': 'COM_INPUT',
+                    'origin': ADDRESS,
+                    'type': 'result',
+                    'message': RESPONSE})
 
 def waitForCommands(timeout, input):
     # wait until a command has been issued

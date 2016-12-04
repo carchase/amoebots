@@ -1,4 +1,13 @@
 import SocketServer
+import socket
+
+# def connect_communication_layer(info):
+#     host, port = '10.100.213.34', 5000
+#     sock = socket.socket(socket.AF_NET, socket.SOCK_STEAM)
+#     sock.connect((host, port))
+#
+#     sock.send(info)
+
 
 class TCPHandler(SocketServer.BaseRequestHandler):
     '''
@@ -22,12 +31,15 @@ class TCPHandler(SocketServer.BaseRequestHandler):
 
         if (self.data[-1] == '1'):
             self.request.sendall('localhost 1500')
+            #connect_communication_layer(b'{\"type\": \"SMORES\",\"id\": \"' + self.data[-1] + b'\", \"ip\": \"192.168.1.1\"}')
         elif(self.data[-1] == '2'):
             self.request.sendall('localhost 2500')
+            #connect_communication_layer(b'{\"type\": \"SMORES\",\"id\": \"' + self.data[-1] + b'\", \"ip\": \"192.168.1.1\"}')
         else:
             print 'The server did not find the client.'
             #Do nothing. The server will keep working.
             pass
+
 
 if __name__ == '__main__':
     host, port = 'localhost', 5000

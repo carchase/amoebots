@@ -1,6 +1,6 @@
 import socket
 
-HOST_IP = 'localhost'
+HOST_IP = '10.100.213.34'
 PORT = 5000
 BufferSize = 24
 Message = b'{\"type\": \"SMORES\",\"id\": \"robot-1\"}'

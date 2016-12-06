@@ -80,13 +80,13 @@ def movement_level_main(MOV_INPUT, COM_INPUT, AI_INPUT, MAIN_INPUT):
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '1 150'
+                        'message': '2 150'
                     })
                     COM_INPUT.put({
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '2 150'
+                        'message': '1 150'
                     })
                     COM_INPUT.put({
                         'destination': RESPONSE['origin'],
@@ -116,13 +116,13 @@ def movement_level_main(MOV_INPUT, COM_INPUT, AI_INPUT, MAIN_INPUT):
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '1 150'
+                        'message': '2 150'
                     })
                     COM_INPUT.put({
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '2 150'
+                        'message': '1 150'
                     })
                     COM_INPUT.put({
                         'destination': RESPONSE['origin'],

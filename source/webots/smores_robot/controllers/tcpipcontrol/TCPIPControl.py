@@ -13,6 +13,7 @@ from controller import Robot
 import socket
 import SocketServer
 from time import sleep
+import threading
 
 
 tcp_command = None
@@ -109,7 +110,7 @@ class TCPIPControl(Robot):
         return host, port
 
     def run(self):
-        host, port = '10.100.213.34', 5000
+        host, port = 'localhost', 5000
         # data = 'My ID is: 1'.join(sys.argv[1:])
         data = (b'{\"type\": \"SMORES\",\"id\": \"1\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) +  b'\"}')
         # data = 'My ID is: 1'
@@ -177,7 +178,6 @@ class TCPIPControl(Robot):
 
 # The main program starts from here
 class TCPHandler(SocketServer.BaseRequestHandler):
-
     def handle(self):
         global tcp_velocity
         global tcp_command
@@ -191,14 +191,32 @@ class TCPHandler(SocketServer.BaseRequestHandler):
         self.request.send(b'Got it')
         self.request.close()
 
+class Thread(threading.Thread):
+    #This class is for multi-threading.
+    #Use this thread like in the following example.
+    #thread1 = myThread(1, "Thread-1", 1)
+    #
+    def __init__(self, ThreadID, name, counter):
+        self.ThreadID = ThreadID
+        self.name = name
+        self.counter = counter
+    def run(self):
+        print 'Starting: ', self.name
+        print_time(self.name, self.counter, 5)
+        print "Exiting " + self.name
 
-
+def print_time(threadName, delay, counter):
+    while counter:
+        if exitFlag:
+            threadName.exit()
+        time.sleep(delay)
+        print "%s: %s" % (threadName, time.ctime(time.time()))
+        counter -= 1
 # This is the main program of your controller.
 # It creates an instance of your Robot subclass, launches its
 # function(s) and destroys it at the end of the execution.
 # Note that only one instance of Robot should be created in
 # a controller program.
 
-sleep(30)
 controller = TCPIPControl()
 controller.run()

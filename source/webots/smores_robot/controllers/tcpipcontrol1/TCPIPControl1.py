@@ -1,7 +1,7 @@
-# File:          TCPIPControl.py
-# Date:          Ben Smith
+# File:          TCPIPControl1.py
+# Date:
 # Description:   
-# Author:        
+# Author:        Ben Smith
 # Modifications: 
 
 # You may need to import some classes of the controller module. Ex:
@@ -12,93 +12,184 @@
 from controller import Robot
 import socket
 import SocketServer
+from time import sleep
+
+
+tcp_command = None
+tcp_velocity = None
 
 # Here is the main class of your controller.
 # This class defines how to initialize and how to run your controller.
 # Note that this class derives Robot and so inherits all its functions
-class TCPIPControl (Robot):
-  
-  # User defined function for initializing and running
-  # the TCPIPControl class
-  def run(self):
-    
-    # You should insert a getDevice-like function in order to get the
-    # instance of a device of the robot. Something like:
-    #  led = self.getLed('ledname')
-    main()
-    # Main loop
-    while True:
-      # Perform a simulation step of 64 milliseconds
-      # and leave the loop when the simulation is over
-      if self.step(64) == -1:
-        break
-      
-      # Read the sensors:
-      # Enter here functions to read sensor data, like:
-      #  val = ds.getValue()
-      
-      # Process sensor data here.
-      
-      # Enter here functions to send actuator commands, like:
-      #  led.set(1)
-    
-    # Enter here exit cleanup code
+
+class TCPIPControl(Robot):
+    top_motor = None
+    left_motor = None
+    right_motor = None
+    top_conn = None
+    left_conn = None
+    right_conn = None
+    back_conn = None
+    tcp_received = False
+
+    tcp_command = None
+    tcp_velocity = None
+
+    # User defined function for initializing and running
+    # the TCPIPControl class
+    def handleInput(self, cmd, vel):
+        if cmd == 1:
+            print 'Moving forward'
+            self.moveWheels(-vel, -vel, True)
+        elif cmd == 2:
+            print 'Moving backward'
+            self.moveWheels(vel, vel, True)
+        elif cmd == 3:
+            print 'Turning left'
+            self.moveWheels(0, vel, True)
+        elif cmd == 4:
+            print 'Turning right'
+            self.moveWheels(vel, 0, True)
+        elif cmd == 5:
+            print 'Stopping'
+            self.moveWheels(0, 0, False)
+        elif cmd == 6:
+            print 'Stopping arm'
+            self.moveArm(0, False)
+        elif cmd == 7:
+            print 'Moving arm'  # up?
+            self.moveArm(vel, True)
+        elif cmd == 8:
+            print 'Moving arm'  # down?
+            self.moveArm(-vel, True)
+        elif cmd == 11:
+            print 'Moving forward'
+            self.moveWheels(vel, vel, False)
+        elif cmd == 12:
+            print 'Moving backward'
+            self.moveWheels(-vel, -vel, False)
+        elif cmd == 13:
+            print 'Turning left'
+            self.moveWheels(0, vel, False)
+        elif cmd == 14:
+            print 'Turning right'
+            self.moveWheels(vel, 0, False)
+        elif cmd == 15:
+            print 'Moving arm'  # up?
+            self.moveArm(vel, False)
+        elif cmd == 16:
+            print 'Moving arm'  # down?
+            self.moveArm(-vel, False)
+        else:
+            print 'Invalid command ' + str(cmd)
+
+    def moveWheels(self, left, right, delay):
+        self.left_motor.setVelocity(left)
+        self.right_motor.setVelocity(right)
+        if delay:
+            if right != 0 and left != 0:
+                self.step(2000)
+            else:
+                self.step(1000)
+            self.moveWheels(0, 0, False)
+        else:
+            self.tcp_received = False
+
+    def moveArm(self, velocity, delay):
+        self.top_motor.setPosition(velocity / 2.0)
+        if delay:
+            self.step(500)
+            self.moveArm(0, False)
+        else:
+            self.tcp_received = False
+
+    def SetupNewHostPort(self, hostport):
+        host = hostport[0]
+        port = int(hostport[1])
+        return host, port
+
+    def run(self):
+        host, port = '10.100.213.34', 5000
+        # data = 'My ID is: 1'.join(sys.argv[1:])
+        data = (b'{\"type\": \"SMORES\",\"id\": \"2\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) +  b'\"}')
+        # data = 'My ID is: 2'
+
+        # create a socket (SOCK_STREAM means a TCP socket)
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # connect to the server and send data
+        sock.connect((host, port))
+        sock.send(data + '\n')
+
+        # receive data from the server and shut down.
+        received = str(sock.recv(1024)).split()
+
+        print 'Sent:        {}'.format(data)
+        print 'Received:    {}'.format(received[0] + ', ' + received[1])
+
+        hostport = self.SetupNewHostPort(received)
+        server = SocketServer.TCPServer((hostport[0], hostport[-1]), TCPHandler)
+
+        print 'Opening Port on: ', hostport[1], '...\n'
+
+        # You should insert a getDevice-like function in order to get the
+        # instance of a device of the robot. Something like:
+        #  led = self.getLed('ledname')
+
+        self.top_motor = self.getMotor("Bending Motor")
+        self.top_motor.setPosition(float('0'))
+        self.left_motor = self.getMotor("Left Wheel Motor")
+        self.left_motor.setPosition(float('inf'))
+        self.right_motor = self.getMotor("Right Wheel Motor")
+        self.right_motor.setPosition(float('inf'))
+
+        self.top_conn = self.getConnector("top conn")
+        self.top_conn.enablePresence(64)
+        self.left_conn = self.getConnector("left conn")
+        self.left_conn.enablePresence(64)
+        self.right_conn = self.getConnector("right conn")
+        self.right_conn.enablePresence(64)
+        self.back_conn = self.getConnector("back conn")
+        self.back_conn.enablePresence(64)
+
+        self.left_motor.setVelocity(0)
+        self.right_motor.setVelocity(0)
+
+        global tcp_command
+        global tcp_velocity
+
+        #Main loop
+        while True:
+            # Perform a simulation step of 64 milliseconds
+            # and leave the loop when the simulation is over
+            if self.step(64) == -1:
+                break
+
+            # handle one request per loop
+            if not self.tcp_received:
+                server.handle_request()
+                self.tcp_received = True
+
+            # if there was a request, do the command
+            if self.tcp_received:
+                self.handleInput(tcp_command, tcp_velocity)
+
+            self.step(500)
 
 # The main program starts from here
-def main():
-    host, port = 'localhost', 5000
-    # data = 'My ID is: 1'.join(sys.argv[1:])
-    data = 'My ID is: 2'
-
-    # create a socket (SOCK_STREAM means a TCP socket)
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    # connect to the server and send data
-    sock.connect((host, port))
-    sock.send(data + '\n')
-
-    # receive data from the server and shut down.
-    received = str(sock.recv(1024)).split()
-
-    print 'Sent:        {}'.format(data)
-    print 'Received:    {}'.format(received[0] + ', ' + received[1])
-
-    hostport = SetupNewHostPort(received)
-
-    StartServer(hostport[0], hostport[1])
-
-def SetupNewHostPort(hostport):
-    host = hostport[0]
-    port = int(hostport[1])
-    return host, port
-
 class TCPHandler(SocketServer.BaseRequestHandler):
+
     def handle(self):
+        global tcp_velocity
+        global tcp_command
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024).strip()
-        #Make calls to the API here. This should handle all the commands.
-        #Here are some fake commands for now.
-        if(self.data == 'Forward'):
-            print 'Forward'
-        elif(self.data == 'Left'):
-            print 'Left'
-        elif(self.data == 'Right'):
-            print 'Right'
-        elif(self.data == 'Backward'):
-            print 'Backward'
-
-
-
-def StartServer(host, port):
-    # create the server, binding the localhost to the assigned port
-    server = SocketServer.TCPServer((host, port), TCPHandler)
-    print 'Opening Port on: ', port, '...\n'
-    # activate the server and keep it running until told not to.
-    server.serve_forever()
-
-
-
-def APICommand(command):
-    print ('This is a command that will be sent to the API.', command)
+        # Make calls to the API here. This should handle all the commands.
+        # Here are some fake commands for now.
+        self.data = self.data.split(' ')
+        tcp_command = int(self.data[0])
+        tcp_velocity = int(self.data[1]) / 100
+        self.request.send(b'Got it')
+        self.request.close()
 
 
 
@@ -107,5 +198,7 @@ def APICommand(command):
 # function(s) and destroys it at the end of the execution.
 # Note that only one instance of Robot should be created in
 # a controller program.
+
+
 controller = TCPIPControl()
 controller.run()

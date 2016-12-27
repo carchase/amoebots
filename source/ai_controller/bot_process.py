@@ -25,12 +25,14 @@ def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
             #    'origin': ADDRESS,
             #    'type': 'result',
             #    'message': 'Connection successful'})
-            
-            PORT.write(bytes("5 150", "utf-8"))
 
             RESPONSE = PORT.readline().strip().decode()
 
             if not RESPONSE == '':
+                # Clean out the buffer
+                while PORT.inWaiting() > 0:
+                    RESPONSE = RESPONSE + PORT.read(PORT.inWaiting()).strip().decode()
+
                 COM_INPUT.put({
                     'destination': 'COM_INPUT',
                     'origin': ADDRESS,
@@ -43,7 +45,7 @@ def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                     'origin': ADDRESS,
                     'type': 'command',
                     'message': 'failure'})
-            
+                
             PORT.close()
             
     except:
@@ -99,66 +101,90 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
             'origin': ADDRESS,
             'type': 'info',
             'message': 'connected to robot'})
+
+        # establish connection            
+        RESPONSE = PORT.readline().strip().decode()
+        while PORT.inWaiting() > 0:
+            RESPONSE = RESPONSE + PORT.read(PORT.inWaiting()).strip().decode()
     
         while True:
-            
-            PORT.write(bytes("1 150", "utf-8"))
-            
-            sleep(5)
+            waitForCommands(.5, PROCESS_QUEUE)
+
+            # there is data in the queue
+            while not PROCESS_QUEUE.empty():
+                message = PROCESS_QUEUE.get()
+
+                # make sure the message is a list object
+                if isinstance(message, dict):
+
+                    # check if the message is a command
+                    if message.get('type') == 'command':
                         
-            RESPONSE = PORT.readline().strip().decode()
-            
-            if RESPONSE == '':   
-                    
+                        COM_INPUT.put({
+                            'destination': 'MAIN_INPUT',
+                            'origin': ADDRESS,
+                            'type': 'info',
+                            'message': 'given command ' + message.get('message')})
+                
+                        PORT.write(bytes(message.get('message'), "utf-8"))
+                        
+                        sleep(2.5)
+                        
+                        RESPONSE = ""
+                        while PORT.inWaiting() > 0:
+                            RESPONSE = RESPONSE + PORT.read(PORT.inWaiting()).strip().decode()
+                            
+                        if RESPONSE == '':
+                            COM_INPUT.put({
+                                'destination': 'MAIN_INPUT',
+                                'origin': ADDRESS,
+                                'type': 'command',
+                                'message': 'failure'})
+                            
+                            return 0
+                        
+                        else:
+                            COM_INPUT.put({
+                                'destination': 'MAIN_INPUT',
+                                'origin': ADDRESS,
+                                'type': 'result',
+                                'message': RESPONSE.replace('\r\n', ' ')})
+
+def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
+    # get the connection data
+    data = PROCESS_QUEUE.get()
+    
+    while True:
+        waitForCommands(.5, PROCESS_QUEUE)
+
+        # there is data in the queue
+        while not PROCESS_QUEUE.empty():
+            message = PROCESS_QUEUE.get()
+
+            # check if the message is a command
+            if message.get('type') == 'command':
+                
                 COM_INPUT.put({
                     'destination': 'MAIN_INPUT',
                     'origin': ADDRESS,
-                    'type': 'command',
-                    'message': 'failure'})
-                
-                return 0;
-            
-            else:
-        
+                    'type': 'info',
+                    'message': 'given command ' + message.get('message')})
+
+                # open a socket
+                SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                SOCKET.connect((data.get('ip'), int(ADDRESS[4:])))
+                SOCKET.send(bytes(message.get('message'), "utf-8"))
+                RESPONSE = SOCKET.recv(1024).strip().decode()
+                SOCKET.close()
+                sleep(3)
+
                 COM_INPUT.put({
-                    'destination': 'MAIN_INPUT',
+                    'destination': 'COM_INPUT',
                     'origin': ADDRESS,
                     'type': 'result',
                     'message': RESPONSE})
 
-def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as SOCKET:
-        
-        SOCKET.connect(("localhost", ADDRESS[4:]))
-
-        COM_INPUT.put({
-            'destination': 'MAIN_INPUT',
-            'origin': ADDRESS,
-            'type': 'info',
-            'message': 'connected to socket'})
-    
-        while True:
-            
-            SOCKET.send(bytes("1 150", "utf-8"))
-            
-            sleep(5)
-                        
-            RESPONSE = SOCKET.recv(1024).strip().decode()
-            
-            if RESPONSE == '':   
-                    
-                COM_INPUT.put({
-                    'destination': 'COM_INPUT',
-                    'origin': ADDRESS,
-                    'type': 'command',
-                    'message': 'failure'})
-                
-                return 0;
-            
-            else:
-        
-                COM_INPUT.put({
-                    'destination': 'COM_INPUT',
-                    'origin': ADDRESS,
-                    'type': 'result',
-                    'message': DECODED_RESPONSE})
+def waitForCommands(timeout, input):
+    # wait until a command has been issued
+    while input.empty():
+        sleep(timeout)

@@ -109,10 +109,10 @@ class TCPIPControl(Robot):
         return host, port
 
     def run(self):
-        host, port = '10.100.213.34', 5000
+        host, port = '192.168.2.82', 5000
         # data = 'My ID is: 1'.join(sys.argv[1:])
-        data = (b'{\"type\": \"SMORES\",\"id\": \"2\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) +  b'\"}')
-        # data = 'My ID is: 2'
+        # data = (b'{\"type\": \"SMORES\",\"id\": \"2\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) +  b'\"}')
+        data = 'My ID is: 2'
 
         # create a socket (SOCK_STREAM means a TCP socket)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

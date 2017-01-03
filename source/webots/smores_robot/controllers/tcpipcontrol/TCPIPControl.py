@@ -13,7 +13,7 @@ from controller import Robot
 import socket
 import SocketServer
 from time import sleep
-import threading
+from threading import Thread
 
 
 tcp_command = None
@@ -38,53 +38,53 @@ class TCPIPControl(Robot):
 
     # User defined function for initializing and running
     # the TCPIPControl class
-    def handleInput(self, cmd, vel):
+    def handle_input(self, cmd, vel):
         if cmd == 1:
             print 'Moving forward'
-            self.moveWheels(-vel, -vel, True)
+            self.move_wheels(-vel, -vel, True)
         elif cmd == 2:
             print 'Moving backward'
-            self.moveWheels(vel, vel, True)
+            self.move_wheels(vel, vel, True)
         elif cmd == 3:
             print 'Turning left'
-            self.moveWheels(0, vel, True)
+            self.move_wheels(0, vel, True)
         elif cmd == 4:
             print 'Turning right'
-            self.moveWheels(vel, 0, True)
+            self.move_wheels(vel, 0, True)
         elif cmd == 5:
             print 'Stopping'
-            self.moveWheels(0, 0, False)
+            self.move_wheels(0, 0, False)
         elif cmd == 6:
             print 'Stopping arm'
-            self.moveArm(0, False)
+            self.move_arm(0, False)
         elif cmd == 7:
             print 'Moving arm'  # up?
-            self.moveArm(vel, True)
+            self.move_arm(vel, True)
         elif cmd == 8:
             print 'Moving arm'  # down?
-            self.moveArm(-vel, True)
+            self.move_arm(-vel, True)
         elif cmd == 11:
             print 'Moving forward'
-            self.moveWheels(vel, vel, False)
+            self.move_wheels(vel, vel, False)
         elif cmd == 12:
             print 'Moving backward'
-            self.moveWheels(-vel, -vel, False)
+            self.move_wheels(-vel, -vel, False)
         elif cmd == 13:
             print 'Turning left'
-            self.moveWheels(0, vel, False)
+            self.move_wheels(0, vel, False)
         elif cmd == 14:
             print 'Turning right'
-            self.moveWheels(vel, 0, False)
+            self.move_wheels(vel, 0, False)
         elif cmd == 15:
             print 'Moving arm'  # up?
-            self.moveArm(vel, False)
+            self.move_arm(vel, False)
         elif cmd == 16:
             print 'Moving arm'  # down?
-            self.moveArm(-vel, False)
+            self.move_arm(-vel, False)
         else:
             print 'Invalid command ' + str(cmd)
 
-    def moveWheels(self, left, right, delay):
+    def move_wheels(self, left, right, delay):
         self.left_motor.setVelocity(left)
         self.right_motor.setVelocity(right)
         if delay:
@@ -92,28 +92,28 @@ class TCPIPControl(Robot):
                 self.step(2000)
             else:
                 self.step(1000)
-            self.moveWheels(0, 0, False)
+            self.move_wheels(0, 0, False)
         else:
             self.tcp_received = False
 
-    def moveArm(self, velocity, delay):
+    def move_arm(self, velocity, delay):
         self.top_motor.setPosition(velocity / 2.0)
         if delay:
             self.step(500)
-            self.moveArm(0, False)
+            self.move_arm(0, False)
         else:
             self.tcp_received = False
 
-    def SetupNewHostPort(self, hostport):
+    def setup_new_host_port(self, hostport):
         host = hostport[0]
         port = int(hostport[1])
         return host, port
 
-    def run(self):
-        host, port = 'localhost', 5000
+    def connect_to_controller(self):
+        host, port = '192.168.2.82', 5000
         # data = 'My ID is: 1'.join(sys.argv[1:])
-        data = (b'{\"type\": \"SMORES\",\"id\": \"1\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) +  b'\"}')
-        # data = 'My ID is: 1'
+        # data = (b'{\"type\": \"SMORES\",\"id\": \"1\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) + b'\"}')
+        data = 'My ID is: 1'
 
         # create a socket (SOCK_STREAM means a TCP socket)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -127,15 +127,23 @@ class TCPIPControl(Robot):
         print 'Sent:        {}'.format(data)
         print 'Received:    {}'.format(received[0] + ', ' + received[1])
 
-        hostport = self.SetupNewHostPort(received)
+        hostport = self.setup_new_host_port(received)
         server = SocketServer.TCPServer((hostport[0], hostport[-1]), TCPHandler)
 
         print 'Opening Port on: ', hostport[1], '...\n'
+        return server
+
+    def run(self):
+        # calls the function which connects the robot to the controller
+        server = self.connect_to_controller()
 
         # You should insert a getDevice-like function in order to get the
         # instance of a device of the robot. Something like:
         #  led = self.getLed('ledname')
 
+        # So, the way this is handled here is stupid, but I have no choice because this is
+        # how the devs of Webots decided to make their controller. Anyway, here is the list
+        # of commands that will control the different motors on the robot.
         self.top_motor = self.getMotor("Bending Motor")
         self.top_motor.setPosition(float('0'))
         self.left_motor = self.getMotor("Left Wheel Motor")
@@ -172,7 +180,7 @@ class TCPIPControl(Robot):
 
             # if there was a request, do the command
             if self.tcp_received:
-                self.handleInput(tcp_command, tcp_velocity)
+                self.handle_input(tcp_command, tcp_velocity)
 
             self.step(500)
 
@@ -191,27 +199,27 @@ class TCPHandler(SocketServer.BaseRequestHandler):
         self.request.send(b'Got it')
         self.request.close()
 
-class Thread(threading.Thread):
-    #This class is for multi-threading.
-    #Use this thread like in the following example.
-    #thread1 = myThread(1, "Thread-1", 1)
-    #
-    def __init__(self, ThreadID, name, counter):
-        self.ThreadID = ThreadID
-        self.name = name
-        self.counter = counter
-    def run(self):
-        print 'Starting: ', self.name
-        print_time(self.name, self.counter, 5)
-        print "Exiting " + self.name
+# class Thread(threading.Thread):
+#     #This class is for multi-threading.
+#     #Use this thread like in the following example.
+#     #thread1 = myThread(1, "Thread-1", 1)
+#     #
+#     def __init__(self, ThreadID, name, counter):
+#         self.ThreadID = ThreadID
+#         self.name = name
+#         self.counter = counter
+#     def run(self):
+#         print 'Starting: ', self.name
+#         print_time(self.name, self.counter, 5)
+#         print "Exiting " + self.name
 
-def print_time(threadName, delay, counter):
-    while counter:
-        if exitFlag:
-            threadName.exit()
-        time.sleep(delay)
-        print "%s: %s" % (threadName, time.ctime(time.time()))
-        counter -= 1
+# def print_time(threadName, delay, counter):
+#     while counter:
+#         if exitFlag:
+#             threadName.exit()
+#         time.sleep(delay)
+#         print "%s: %s" % (threadName, time.ctime(time.time()))
+#         counter -= 1
 # This is the main program of your controller.
 # It creates an instance of your Robot subclass, launches its
 # function(s) and destroys it at the end of the execution.

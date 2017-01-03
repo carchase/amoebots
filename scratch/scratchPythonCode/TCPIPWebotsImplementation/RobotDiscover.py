@@ -42,7 +42,7 @@ class TCPHandler(SocketServer.BaseRequestHandler):
 
 
 if __name__ == '__main__':
-    host, port = 'localhost', 5000
+    host, port = '192.168.2.82', 5000
 
     #create the server, binding the local host to 5000
     server = SocketServer.TCPServer((host, port), TCPHandler)

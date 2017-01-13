@@ -40,29 +40,40 @@ void loop() {
 	uint16_t blocks;
 	char buf[bufSize];
 
-	blocks = pixy.getBlocks();
-	i++;
+	while (Serial.available() > 0) {
+		blocks = pixy.getBlocks();
+		i++;
 
-	if(i % waitFrames == 0) {
-		if (blocks) {
-			// sprintf(buf, "Detected %d blocks\n", blocks);
-			// Serial.print(buf);
-			if (updateData(0, blocks)) {
-				sprintf(buf, "Update completed, detected %d blocks\n", blocks);
-				Serial.print(buf);
+		if(i % waitFrames == 0) {
+			if (blocks) {
+				// sprintf(buf, "Detected %d blocks\n", blocks);
+				// Serial.print(buf);
+/*				if (updateData(0, blocks)) {
+					sprintf(buf, "Update completed, detected %d blocks\n", blocks);
+					Serial.print(buf);
+				} else {
+					Serial.print("Error updating data\n");
+				}*/
+				for (int j = 0; j < numCameras; j++) {
+					if (!updateData(j, blocks)) {
+						Serial.print("Error updating camera " + j + "\n");
+					}
+				}
 			} else {
-				Serial.print("Error updating data\n");
+				// Serial.print("No blocks detected\n");
 			}
-		} else {
-			Serial.print("No blocks detected\n");
 		}
+
+		int cmd = Serial.parseInt();//1,2,3,4,5,6-forward backward left right
+		int vel = Serial.parseInt();//- stop standby, v range from 130-255
+		handleInput(cmd);
 	}
-	if (i % reportFrames == 0) {
+/*	if (i % reportFrames == 0) {
 		delay(1000);
 		char buff[bigBufSize];
 		sprintf(buff, report());
 		Serial.print(buff);
-	}
+	}*/
 }
 
 /*
@@ -79,6 +90,7 @@ int initialize() {
 
 /*
 	Updates the camera object data with the blocks returned from the pixy
+	Returns 1 if update was successful, 0 if update failed
 */
 int updateData(int cam, uint16_t blocks) {
 	// check if cam is a valid camera id
@@ -139,4 +151,16 @@ char* report() {
 	// reinitialize data
 	initialize();
 	return output;
+}
+
+void handleInput (int cmd) {
+	switch (cmd) {
+		case 1:
+			char buff[bigBufSize];
+			sprintf(buff, report());
+			Serial.println(buff);
+			break;
+		default:
+			Serial.println("Unsupported command: " + String(cmd));
+	}
 }

@@ -2,7 +2,7 @@
 #include "PixyUART.h"
 
 const int waitFrames = 50;		// check for blocks every waitFrames frames (Pixy runs at 50 fps)
-const int reportFrames = 500;	// send report every reportFrames frames (Pixy runs at 50 fps)
+const int reportFrames = 50;	// send report every reportFrames frames (Pixy runs at 50 fps)
 const int numCameras = 1;
 const int numObjs = 7;
 const int bufSize = 32;
@@ -40,40 +40,35 @@ void loop() {
 	uint16_t blocks;
 	char buf[bufSize];
 
-	while (Serial.available() > 0) {
-		blocks = pixy.getBlocks();
-		i++;
+	blocks = pixy.getBlocks();
+	i++;
 
-		if(i % waitFrames == 0) {
-			if (blocks) {
-				// sprintf(buf, "Detected %d blocks\n", blocks);
+	if(i % waitFrames == 0) {
+		if (blocks) {
+			// sprintf(buf, "Detected %d blocks\n", blocks);
+			// Serial.print(buf);
+			if (updateData(0, blocks)) {
+				// sprintf(buf, "Update completed, detected %d blocks\n", blocks);
 				// Serial.print(buf);
-/*				if (updateData(0, blocks)) {
-					sprintf(buf, "Update completed, detected %d blocks\n", blocks);
-					Serial.print(buf);
-				} else {
-					Serial.print("Error updating data\n");
-				}*/
-				for (int j = 0; j < numCameras; j++) {
-					if (!updateData(j, blocks)) {
-						Serial.print("Error updating camera " + j + "\n");
-					}
-				}
 			} else {
-				// Serial.print("No blocks detected\n");
+				// Serial.print("Error updating data\n");
 			}
+			// for (int j = 0; j < numCameras; j++) {
+			// 	if (!updateData(j, blocks)) {
+			// 		Serial.print("Error updating camera " + j + "\n");
+			// 	}
+			// }
+		} else {
+			// Serial.print("No blocks detected\n");
 		}
-
-		int cmd = Serial.parseInt();//1,2,3,4,5,6-forward backward left right
-		int vel = Serial.parseInt();//- stop standby, v range from 130-255
-		handleInput(cmd);
 	}
-/*	if (i % reportFrames == 0) {
+
+	if (i % reportFrames == 0) {
 		delay(1000);
 		char buff[bigBufSize];
 		sprintf(buff, report());
 		Serial.print(buff);
-	}*/
+	}
 }
 
 /*
@@ -153,14 +148,14 @@ char* report() {
 	return output;
 }
 
-void handleInput (int cmd) {
-	switch (cmd) {
-		case 1:
-			char buff[bigBufSize];
-			sprintf(buff, report());
-			Serial.println(buff);
-			break;
-		default:
-			Serial.println("Unsupported command: " + String(cmd));
-	}
-}
+// void handleInput (int cmd) {
+// 	switch (cmd) {
+// 		case 1:
+// 			char buff[bigBufSize];
+// 			sprintf(buff, report());
+// 			Serial.println(buff);
+// 			break;
+// 		default:
+// 			Serial.println("Unsupported command: " + String(cmd));
+// 	}
+// }

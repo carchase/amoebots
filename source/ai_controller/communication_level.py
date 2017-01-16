@@ -120,4 +120,4 @@ def com_level_main(COM_INPUT, MOV_INPUT, MAIN_INPUT):
                 CON_DICT[ADDRESS] = ['checking', PROCESS_QUEUE, BOT_PROCESS]
             
         # sleep so that this is not constantly eating processing time
-        sleep(.5)
+        sleep(.1)

@@ -44,109 +44,43 @@ def movement_level_main(MOV_INPUT, COM_INPUT, AI_INPUT, MAIN_INPUT):
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '2 150'
+                        'message': '1 150 2000',
+                        'duration': 2
                     })
                     COM_INPUT.put({
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '1 150'
+                        'message': '2 150 2000',
+                        'duration': 2
                     })
                     COM_INPUT.put({
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '3 150'
+                        'message': '3 150 2000',
+                        'duration': 2
                     })
                     COM_INPUT.put({
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '4 150'
+                        'message': '4 150 2000',
+                        'duration': 2
                     })
                     COM_INPUT.put({
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '7 150'
+                        'message': '5 150 2000',
+                        'duration': 2
                     })
                     COM_INPUT.put({
                         'destination': RESPONSE['origin'],
                         'type': 'command',
                         'origin': 'MOV_LEVEL',
-                        'message': '8 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '2 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '1 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '3 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '4 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '7 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '8 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '2 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '1 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '3 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '4 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '7 150'
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '8 150'
+                        'message': '6 150 2000',
+                        'duration': 2
                     })
 
                 elif RESPONSE.get('type') == 'command' and RESPONSE['message'] == 'failure':
@@ -175,6 +109,7 @@ def movement_level_main(MOV_INPUT, COM_INPUT, AI_INPUT, MAIN_INPUT):
                 # send this un-handled message to main
                 # for raw output to the screen
                 MAIN_INPUT.put(RESPONSE)
+                
         # Do rest of stuff
 
-        sleep(.5)
+        sleep(.1)

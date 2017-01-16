@@ -48,12 +48,15 @@ def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                 
             PORT.close()
             
-    except:
-        COM_INPUT.put({
-            'destination': 'COM_INPUT',
-            'origin': ADDRESS,
-            'type': 'command',
-            'message': 'failure'})
+    except Exception as e:
+        COM_INPUT.put({'destination': 'COM_INPUT',
+                        'origin': ADDRESS,
+                        'type': 'command',
+                        'message': 'failure'})
+        COM_INPUT.put({'destination': 'MAIN_INPUT',
+                        'origin': ADDRESS,
+                        'type': 'log',
+                        'message': e})
         
     return 0
 
@@ -86,11 +89,15 @@ def bot_process_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                 'type': 'command',
                 'message': 'failure'})
 
-    except:
+    except Exception as e:
         COM_INPUT.put({'destination': 'COM_INPUT',
                         'origin': ADDRESS,
                         'type': 'command',
                         'message': 'failure'})
+        COM_INPUT.put({'destination': 'MAIN_INPUT',
+                        'origin': ADDRESS,
+                        'type': 'log',
+                        'message': e})
     return 0
 
 def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
@@ -108,7 +115,7 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
             RESPONSE = RESPONSE + PORT.read(PORT.inWaiting()).strip().decode()
     
         while True:
-            waitForCommands(.5, PROCESS_QUEUE)
+            waitForCommands(.1, PROCESS_QUEUE)
 
             # there is data in the queue
             while not PROCESS_QUEUE.empty():
@@ -128,7 +135,7 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                 
                         PORT.write(bytes(message.get('message'), "utf-8"))
                         
-                        sleep(2.5)
+                        sleep(message.get('duration') + 1)
                         
                         RESPONSE = ""
                         while PORT.inWaiting() > 0:
@@ -155,7 +162,7 @@ def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
     data = PROCESS_QUEUE.get()
     
     while True:
-        waitForCommands(.5, PROCESS_QUEUE)
+        waitForCommands(.1, PROCESS_QUEUE)
 
         # there is data in the queue
         while not PROCESS_QUEUE.empty():

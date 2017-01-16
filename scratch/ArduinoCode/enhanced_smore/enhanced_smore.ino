@@ -90,35 +90,35 @@ String action(int act, int speed, int del){
 
   switch(act){
     case 1:
-      move(1,v,0);
-      move(0,v,1);
-      message += "Moving Forward for " + del + " mS";
+      move(1,speed,0);
+      move(0,speed,1);
+      message += "Moving Forward for " + del + String(" mS");
       break;
     case 2:
-      move(1,v,1);
-      move(0,v,0);
-      message += "Moving Backward " + del + " mS"; 
+      move(1,speed,1);
+      move(0,speed,0);
+      message += "Moving Backward " + del + String(" mS"); 
       break;
     case 3:
-      move(1,vt,1);
-      move(0,vt,1);
-      message += "Turning Left " + del + " mS";
+      move(1,speed,1);
+      move(0,speed,1);
+      message += "Turning Left " + del + String(" mS");
       break;
     case 4:
-      move(1,vt,0);
-      move(0,vt,0);
-      message += "Turning Right " + del + " mS";
+      move(1,speed,0);
+      move(0,speed,0);
+      message += "Turning Right " + del + String(" mS");
       break;
     case 5:
-      move(2,vp,1);
-      move(3,vp,1);
-      message += "Moving the arm " + del + " mS in direction 1";
+      move(2,speed,1);
+      move(3,speed,1);
+      message += "Moving the arm " + del + String(" mS in direction 1");
       whichStop = 1;
       break;
     case 6:
-      move(2,vp,0);
-      move(3,vp,0);
-      message += "Moving the arm " + del + " mS in direction 2";
+      move(2,speed,0);
+      move(3,speed,0);
+      message += "Moving the arm " + del + String(" mS in direction 2");
       whichStop = 1;
     case 7:
       message += "Move key out";
@@ -136,6 +136,8 @@ String action(int act, int speed, int del){
 
   //indicates which stop function is called
   Stop(whichStop);
+
+  return message;
 }
 
 void Stop(int which){

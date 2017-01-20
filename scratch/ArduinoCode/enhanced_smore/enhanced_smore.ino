@@ -58,7 +58,7 @@ void setup(){
   pinMode(DIN1, OUTPUT);
 
   Serial.begin(115200);
-  Serial.println("Hello World");
+  Serial.println("Robot is Online");
 }
 
 //command list:(command, speed)
@@ -92,33 +92,33 @@ String action(int act, int speed, int del){
     case 1:
       move(1,speed,0);
       move(0,speed,1);
-      message += "Moving Forward for " + del + String(" mS");
+      message += "Moving Forward for " + String(del);
       break;
     case 2:
       move(1,speed,1);
       move(0,speed,0);
-      message += "Moving Backward " + del + String(" mS"); 
+      message += "Moving Backward for " + String(del); 
       break;
     case 3:
       move(1,speed,1);
       move(0,speed,1);
-      message += "Turning Left " + del + String(" mS");
+      message += "Turning Left for " + String(del);
       break;
     case 4:
       move(1,speed,0);
       move(0,speed,0);
-      message += "Turning Right " + del + String(" mS");
+      message += "Turning Right for " + String(del);
       break;
     case 5:
       move(2,speed,1);
       move(3,speed,1);
-      message += "Moving the arm " + del + String(" mS in direction 1");
+      message += "Moving the arm in direction 1 for " + String(del);
       whichStop = 1;
       break;
     case 6:
       move(2,speed,0);
       move(3,speed,0);
-      message += "Moving the arm " + del + String(" mS in direction 2");
+      message += "Moving the arm in direction 2 for " + String(del);
       whichStop = 1;
     case 7:
       message += "Move key out";

@@ -67,23 +67,27 @@ class eyebot_test (Robot):
 			left_dist = left_ds.getValue()
 
 			# Process sensor data here.
-			print "right: " + str(right_dist)
-			print "left: " + str(left_dist)
+			# print "right: " + str(right_dist)
+			# print "left: " + str(left_dist)
 
 			# Enter here functions to send actuator commands, like:
 			#  led.set(1)
-			move('forward')
-			time.sleep(1)
-			move('backward')
-			time.sleep(1)
-			move('left')
-			time.sleep(1)
-			move('right')
-			time.sleep(1)
+			print 'moving forward'
+			move('forward', left_wheel, right_wheel, back_wheel)
+			self.step(1000)
+			print 'moving backwards'
+			move('backward', left_wheel, right_wheel, back_wheel)
+			self.step(1000)
+			print 'turning left'
+			move('left', left_wheel, right_wheel, back_wheel)
+			self.step(1000)
+			print 'turning right'
+			move('right', left_wheel, right_wheel, back_wheel)
+			self.step(1000)
 
 		# Enter here exit cleanup code
 
-def move(direction):
+def move(direction, left_wheel, right_wheel, back_wheel):
 	if direction == 'forward':
 		left_wheel.setVelocity(1)
 		right_wheel.setVelocity(1)

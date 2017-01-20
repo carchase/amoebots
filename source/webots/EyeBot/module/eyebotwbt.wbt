@@ -3,8 +3,8 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation -0.935369 0.293415 0.197467 0.590185
-  position 0.115384 0.678731 1.02078
+  orientation -0.365769 0.90458 0.218972 0.47389
+  position 0.324078 0.2461 0.664599
 }
 Background {
   skyColor [
@@ -59,172 +59,195 @@ DEF WALL_4 Solid {
   boundingObject USE WALL_SHAPE
 }
 Robot {
+  translation 0 0.1 0
   children [
-    Transform {
-      translation 0 0.07 0
+    DEF FRONT_CAM Camera {
+      translation 0 0.02667 0.05715
+      rotation 0 1 0 3.14159
       children [
-        DEF RIGHT_CONN Connector {
-          translation -0.05 0 0
-          name "right connector"
-          isLocked TRUE
-          autoLock TRUE
-        }
-        DEF LEFT_CONN Connector {
-          translation 0.05 0 0
-          name "left connector"
-          isLocked TRUE
-          autoLock TRUE
-        }
-        DEF BACK_CONN Connector {
-          translation 0 0 -0.05
-          name "back connector"
-          isLocked TRUE
-          autoLock TRUE
-        }
-        DEF FRONT_CONN Connector {
-          translation 0 0 0.05
-          name "front connector"
-          isLocked TRUE
-          autoLock TRUE
-        }
-        DEF RIGHT_SONAR DistanceSensor {
-          translation -0.05 0 0
-          rotation 0 1 0 3.14159
-          children [
-            Shape {
-              geometry Box {
-                size 0.01 0.01 0.01
-              }
-            }
-          ]
-          name "right distance sensor"
-          lookupTable [
-            0 0 0
-            1 1000 0
-          ]
-          type "sonar"
-          numberOfRays 2
-        }
-        DEF LEFT_SONAR DistanceSensor {
-          translation 0.05 0 0
-          children [
-            Shape {
-              geometry Box {
-                size 0.01 0.01 0.01
-              }
-            }
-          ]
-          name "left distance sensor"
-          lookupTable [
-            0 0 0
-            1 1000 0
-          ]
-          type "sonar"
-          numberOfRays 2
-        }
-        DEF WHEEL_TRANSFORM Transform {
-          translation 0 -0.03 0
-          rotation 0 0 1 1.5708
-          children [
-            HingeJoint {
-              device [
-                RotationalMotor {
-                  name "back wheel motor"
-                }
-              ]
-              endPoint Solid {
-                translation 0 0 -0.04
-                rotation 1 0 0 1.5708
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                      }
-                    }
-                    geometry Cylinder {
-                      height 0.01
-                      radius 0.03
-                    }
-                  }
-                ]
-                name "LEFT_WHEEL"
-              }
-            }
-            HingeJoint {
-              device [
-                RotationalMotor {
-                  name "left wheel motor"
-                }
-              ]
-              endPoint Solid {
-                translation 0 -0.03 0.02
-                rotation 1 0 0 -0.5236
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                      }
-                    }
-                    geometry Cylinder {
-                      height 0.01
-                      radius 0.03
-                    }
-                  }
-                ]
-                name "LEFT_WHEEL"
-              }
-            }
-            HingeJoint {
-              device [
-                RotationalMotor {
-                  name "right wheel motor"
-                }
-              ]
-              endPoint Solid {
-                translation 0 0.03 0.02
-                rotation 1 0 0 0.5236
-                children [
-                  Shape {
-                    appearance Appearance {
-                      material Material {
-                      }
-                    }
-                    geometry Cylinder {
-                      height 0.01
-                      radius 0.03
-                    }
-                  }
-                ]
-                name "LEFT_WHEEL"
-              }
-            }
-          ]
-        }
-        DEF FRONT_CAM Camera {
-          translation 0 0 0.05
-          rotation 0 1 0 3.14159
-          children [
-            Shape {
-              geometry Box {
-                size 0.01 0.01 0.01
-              }
-            }
-          ]
-        }
-        DEF BODY Shape {
+        Shape {
           appearance Appearance {
             material Material {
-              diffuseColor 1 0.5 0.5
-              emissiveColor 0.5 0 0
+              diffuseColor 0 0 0
             }
           }
           geometry Box {
-            size 0.1 0.1 0.1
+            size 0.01 0.01 0.01
           }
         }
       ]
     }
+    DEF WHEEL_TRANSFORM Transform {
+      translation 0 -0.035 0
+      rotation 0 0 1 1.5708
+      children [
+        HingeJoint {
+          device [
+            RotationalMotor {
+              name "back wheel motor"
+            }
+          ]
+          endPoint Solid {
+            translation 0 0 -0.04445
+            rotation 1 0 0 1.5708
+            children [
+              DEF BACK_WHEEL Shape {
+                appearance Appearance {
+                  material Material {
+                  }
+                }
+                geometry Cylinder {
+                  height 0.01
+                  radius 0.03
+                }
+              }
+            ]
+            name "BACK_WHEEL"
+            boundingObject USE BACK_WHEEL
+            physics Physics {
+            }
+          }
+        }
+        HingeJoint {
+          device [
+            RotationalMotor {
+              name "left wheel motor"
+            }
+          ]
+          endPoint Solid {
+            translation 0 -0.0381 0.0254
+            rotation 1 0 0 -0.5236
+            children [
+              DEF LEFT_WHEEL Shape {
+                appearance Appearance {
+                  material Material {
+                  }
+                }
+                geometry Cylinder {
+                  height 0.01
+                  radius 0.03
+                }
+              }
+            ]
+            name "LEFT_WHEEL"
+            boundingObject USE LEFT_WHEEL
+            physics Physics {
+            }
+          }
+        }
+        HingeJoint {
+          device [
+            RotationalMotor {
+              name "right wheel motor"
+            }
+          ]
+          endPoint Solid {
+            translation 0 0.0381 0.0254
+            rotation 1 0 0 0.5236
+            children [
+              DEF RIGHT_WHEEL Shape {
+                appearance Appearance {
+                  material Material {
+                  }
+                }
+                geometry Cylinder {
+                  height 0.01
+                  radius 0.03
+                }
+              }
+            ]
+            name "RIGHT_WHEEL"
+            boundingObject USE RIGHT_WHEEL
+            physics Physics {
+            }
+          }
+        }
+      ]
+    }
+    DEF LEFT_SONAR DistanceSensor {
+      translation 0.05715 0 0
+      children [
+        Shape {
+          appearance Appearance {
+            material Material {
+              diffuseColor 0 0 0
+            }
+          }
+          geometry Box {
+            size 0.01 0.01 0.01
+          }
+        }
+      ]
+      name "left distance sensor"
+      lookupTable [
+        0 0 0
+        1 1000 0
+      ]
+      type "sonar"
+      numberOfRays 2
+    }
+    DEF RIGHT_SONAR DistanceSensor {
+      translation -0.05715 0 0
+      rotation 0 1 0 3.14159
+      children [
+        Shape {
+          appearance Appearance {
+            material Material {
+              diffuseColor 0 0 0
+            }
+          }
+          geometry Box {
+            size 0.01 0.01 0.01
+          }
+        }
+      ]
+      name "right distance sensor"
+      lookupTable [
+        0 0 0
+        1 1000 0
+      ]
+      type "sonar"
+      numberOfRays 2
+    }
+    DEF FRONT_CONN Connector {
+      translation 0 0 0.05715
+      name "front connector"
+      isLocked TRUE
+      autoLock TRUE
+    }
+    DEF BACK_CONN Connector {
+      translation 0 0 -0.05715
+      name "back connector"
+      isLocked TRUE
+      autoLock TRUE
+    }
+    DEF LEFT_CONN Connector {
+      translation 0.05715 0 0
+      name "left connector"
+      isLocked TRUE
+      autoLock TRUE
+    }
+    DEF RIGHT_CONN Connector {
+      translation -0.05715 0 0
+      name "right connector"
+      isLocked TRUE
+      autoLock TRUE
+    }
+    DEF BODY Shape {
+      appearance Appearance {
+        material Material {
+          diffuseColor 1 0.3 0.2
+          emissiveColor 0.5 0 0
+        }
+      }
+      geometry Box {
+        size 0.1143 0.1143 0.1143
+      }
+    }
   ]
   name "EyeBot"
+  boundingObject USE BODY
+  physics Physics {
+  }
   controller "eyebot_test"
 }

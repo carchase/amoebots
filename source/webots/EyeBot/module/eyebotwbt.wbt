@@ -3,8 +3,8 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation -0.430258 0.858209 0.279921 1.01436
-  position 0.402459 0.357858 0.341741
+  orientation -0.935369 0.293415 0.197467 0.590185
+  position 0.115384 0.678731 1.02078
 }
 Background {
   skyColor [
@@ -226,4 +226,5 @@ Robot {
     }
   ]
   name "EyeBot"
+  controller "eyebot_test"
 }

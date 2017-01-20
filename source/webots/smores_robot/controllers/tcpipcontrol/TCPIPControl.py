@@ -22,91 +22,130 @@ queue = Queue()
 # for pushing or pulling of commands.
 queue_free = True
 
+# variables for the motors
+top_motor = None
+left_motor = None
+right_motor = None
+top_conn = None
+left_conn = None
+right_conn = None
+back_conn = None
+
 # Here is the main class of your controller.
 # This class defines how to initialize and how to run your controller.
 # Note that this class derives Robot and so inherits all its functions
 
 class TCPIPControl(Robot):
     # The following variables are all
-    top_motor = None
-    left_motor = None
-    right_motor = None
-    top_conn = None
-    left_conn = None
-    right_conn = None
-    back_conn = None
-    tcp_received = False
-
-    tcp_command = None
-    tcp_velocity = None
+    # top_motor = None
+    # left_motor = None
+    # right_motor = None
+    # top_conn = None
+    # left_conn = None
+    # right_conn = None
+    # back_conn = None
+    # tcp_received = False
+    #
+    # tcp_command = None
+    # tcp_velocity = None
 
     # User defined function for initializing and running
     # the TCPIPControl class
-    def handle_input(self, cmd, vel):
+    def handle_input(self, cmd, vel, delay):
+        global top_motor
+        global left_motor
+        global right_motor
+
+        top_motor = self.getMotor("Bending Motor")
+        # top_motor.setPosition(float('inf'))
+        left_motor = self.getMotor("Left Wheel Motor")
+        # left_motor.setPosition(float('inf'))
+        right_motor = self.getMotor("Right Wheel Motor")
+        # right_motor.setPosition(float('inf'))
+
+        top_conn = self.getConnector("top conn")
+        top_conn.enablePresence(64)
+        left_conn = self.getConnector("left conn")
+        left_conn.enablePresence(64)
+        right_conn = self.getConnector("right conn")
+        right_conn.enablePresence(64)
+        back_conn = self.getConnector("back conn")
+        back_conn.enablePresence(64)
+
+        whichStop = 0
+
         if cmd == 1:
-            print 'Moving forward'
-            self.move_wheels(-vel, -vel, True)
+            self.move(left_motor, vel, 1)
+            self.move(right_motor, vel, 1)
+            message = 'Moving forward for ' + str(delay)
         elif cmd == 2:
-            print 'Moving backward'
-            self.move_wheels(vel, vel, True)
+            self.move(left_motor, vel, -1)
+            self.move(right_motor, vel, -1)
+            message = 'Moving backward for ' + str(delay)
         elif cmd == 3:
-            print 'Turning left'
-            self.move_wheels(0, vel, True)
+            self.move(left_motor, vel, 1)
+            self.move(right_motor, vel, -1)
+            message = 'Turning left for ' + str(delay)
         elif cmd == 4:
-            print 'Turning right'
-            self.move_wheels(vel, 0, True)
+            self.move(left_motor, vel, -1)
+            self.move(right_motor, vel, 1)
+            message = 'Turning right for ' + str(delay)
         elif cmd == 5:
-            print 'Stopping'
-            self.move_wheels(0, 0, False)
+            self.move(top_motor, vel, 1)
+            message = 'Moving the arm down ' + str(delay)
+            whichStop = 1
         elif cmd == 6:
-            print 'Stopping arm'
-            self.move_arm(0, False)
+            self.move(top_motor, vel, -1)
+            message = 'Moving the arm up ' + str(delay)
+            whichStop = 1
         elif cmd == 7:
-            print 'Moving arm'  # up?
-            self.move_arm(vel, True)
+            message = 'Move key out'
+            whichStop = 2
         elif cmd == 8:
-            print 'Moving arm'  # down?
-            self.move_arm(-vel, True)
-        elif cmd == 11:
-            print 'Moving forward'
-            self.move_wheels(vel, vel, False)
-        elif cmd == 12:
-            print 'Moving backward'
-            self.move_wheels(-vel, -vel, False)
-        elif cmd == 13:
-            print 'Turning left'
-            self.move_wheels(0, vel, False)
-        elif cmd == 14:
-            print 'Turning right'
-            self.move_wheels(vel, 0, False)
-        elif cmd == 15:
-            print 'Moving arm'  # up?
-            self.move_arm(vel, False)
-        elif cmd == 16:
-            print 'Moving arm'  # down?
-            self.move_arm(-vel, False)
+            message = 'Move key in'
+            whichStop = 2
         else:
-            print 'Invalid command ' + str(cmd)
+            message = 'Invalid command ' + str(cmd)
 
-    def move_wheels(self, left, right, delay):
-        self.left_motor.setVelocity(left)
-        self.right_motor.setVelocity(right)
-        if delay:
-            if right != 0 and left != 0:
-                self.step(2000)
-            else:
-                self.step(1000)
-            self.move_wheels(0, 0, False)
-        else:
-            self.tcp_received = False
+        # delay is used to allow the motor to move for a predetermined
+        # amount of time before it's turned off
+        self.step(delay)
 
-    def move_arm(self, velocity, delay):
-        self.top_motor.setPosition(velocity / 2.0)
-        if delay:
-            self.step(500)
-            self.move_arm(0, False)
-        else:
-            self.tcp_received = False
+        # indicates which stop function is called
+        if whichStop == 0:
+            right_motor.setVelocity(0)
+            left_motor.setVelocity(0)
+        elif whichStop == 1:
+            top_motor.setVelocity(0)
+
+        return message
+
+    def move(self, motor, speed, direction):
+        # move motor specific speed and direction
+        # speed: 0 is off, 255 is full speed
+        # direction: 1 clockwise, -1 counter-clockwise
+        motor.setPosition(float('inf'))
+        motor.setVelocity(direction * speed)
+
+    # def move_wheels(self, left, right, delay):
+    #     self.left_motor.setVelocity(left)
+    #     self.right_motor.setVelocity(right)
+    #     if delay:
+    #         if right != 0 and left != 0:
+    #             self.step(2000)
+    #         else:
+    #             self.step(1000)
+    #         self.move_wheels(0, 0, False)
+    #     else:
+    #         self.tcp_received = False
+    #
+    # def move_arm(self, velocity, delay):
+    #     self.top_motor.setPosition(velocity / 2.0)
+    #     if delay:
+    #         self.step(500)
+    #         self.move_arm(0, False)
+    #     else:
+    #         self.tcp_received = False
 
     def setup_new_host_port(self, hostport):
         host = hostport[0]
@@ -153,24 +192,24 @@ class TCPIPControl(Robot):
         # So, the way this is handled here is stupid, but I have no choice because this is
         # how the devs of Webots decided to make their controller. Anyway, here is the list
         # of commands that will control the different motors on the robot.
-        self.top_motor = self.getMotor("Bending Motor")
-        self.top_motor.setPosition(float('0'))
-        self.left_motor = self.getMotor("Left Wheel Motor")
-        self.left_motor.setPosition(float('inf'))
-        self.right_motor = self.getMotor("Right Wheel Motor")
-        self.right_motor.setPosition(float('inf'))
-
-        self.top_conn = self.getConnector("top conn")
-        self.top_conn.enablePresence(64)
-        self.left_conn = self.getConnector("left conn")
-        self.left_conn.enablePresence(64)
-        self.right_conn = self.getConnector("right conn")
-        self.right_conn.enablePresence(64)
-        self.back_conn = self.getConnector("back conn")
-        self.back_conn.enablePresence(64)
-
-        self.left_motor.setVelocity(0)
-        self.right_motor.setVelocity(0)
+        # self.top_motor = self.getMotor("Bending Motor")
+        # # self.top_motor.setPosition(float('0'))
+        # self.left_motor = self.getMotor("Left Wheel Motor")
+        # # self.left_motor.setPosition(float('inf'))
+        # self.right_motor = self.getMotor("Right Wheel Motor")
+        # # self.right_motor.setPosition(float('inf'))
+        #
+        # self.top_conn = self.getConnector("top conn")
+        # self.top_conn.enablePresence(64)
+        # self.left_conn = self.getConnector("left conn")
+        # self.left_conn.enablePresence(64)
+        # self.right_conn = self.getConnector("right conn")
+        # self.right_conn.enablePresence(64)
+        # self.back_conn = self.getConnector("back conn")
+        # self.back_conn.enablePresence(64)
+        #
+        # self.left_motor.setVelocity(0)
+        # self.right_motor.setVelocity(0)
         # The queue is where all the commands will be stored and accessed over TCP and in the Simulator.
         # The queue_free is a boolean that lets the program know when the queue is accessible.
         global queue
@@ -190,7 +229,7 @@ class TCPIPControl(Robot):
                 queue_free = True
                 # The first two commands are sent to the command function using the command
                 # type and then the velocity.
-                self.handle_input(int(command[0]), int(command[1])/100)
+                self.handle_input(int(command[0]), int(command[1])/100, int(command[2]))
                 # The command will execute for the specified duration of time.
                 self.step(int(command[2]))
             print 'loop executed'

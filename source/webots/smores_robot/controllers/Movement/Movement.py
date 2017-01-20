@@ -12,6 +12,14 @@
 from controller import Robot
 import time
 
+top_motor = None
+left_motor = None
+right_motor = None
+top_conn = None
+left_conn = None
+right_conn = None
+back_conn = None
+
 # Here is the main class of your controller.
 # This class defines how to initialize and how to run your controller.
 # Note that this class derives Robot and so inherits all its functions
@@ -20,6 +28,13 @@ class Movement (Robot):
   # User defined function for initializing and running
   # the Movement class
   def run(self):
+    global top_motor
+    global left_motor
+    global right_motor
+    global top_conn
+    global left_conn
+    global right_conn
+    global back_conn
 
     # You should insert a getDevice-like function in order to get the
     # instance of a device of the robot. Something like:
@@ -52,15 +67,12 @@ class Movement (Robot):
       #  val = ds.getValue()
 
       # read cmd, vel, delay here!
-      cmd = 1
-      vel = 1
-      delay = 1000
       
       # Process sensor data here.
       
       # Enter here functions to send actuator commands, like:
       #  led.set(1)
-      print action(self, cmd, vel, delay, left_motor, right_motor, top_motor)
+      print action(self, cmd, vel, delay)
     
     # Enter here exit cleanup code
 
@@ -68,7 +80,11 @@ class Movement (Robot):
 # vel indicates how fast motor will move
 # delay indicates the delay prior to the command being terminated
 # which may be used to indicate encoder position in the future
-def action(self, cmd, vel, delay, left_motor, right_motor, top_motor):
+def action(self, cmd, vel, delay):
+  global top_motor
+  global left_motor
+  global right_motor
+
   whichStop = 0
 
   if cmd == 1:
@@ -119,7 +135,6 @@ def action(self, cmd, vel, delay, left_motor, right_motor, top_motor):
 
 def move(self, motor, speed, direction):
   # move motor specific speed and direction
-  # motor: 0 for right motor, 1 for left motor, 2 for arm motor
   # speed: 0 is off, 255 is full speed
   # direction: 1 clockwise, -1 counter-clockwise
 

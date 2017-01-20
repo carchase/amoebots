@@ -15,20 +15,19 @@ import SocketServer
 from time import sleep
 from threading import Thread
 from multiprocessing import Process, Queue
-
-tcp_command = None
-tcp_velocity = None
-# Trying this queue out for the multithreading for handling
-# information between threads.
-# queue = Queue.Queue()
+# queue is where the commands are going to be pushed to and accessed between threads.
+# Currently trying out a global instead of passing the queue to the threads for now.
 queue = Queue()
-queue_free = False
+# queue_free is a boolean that will be letting hte program know when the queue is accessible
+# for pushing or pulling of commands.
+queue_free = True
 
 # Here is the main class of your controller.
 # This class defines how to initialize and how to run your controller.
 # Note that this class derives Robot and so inherits all its functions
 
 class TCPIPControl(Robot):
+    # The following variables are all
     top_motor = None
     left_motor = None
     right_motor = None
@@ -185,7 +184,7 @@ class TCPIPControl(Robot):
                 break
             # If the queue is free, lock the queue, get the command from the queue
             # lock the queue, and then handle the command.
-            if queue_free == True:
+            if (queue_free == True) and not queue.empty():
                 queue_free = False
                 command = queue.get()
                 queue_free = True

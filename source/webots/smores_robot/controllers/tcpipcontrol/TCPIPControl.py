@@ -14,10 +14,15 @@ import socket
 import SocketServer
 from time import sleep
 from threading import Thread
-
+from multiprocessing import Process, Queue
 
 tcp_command = None
 tcp_velocity = None
+# Trying this queue out for the multithreading for handling
+# information between threads.
+# queue = Queue.Queue()
+queue = Queue()
+queue_free = False
 
 # Here is the main class of your controller.
 # This class defines how to initialize and how to run your controller.
@@ -109,14 +114,20 @@ class TCPIPControl(Robot):
         port = int(hostport[1])
         return host, port
 
-    def connect_to_controller(self):
-        host, port = '192.168.2.82', 5000
+    def run(self):
+        print 'Inside the run method.'
+        # The host gethostbyname method is only working on my (Ben Smith's) computer because the
+        # host that it's connecting to is my own computer. This will need to change if the connection
+        # is external.
+        host, port = socket.gethostbyname(socket.gethostname()), 5000
         # data = 'My ID is: 1'.join(sys.argv[1:])
-        # data = (b'{\"type\": \"SMORES\",\"id\": \"1\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) + b'\"}')
-        data = 'My ID is: 1'
+        data = (b'{\"type\": \"SMORES\",\"id\": \"1\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) + b'\"}')
+        # data = 'My ID is: 1'
 
         # create a socket (SOCK_STREAM means a TCP socket)
+        print 'before socket connection'
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print 'after socket connection'
         # connect to the server and send data
         sock.connect((host, port))
         sock.send(data + '\n')
@@ -131,11 +142,10 @@ class TCPIPControl(Robot):
         server = SocketServer.TCPServer((hostport[0], hostport[-1]), TCPHandler)
 
         print 'Opening Port on: ', hostport[1], '...\n'
-        return server
-
-    def run(self):
-        # calls the function which connects the robot to the controller
-        server = self.connect_to_controller()
+        # Spinning the server up in a new thread. The messages sent over TCP will be stored in the
+        # global queue that's initiated up at the top.
+        thread_server = Thread(target=server.serve_forever)
+        thread_server.start()
 
         # You should insert a getDevice-like function in order to get the
         # instance of a device of the robot. Something like:
@@ -162,64 +172,58 @@ class TCPIPControl(Robot):
 
         self.left_motor.setVelocity(0)
         self.right_motor.setVelocity(0)
+        # The queue is where all the commands will be stored and accessed over TCP and in the Simulator.
+        # The queue_free is a boolean that lets the program know when the queue is accessible.
+        global queue
+        global queue_free
 
-        global tcp_command
-        global tcp_velocity
-
-        #Main loop
+        # Main loop
         while True:
             # Perform a simulation step of 64 milliseconds
             # and leave the loop when the simulation is over
             if self.step(64) == -1:
                 break
+            # If the queue is free, lock the queue, get the command from the queue
+            # lock the queue, and then handle the command.
+            if queue_free == True:
+                queue_free = False
+                command = queue.get()
+                queue_free = True
+                # The first two commands are sent to the command function using the command
+                # type and then the velocity.
+                self.handle_input(int(command[0]), int(command[1])/100)
+                # The command will execute for the specified duration of time.
+                self.step(int(command[2]))
+            print 'loop executed'
 
-            # handle one request per loop
-            if not self.tcp_received:
-                server.handle_request()
-                self.tcp_received = True
-
-            # if there was a request, do the command
-            if self.tcp_received:
-                self.handle_input(tcp_command, tcp_velocity)
-
-            self.step(500)
-
-# The main program starts from here
 class TCPHandler(SocketServer.BaseRequestHandler):
-    def handle(self):
-        global tcp_velocity
-        global tcp_command
-        # self.request is the TCP socket connected to the client
-        self.data = self.request.recv(1024).strip()
-        # Make calls to the API here. This should handle all the commands.
-        # Here are some fake commands for now.
-        self.data = self.data.split(' ')
-        tcp_command = int(self.data[0])
-        tcp_velocity = int(self.data[1]) / 100
-        self.request.send(b'Got it')
-        self.request.close()
+        def handle(self):
+            print 'we are in the tcp handler.'
+            # global tcp_command
+            # global tcp_velocity
+            global queue
+            global queue_free
+            # Receives the command from the TCP socket.
+            self.data = self.request.recv(1024).strip()
+            # Splits the string into the individual parts of the command.
+            # There are three parts:
+            #     1. The command number
+            #     2. The velocity for the motors
+            #     3. The duraction of the command to execute
+            self.data = self.data.split(' ')
+            # Sends a response back to the server to confirm reception of the command.
+            self.request.send(b'Got it')
+            # And finally closes the connection.
+            self.request.close()
+            # puts the data into the Queue so that information can be passed between threads.
+            # If the queue is free, then lock the queue, put the command into the queue,
+            # and then lock the queue when finished.
+            if queue_free == True:
+                print 'Putting command into the queue.'
+                queue_free = False
+                queue.put(self.data)
+                queue_free = True
 
-# class Thread(threading.Thread):
-#     #This class is for multi-threading.
-#     #Use this thread like in the following example.
-#     #thread1 = myThread(1, "Thread-1", 1)
-#     #
-#     def __init__(self, ThreadID, name, counter):
-#         self.ThreadID = ThreadID
-#         self.name = name
-#         self.counter = counter
-#     def run(self):
-#         print 'Starting: ', self.name
-#         print_time(self.name, self.counter, 5)
-#         print "Exiting " + self.name
-
-# def print_time(threadName, delay, counter):
-#     while counter:
-#         if exitFlag:
-#             threadName.exit()
-#         time.sleep(delay)
-#         print "%s: %s" % (threadName, time.ctime(time.time()))
-#         counter -= 1
 # This is the main program of your controller.
 # It creates an instance of your Robot subclass, launches its
 # function(s) and destroys it at the end of the execution.
@@ -228,3 +232,9 @@ class TCPHandler(SocketServer.BaseRequestHandler):
 
 controller = TCPIPControl()
 controller.run()
+# creates the threads that is going to run the program here.
+# network_thread in this instance starts the connection to the controller in a thread.
+# network_thread = Thread(target=controller.connect_to_controller(), args=(self,queue))
+# controller_thread = Thread(target=controller.run(), args=(self,queue))
+# network_thread.start()
+# controller_thread.start()

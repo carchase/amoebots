@@ -12,15 +12,22 @@
 from controller import Robot
 import time
 
+top_motor = ''
+left_motor = ''
+right_motor = ''
+
 # Here is the main class of your controller.
 # This class defines how to initialize and how to run your controller.
 # Note that this class derives Robot and so inherits all its functions
 class Movement (Robot):
-  
+
   # User defined function for initializing and running
   # the Movement class
   def run(self):
-    
+    global top_motor
+    global left_motor
+    global right_motor
+
     # You should insert a getDevice-like function in order to get the
     # instance of a device of the robot. Something like:
     #  led = self.getLed('ledname')
@@ -51,75 +58,107 @@ class Movement (Robot):
       # Enter here functions to read sensor data, like:
       #  val = ds.getValue()
 
-      # read cmd and vel here!
-      
+      # read cmd, vel, delay here!
+      cmd = 1
+      vel = 1
+      delay = 1000
       
       # Process sensor data here.
       
       # Enter here functions to send actuator commands, like:
       #  led.set(1)
-      handleInput(cmd, vel)
+      print action(cmd, vel, delay)
     
     # Enter here exit cleanup code
 
-def handleInput(cmd, vel):
+# Signifies which action robot will take
+# vel indicates how fast motor will move
+# delay indicates the delay prior to the command being terminated
+# which may be used to indicate encoder position in the future
+def action(cmd, vel, delay):
+  whichStop = 0
+
   if cmd == 1:
-    print 'Moving forward'
-    moveWheels(vel, vel, True)
+    move(1, vel, 0)
+    move(0, vel, 1)
+    message = 'Moving forward for ' + str(delay)
   elif cmd == 2:
-    print 'Moving backward'
-    moveWheels(-vel, -vel, True)
+    move(1, vel, 1)
+    move(0, vel, 0)
+    message = 'Moving backward for ' + str(delay)
   elif cmd == 3:
-    print 'Turning left'
-    moveWheels(0, vel, True)
+    move(1, vel, 1)
+    move(0, vel, 1)
+    message = 'Turning left for ' + str(delay)
   elif cmd == 4:
-    print 'Turning right'
-    moveWheels(vel, 0, True)
+    move(1, vel, 0)
+    move(0, vel, 0)
+    message = 'Turning right for ' + str(delay)
   elif cmd == 5:
-    print 'Stopping'
-    moveWheels(0, 0, False)
+    move(2, vel, 1)
+    message = 'Moving the arm in direction 1 for ' + str(delay)
+    whichStop = 1
   elif cmd == 6:
-    print 'Stopping arm'
-    moveArm(0, False)
+    move(2, vel, 0)
+    message = 'Moving the arm in direction 2 for ' + str(delay)
+    whichStop = 1
   elif cmd == 7:
-    print 'Moving arm' # up?
-    moveArm(vel, True)
+    message = 'Move key out'
+    whichStop = 2
   elif cmd == 8:
-    print 'Moving arm' # down?
-    moveArm(-vel, True)
-  elif cmd == 11:
-    print 'Moving forward'
-    moveWheels(vel, vel, False)
-  elif cmd == 12:
-    print 'Moving backward'
-    moveWheels(-vel, -vel, False)
-  elif cmd == 13:
-    print 'Turning left'
-    moveWheels(0, vel, False)
-  elif cmd == 14:
-    print 'Turning right'
-    moveWheels(vel, 0, False)
-  elif cmd == 15:
-    print 'Moving arm' # up?
-    moveArm(vel, False)
-  elif cmd == 16:
-    print 'Moving arm' # down?
-    moveArm(-vel, False)
+    message = 'Move key in'
+    whichStop = 2
   else:
-    print 'Invalid command ' + str(cmd)
+    message = 'Invalid command ' + str(cmd)
 
-def moveWheels(left, right, delay):
-  left_motor.setVelocity(left)
-  right_motor.setVelocity(right)
-  if delay:
-    time.sleep(1)
-    moveWheels(0, 0, False)
+  # delay is used to allow the motor to move for a predetermined
+  # amount of time before it's turned off
+  time.sleep((delay * 1.0) / 1000)
 
-def moveArm(velocity, delay):
-  top_motor.setVelocty(velocity)
-  if delay:
-    time.sleep(1)
-    moveArm(0, False)
+  # indicates which stop function is called
+  stop(whichStop)
+
+  return message
+
+def stop(whichStop):
+  global left_motor
+  global right_motor
+  global top_motor
+
+  if whichStop == 0:
+    # stops robot movement
+    right_motor.setVelocity(0)
+    left_motor.setVelocity(0)
+  elif whichStop == 1:
+    # stops arm movement
+    top_motor.setVelocity(0)
+  # else:
+    # stops the key
+
+def move(motor, speed, direction):
+  # move motor specific speed and direction
+  # motor: 0 for right motor, 1 for left motor, 2 for arm motor
+  # speed: 0 is off, 255 is full speed
+  # direction: 0 clockwise, 1 counter-clockwise
+
+  global left_motor
+  global right_motor
+  global top_motor
+
+  # webots only: use direction to modify whether
+  # motor turns forwards or backwards
+  # relative to its axis in the simulator
+  if direction == 0:
+    mod = 1
+  elif direction == 1:
+    mod = -1
+
+  if motor == 0:
+    right_motor.setVelocity(mod * speed)
+  elif motor == 1:
+    left_motor.setVelocity(mod * speed)
+  elif motor == 2:
+    top_motor.setVelocity(mod * speed)
 
 # The main program starts from here
 

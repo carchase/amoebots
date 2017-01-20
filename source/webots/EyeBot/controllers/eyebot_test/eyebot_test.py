@@ -83,7 +83,7 @@ class eyebot_test (Robot):
 
 		# Enter here exit cleanup code
 
-def move(self, direction):
+def move(direction):
 	if direction == 'forward':
 		left_wheel.setVelocity(1)
 		right_wheel.setVelocity(1)

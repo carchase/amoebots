@@ -129,6 +129,9 @@ String action(int act, int speed, int del){
       message += "Move key in";
       whichStop = 2;
       break;
+    case 99:
+      message += "Robot is Online";
+      break;
   }
 
   //delay is used to allow the motor to move for a predetermined

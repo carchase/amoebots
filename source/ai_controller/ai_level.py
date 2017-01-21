@@ -10,15 +10,18 @@ from time import sleep
 from message import Message
 
 def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT):
-    MAIN_INPUT.put( Message('AI_LEVEL', 'MAIN_INPUT', 'INFO', {'message': 'AI_level is running'}))
-    
+    MAIN_INPUT.put( Message('AI_LEVEL', 'MAIN_LOG', 'info', {'message': 'AI_level is running'}))
+
     # Infinite loop to keep the process running
     while(True):
+        try:
+            # Get items from input queue until it is not empty
+            while not MAIN_INPUT.empty():
+                MAIN_INPUT.put(AI_INPUT.get()) # For now just parrot
 
-        # Get items from input queue until it is not empty
-        while not MAIN_INPUT.empty():
-            MAIN_INPUT.put(AI_INPUT.get()) # For now just parrot
+            # Do rest of stuff
 
-        # Do rest of stuff
+            sleep(1)
 
-        sleep(1)
+        except Exception as e:
+            MAIN_INPUT.put( Message('AI_LEVEL', 'MAIN_LOG', 'error', {'message': str(e)}))

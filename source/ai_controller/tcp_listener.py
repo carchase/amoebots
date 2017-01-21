@@ -7,6 +7,7 @@ import socketserver
 import socket
 import json
 from multiprocessing import Queue
+from message import Message
 
 SERVER_HOST = socket.gethostbyname(socket.gethostname())
 SERVER_PORT = 5000
@@ -48,8 +49,10 @@ class TCPHandler(socketserver.BaseRequestHandler):
             else:
                 self.request.send(bytes("Unsupported robot type", "utf-8"))
         
-        except:
-            # exception occurred, must be unsupported data
+        except Exception as e:
+            COM_INPUT_QUEUE.put( Message('TCP_LISTENER', 'MAIN_LOG', 'error', {'message': str(e)}))
+
+            # exception occurred, attempt to recover data
             self.request.send(bytes("Unsupported data type", "utf-8"))
         
         finally:
@@ -60,11 +63,7 @@ class TCPHandler(socketserver.BaseRequestHandler):
 def tcp_listener_main(COM_INPUT, PROCESS_QUEUE):
     global COM_INPUT_QUEUE
     COM_INPUT_QUEUE = COM_INPUT
-    COM_INPUT_QUEUE.put({
-        'destination': 'MAIN_INPUT',
-        'origin': 'TCP_LISTENER',
-        'type': 'info',
-        'message': 'TCP_listener is running'})
+    COM_INPUT.put( Message('TCP_LISTENER', 'MAIN_LOG', 'info', {'message': 'TCP_listener is running'}))
 
     # create the server, binding the localhost to the assigned port.
     server = socketserver.TCPServer((SERVER_HOST, SERVER_PORT), TCPHandler)

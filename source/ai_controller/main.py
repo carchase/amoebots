@@ -24,12 +24,12 @@ def mainLoop():
     # Instantiate the processes
     COMMUNICATION_LEVEL = Process(target=communication_level.com_level_main, args=(COM_INPUT_QUEUE, MOVEMENT_INPUT_QUEUE, MAIN_INPUT_QUEUE))
     MOVEMENT_LEVEL = Process(target=movement_level.movement_level_main, args=(MOVEMENT_INPUT_QUEUE, COM_INPUT_QUEUE, AI_INPUT_QUEUE, MAIN_INPUT_QUEUE))
-    AI_LEVEL = Process(target=ai_level.ai_level_main, args=(AI_INPUT_QUEUE, MOVEMENT_INPUT_QUEUE, MAIN_INPUT_QUEUE))
+    # AI_LEVEL = Process(target=ai_level.ai_level_main, args=(AI_INPUT_QUEUE, MOVEMENT_INPUT_QUEUE, MAIN_INPUT_QUEUE))
     
     # Start the processes
     COMMUNICATION_LEVEL.start()
     MOVEMENT_LEVEL.start()
-    AI_LEVEL.start()
+    # AI_LEVEL.start()
 
     # Infinite loop to keep checking the queue for information
     while(True):
@@ -44,11 +44,11 @@ def checkLogs(MAIN_INPUT_QUEUE):
         chunk = MAIN_INPUT_QUEUE.get()
         
         # Ensure that the message is a log message
-        if type(chunk) is Message:
+        if isinstance(chunk, Message):
             print(chunk.toString())
         else:
             # Otherwise print out the raw data
-            print('raw:', chunk)
+            print('RAW:', chunk)
 
 if __name__ == "__main__":
     mainLoop()

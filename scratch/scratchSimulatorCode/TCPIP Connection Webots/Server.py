@@ -20,7 +20,7 @@ while True:
         (client_socket, address) = server_socket.accept()
         print "Connected to: ", address, "\n"
     except socket.error as e:
-        print "Error establishing connection: " + e.message
+        print "Error establishing connection: " + str(e)
         pass
     client_socket.settimeout(1)
 

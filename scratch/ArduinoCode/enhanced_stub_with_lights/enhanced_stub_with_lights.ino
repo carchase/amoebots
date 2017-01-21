@@ -42,13 +42,13 @@ String action(int act, int speed, int del){
 
   switch(act){
     case 1:
-      move(1,speed,0);
-      move(0,speed,1);
+      move(1,speed,1);
+      move(0,speed,0);
       message += "Moving Forward for " + String(del);
       break;
     case 2:
-      move(1,speed,1);
-      move(0,speed,0);
+      move(1,speed,0);
+      move(0,speed,1);
       message += "Moving Backward for " + String(del); 
       break;
     case 3:
@@ -80,6 +80,9 @@ String action(int act, int speed, int del){
     case 8:
       message += "Move key in";
       whichStop = 2;
+      break;
+    case 99:
+      message += "Robot is Online";
       break;
   }
 

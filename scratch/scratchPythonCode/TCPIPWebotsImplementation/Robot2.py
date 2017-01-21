@@ -40,7 +40,7 @@ def StartServer(host, port):
             (client, address) = server.accept()
             print'connected to: ', address, '\n'
         except socket.error as e:
-            print 'There was an error establishing a connection to', client, ': ' + e.message
+            print 'There was an error establishing a connection to', client, ': ' + str(e)
             pass
         #make sure that the client doesn't timeout.
         client.settimeout(1)

@@ -10,106 +10,69 @@ View the full repository here https://github.com/car-chase/amoebots
 
 from multiprocessing import Process, Queue
 from time import sleep
+from message import Message
 
 MOV_DICT = {}
 
 def movement_level_main(MOV_INPUT, COM_INPUT, AI_INPUT, MAIN_INPUT):
-    MAIN_INPUT.put({
-        'destination': 'MAIN_INPUT',
-        'type': 'info',
-        'origin': 'MOV_LEVEL',
-        'message': 'Movement_level is running'
-    })
+    MAIN_INPUT.put( Message('MOV_LEVEL', 'MAIN_LOG', 'info', {'message': 'Movement_level is running'}))
 
-    MOV_DICT['COM_INPUT'] = [COM_INPUT]
-    MOV_DICT['MOV_INPUT'] = [MOV_INPUT]
-    MOV_DICT['AI_INPUT'] = [AI_INPUT]
-    MOV_DICT['MAIN_INPUT'] = [MAIN_INPUT]
+    MOV_DICT['COM_LEVEL'] = [COM_INPUT]
+    MOV_DICT['MOV_LEVEL'] = [MOV_INPUT]
+    MOV_DICT['AI_LEVEL'] = [AI_INPUT]
+    MOV_DICT['MAIN_LOG'] = [MAIN_INPUT]
 
     # Infinite loop to keep the process running
     while(True):
+        try:
 
-        # Get items from input queue until it is not empty
-        while not MOV_INPUT.empty():
-            
-            RESPONSE = MOV_INPUT.get()
-
-            # make sure the response is a list object
-            if isinstance(RESPONSE, dict):
+            # Get items from input queue until it is not empty
+            while not MOV_INPUT.empty():
                 
-                # if the item is a 'add' add the robot to the MOV_DICT
-                if RESPONSE.get('type') == 'command' and RESPONSE.get('message') == 'add':
-                    MOV_DICT[RESPONSE['origin']] = [COM_INPUT]
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '1 150 2000',
-                        'duration': 2
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '2 150 2000',
-                        'duration': 2
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '3 150 2000',
-                        'duration': 2
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '4 150 2000',
-                        'duration': 2
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '5 150 2000',
-                        'duration': 2
-                    })
-                    COM_INPUT.put({
-                        'destination': RESPONSE['origin'],
-                        'type': 'command',
-                        'origin': 'MOV_LEVEL',
-                        'message': '6 150 2000',
-                        'duration': 2
-                    })
+                response = MOV_INPUT.get()
 
-                elif RESPONSE.get('type') == 'command' and RESPONSE['message'] == 'failure':
-                    # if the item is a 'failure', remove the process from the MOV_DICT
-                    if MOV_DICT.get(RESPONSE.get('origin')) != None:
-                        del MOV_DICT[RESPONSE.get('origin')]
+                # make sure the response is a list object
+                if isinstance(response, Message):
+                    
+                    # if the item is a 'add' add the robot to the MOV_DICT
+                    if response.category == 'command' and response.data.get('directive') == 'add':
+                        MOV_DICT[response.origin] = [COM_INPUT]
+                        COM_INPUT.put( Message('MOV_LEVEL', response.origin, 'movement', {'command': 1, 'velocity': 150, 'duration': 2, 'message': 'Forward movement command'}))
+                        COM_INPUT.put( Message('MOV_LEVEL', response.origin, 'movement', {'command': 2, 'velocity': 150, 'duration': 2, 'message': 'Backward movement command'}))
+                        COM_INPUT.put( Message('MOV_LEVEL', response.origin, 'movement', {'command': 3, 'velocity': 150, 'duration': 2, 'message': 'Left movement command'}))
+                        COM_INPUT.put( Message('MOV_LEVEL', response.origin, 'movement', {'command': 4, 'velocity': 150, 'duration': 2, 'message': 'Right movement command'}))
+                        COM_INPUT.put( Message('MOV_LEVEL', response.origin, 'movement', {'command': 5, 'velocity': 150, 'duration': 2, 'message': 'Arm direction 1 movement command'}))
+                        COM_INPUT.put( Message('MOV_LEVEL', response.origin, 'movement', {'command': 6, 'velocity': 150, 'duration': 2, 'message': 'Arm direction 2 movement command'}))
 
-                elif RESPONSE.get('type') == 'result':
+                    elif response.category == 'command' and response.data.get('directive') == 'failure':
+                        # if the item is a 'failure', remove the process from the MOV_DICT
+                        if MOV_DICT.get(response.origin) != None:
+                            del MOV_DICT[response.origin]
 
-                    # forward to the mov level
-                    RESPONSE['destination'] = "MOV_INPUT"
+                    elif response.category == 'response':
+                        # TODO: Process response
+                        response.destination = "MAIN_LOG"
 
-                #relay message to destination
-                if RESPONSE['destination'] != "MOV_INPUT":
-                    RELAY_TO = CON_DICT[RESPONSE['destination']][1]
+                    #relay message to destination
+                    if response.destination != "MOV_LEVEL":
+                        relayTo = CON_DICT[response.destination][0]
 
-                    RELAY_TO.put(RESPONSE)
+                        relayTo.put(response)
 
+                    else:
+                        MAIN_INPUT.put(response)
+
+
+                # un-handled message
                 else:
-                    MAIN_INPUT.put(RESPONSE)
 
+                    # send this un-handled message to main
+                    # for raw output to the screen
+                    MAIN_INPUT.put(response)
+                    
+            # Do rest of stuff
 
-            # un-handled message
-            else:
+            sleep(.1)
 
-                # send this un-handled message to main
-                # for raw output to the screen
-                MAIN_INPUT.put(RESPONSE)
-                
-        # Do rest of stuff
-
-        sleep(.1)
+        except Exception as e:
+            MAIN_INPUT.put( Message('MOV_LEVEL', 'MAIN_LOG', 'error', {'message': str(e)}))

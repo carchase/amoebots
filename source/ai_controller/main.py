@@ -12,6 +12,7 @@ from time import sleep
 import communication_level
 import movement_level
 import ai_level
+from message import Message
 
 def mainLoop():
     # Make the global queues
@@ -43,8 +44,8 @@ def checkLogs(MAIN_INPUT_QUEUE):
         chunk = MAIN_INPUT_QUEUE.get()
         
         # Ensure that the message is a log message
-        if type(chunk) is dict and chunk.get('type') != None and chunk.get('message') != None and chunk.get('origin') != None and chunk.get('destination') != None:
-            print('To: ', chunk['destination'] + '\tFrom: ', chunk['origin'], chunk['type'] + ': ', chunk['message'])
+        if type(chunk) is Message:
+            print(chunk.toString())
         else:
             # Otherwise print out the raw data
             print('raw:', chunk)

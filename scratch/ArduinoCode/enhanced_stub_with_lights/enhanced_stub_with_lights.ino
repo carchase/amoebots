@@ -52,13 +52,13 @@ String action(int act, int speed, int del){
       message += "Moving Backward for " + String(del); 
       break;
     case 3:
-      move(1,speed,1);
-      move(0,speed,1);
+      move(1,speed,0);
+      move(0,speed,0);
       message += "Turning Left for " + String(del);
       break;
     case 4:
-      move(1,speed,0);
-      move(0,speed,0);
+      move(1,speed,1);
+      move(0,speed,1);
       message += "Turning Right for " + String(del);
       break;
     case 5:

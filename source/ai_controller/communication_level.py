@@ -8,17 +8,13 @@ import bot_process
 import tcp_listener
 import serial.tools.list_ports as ports_list
 from time import sleep
+from message import Message
 
 # stores the connections
 CON_DICT = {}
 
 def com_level_main(COM_INPUT, MOV_INPUT, MAIN_INPUT):
-    
-    MAIN_INPUT.put({
-        'destination': 'MAIN_INPUT',
-        'origin': 'COM_LEVEL',
-        'type': 'info',
-        'message': 'Com_level is running'})
+    MAIN_INPUT.put( Message('COM_LEVEL', 'MAIN_INPUT', 'INFO', {'message': 'Com_level is running'}))
 
     CON_DICT['COM_INPUT'] = ['running', COM_INPUT, None]
     CON_DICT['MOV_INPUT'] = ['running', MOV_INPUT, None]

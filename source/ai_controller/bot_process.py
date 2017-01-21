@@ -6,25 +6,16 @@ Created on Nov 1, 2016
 from time import sleep
 import serial
 import socket
+from message import Message
 
 BAUD = '115200'
 replied = False
 
 def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    COM_INPUT.put({
-       'destination': 'MAIN_INPUT',
-       'origin': ADDRESS,
-       'type': 'info',
-       'message': 'Process_listener started'})
+    COM_INPUT.put( Message(ADDRESS, 'MAIN_INPUT', 'INFO', {'message': 'Process_listener started on port ' + ADDRESS}))
 
     try:
         with serial.Serial(ADDRESS, BAUD, timeout = 10) as PORT:
-        
-            #COM_INPUT.put({
-            #    'destination': 'MAIN_INPUT',
-            #    'origin': ADDRESS,
-            #    'type': 'result',
-            #    'message': 'Connection successful'})
 
             RESPONSE = PORT.readline().strip().decode()
 
@@ -33,81 +24,40 @@ def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                 while PORT.inWaiting() > 0:
                     RESPONSE = RESPONSE + PORT.read(PORT.inWaiting()).strip().decode()
 
-                COM_INPUT.put({
-                    'destination': 'COM_INPUT',
-                    'origin': ADDRESS,
-                    'type': 'command',
-                    'message': 'add'})
+                COM_INPUT.put( Message(ADDRESS, 'COM_INPUT', 'COMMAND', {'directive': 'add', 'message': 'Added a robot on port ' + ADDRESS}))
                 
             else:
-                COM_INPUT.put({
-                    'destination': 'COM_INPUT',
-                    'origin': ADDRESS,
-                    'type': 'command',
-                    'message': 'failure'})
+                COM_INPUT.put( Message(ADDRESS, 'COM_INPUT', 'COMMAND', {'directive': 'failure', 'message': 'Could not add robot on port ' + ADDRESS}))
                 
             PORT.close()
             
     except Exception as e:
-        COM_INPUT.put({'destination': 'COM_INPUT',
-                        'origin': ADDRESS,
-                        'type': 'command',
-                        'message': 'failure'})
-        COM_INPUT.put({'destination': 'MAIN_INPUT',
-                        'origin': ADDRESS,
-                        'type': 'log',
-                        'message': e})
-        
+        COM_INPUT.put( Message(ADDRESS, 'COM_INPUT', 'COMMAND', {'directive': 'failure', 'message': 'Received the following error: ' + e}))
+
     return 0
 
 def bot_process_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    COM_INPUT.put(({
-        'destination': 'MAIN_INPUT',
-        'origin': ADDRESS,
-        'type': 'info',
-        'message': 'bot_process is running'}))
+    COM_INPUT.put( Message(ADDRESS, 'MAIN_INPUT', 'INFO', {'message': 'bot_process is running'}))
 
     # Determine if the bot is TCP or COM
     try:
         if ADDRESS[0:3] == "COM":
-            COM_INPUT.put(({
-                'destination': 'MAIN_INPUT',
-                'origin': ADDRESS,
-                'type': 'info',
-                'message': 'bot is on a com port'}))
+            COM_INPUT.put( Message(ADDRESS, 'MAIN_INPUT', 'INFO', {'message': 'bot is on a com port'}))
             com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE)
         elif ADDRESS[0:3] == "TCP":
-            COM_INPUT.put(({
-                'destination': 'MAIN_INPUT',
-                'origin': ADDRESS,
-                'type': 'info',
-                'message': 'bot is on a tcp port'}))
+            COM_INPUT.put( Message(ADDRESS, 'MAIN_INPUT', 'INFO', {'message': 'bot is on a tcp port'}))
             tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE)
         else:
-            COM_INPUT.put({'destination': 'COM_INPUT',
-                'origin': ADDRESS,
-                'type': 'command',
-                'message': 'failure'})
+            COM_INPUT.put( Message(ADDRESS, 'COM_INPUT', 'COMMAND', {'directive': 'failure', 'message': 'Bot is on an unsupported port type'}))
 
     except Exception as e:
-        COM_INPUT.put({'destination': 'COM_INPUT',
-                        'origin': ADDRESS,
-                        'type': 'command',
-                        'message': 'failure'})
-        COM_INPUT.put({'destination': 'MAIN_INPUT',
-                        'origin': ADDRESS,
-                        'type': 'log',
-                        'message': e})
+        COM_INPUT.put( Message(ADDRESS, 'COM_INPUT', 'COMMAND', {'directive': 'failure', 'message': 'Received the following error: ' + e}))
+
     return 0
 
 def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
     with serial.Serial(ADDRESS, BAUD, timeout = 10) as PORT:
-        
-        COM_INPUT.put({
-            'destination': 'MAIN_INPUT',
-            'origin': ADDRESS,
-            'type': 'info',
-            'message': 'connected to robot'})
+        COM_INPUT.put( Message(ADDRESS, 'MAIN_INPUT', 'INFO', {'message': 'Connected to robot'}))
 
         # establish connection            
         RESPONSE = PORT.readline().strip().decode()
@@ -127,11 +77,7 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                     # check if the message is a command
                     if message.get('type') == 'command':
                         
-                        COM_INPUT.put({
-                            'destination': 'MAIN_INPUT',
-                            'origin': ADDRESS,
-                            'type': 'info',
-                            'message': 'given command ' + message.get('message')})
+                        COM_INPUT.put( Message(ADDRESS, 'MAIN_INPUT', 'INFO', {'message': 'Given command: ' + message.data.get('directive')}))
                 
                         PORT.write(bytes(message.get('message'), "utf-8"))
                         

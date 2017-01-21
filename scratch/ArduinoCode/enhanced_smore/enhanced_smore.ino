@@ -90,23 +90,23 @@ String action(int act, int speed, int del){
 
   switch(act){
     case 1:
-      move(1,speed,0);
-      move(0,speed,1);
+      move(1,speed,1);
+      move(0,speed,0);
       message += "Moving Forward for " + String(del);
       break;
     case 2:
-      move(1,speed,1);
-      move(0,speed,0);
+      move(1,speed,0);
+      move(0,speed,1);
       message += "Moving Backward for " + String(del); 
       break;
     case 3:
-      move(1,speed,1);
-      move(0,speed,1);
+      move(1,speed,0);
+      move(0,speed,0);
       message += "Turning Left for " + String(del);
       break;
     case 4:
-      move(1,speed,0);
-      move(0,speed,0);
+      move(1,speed,1);
+      move(0,speed,1);
       message += "Turning Right for " + String(del);
       break;
     case 5:
@@ -120,6 +120,7 @@ String action(int act, int speed, int del){
       move(3,speed,0);
       message += "Moving the arm in direction 2 for " + String(del);
       whichStop = 1;
+      break;
     case 7:
       message += "Move key out";
       whichStop = 2;

@@ -7,14 +7,10 @@ View the full repository here https://github.com/car-chase/amoebots
 
 from multiprocessing import Process, Queue
 from time import sleep
+from message import Message
 
 def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT):
-    MAIN_INPUT.put({
-        'destination': 'MAIN_INPUT',
-        'type': 'info',
-        'origin': 'AI_LEVEL',
-        'message': 'AI_level is running'
-    })
+    MAIN_INPUT.put( Message('AI_LEVEL', 'MAIN_INPUT', 'INFO', {'message': 'AI_level is running'}))
     
     # Infinite loop to keep the process running
     while(True):

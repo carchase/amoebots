@@ -37,12 +37,7 @@ class TCPHandler(socketserver.BaseRequestHandler):
                 
                 global COM_INPUT_QUEUE
 
-                COM_INPUT_QUEUE.put({
-                    'destination': 'COM_INPUT',
-                    'origin': "TCP:" + str(TCPHandler.nextPort),
-                    'type': 'command',
-                    'message': 'add',
-                    'data': self.data})
+                COM_INPUT_QUEUE.put( Message("TCP:" + str(TCPHandler.nextPort), 'COM_INPUT', 'command', {'directive': 'add', 'args': self.data, 'message': 'Received TCP information'}))
 
                 TCPHandler.nextPort = TCPHandler.nextPort + 1
 

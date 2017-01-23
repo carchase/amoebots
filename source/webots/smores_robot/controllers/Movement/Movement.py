@@ -67,6 +67,9 @@ class Movement (Robot):
       #  val = ds.getValue()
 
       # read cmd, vel, delay here!
+      cmd = 1
+      vel = 1
+      delay = 1000
       
       # Process sensor data here.
       

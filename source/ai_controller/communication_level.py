@@ -56,8 +56,8 @@ def com_level_main(COM_INPUT, MOV_INPUT, MAIN_INPUT):
                         botProcess = Process(target=bot_process.bot_process_main, args=(response.origin, COM_INPUT, processQueue))
                         
                         # push the data to the process
-                        if response.data != None:
-                            processQueue.put(response.data)
+                        if response.data.get("args") != None:
+                            processQueue.put(response.data.get("args"))
 
                         botProcess.start()
 

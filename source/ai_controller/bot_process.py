@@ -90,7 +90,7 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                 
                         PORT.write(bytes(movementStr, "utf-8"))
 
-                        sleep(duration + 2)
+                        sleep(duration + 4)
                         
                         response = ''
                         while PORT.inWaiting() > 0:
@@ -105,38 +105,42 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                             COM_INPUT.put( Message(ADDRESS, 'COM_LEVEL', 'response', {'message': 'Received the following response: ' + response.replace('\r\n', ' ')}))
 
 def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    # get the connection data
-    data = PROCESS_QUEUE.get()
-    
-    while True:
-        waitForCommands(.1, PROCESS_QUEUE)
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as SOCKET:
+        COM_INPUT.put( Message(ADDRESS, 'MAIN_LOG', 'info', {'message': 'Connected to robot'}))
 
-        # there is data in the queue
-        while not PROCESS_QUEUE.empty():
-            message = PROCESS_QUEUE.get()
+        # get the connection data
+        connectionData = PROCESS_QUEUE.get()
 
-            # check if the message is a movement command
-            if message.category == 'movement':
+        # sleep for a few seconds to let the simulator get setup
+        sleep(2)        
+        SOCKET.connect((connectionData.get('ip'), int(ADDRESS[4:])))
 
-                command = message.data.get("command")
-                velocity = message.data.get("velocity")
-                duration = message.data.get("duration")
+        while True:
+            waitForCommands(.1, PROCESS_QUEUE)
 
-                movementStr = str(command) + " " + str(velocity) + " " + str(duration * 1000)
+            # there is data in the queue
+            while not PROCESS_QUEUE.empty():
+                message = PROCESS_QUEUE.get()
 
-                COM_INPUT.put( Message(ADDRESS, 'MAIN_LOG', 'info', {'message': 'Given command: ' + movementStr}))
+                # check if the message is a movement command
+                if message.category == 'movement':
 
-                # open a socket
-                SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                SOCKET.connect((data.get('ip'), int(ADDRESS[4:])))
-                SOCKET.send(bytes(movementStr, "utf-8"))
+                    command = message.data.get("command")
+                    velocity = message.data.get("velocity")
+                    duration = message.data.get("duration")
 
-                sleep(duration + 2)
-                
-                response = SOCKET.recv(1024).strip().decode()
-                SOCKET.close()
+                    movementStr = str(command) + " " + str(velocity) + " " + str(duration * 1000)
 
-                COM_INPUT.put( Message(ADDRESS, 'COM_LEVEL', 'response', {'message': 'Received the following response: ' + response.replace('\r\n', ' ')}))
+                    COM_INPUT.put( Message(ADDRESS, 'MAIN_LOG', 'info', {'message': 'Given command: ' + movementStr}))
+
+                    # send data on the socket
+
+                    # establish the connection
+                    SOCKET.send(bytes(movementStr, "utf-8"))
+                    
+                    response = SOCKET.recv(1024).strip().decode()
+
+                    COM_INPUT.put( Message(ADDRESS, 'COM_LEVEL', 'response', {'message': 'Received the following response: ' + response.replace('\r\n', ' ')}))
 
 def waitForCommands(timeout, input):
     # wait until a command has been issued

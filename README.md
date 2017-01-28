@@ -39,3 +39,16 @@ collaboration with other ETCS Faculty (Drs. PomalzaARaez (ECE), Liu (ECE), and B
 projects and code completed by the CS and ECE senior project teams will be used in future robotics courses 
 here at IPFW.
 
+## Installation
+1. Download and install [python 3](https://www.python.org/downloads/). You can verify it is installed by running the following command:
+ 
+ >$ py --version // Should be 3.6.0 or greater
+2. Install pyserial in order to communicate with the robots:
+ 
+ >$ py -m pip install pyserial
+3. Clone the project repository to your local drive by running the following command:
+
+ >$ git clone https://github.com/car-chase/amoebots.git
+4. Start the AI by running the following command from the project root:
+
+ >$ py ./source/ai_controller/main.py

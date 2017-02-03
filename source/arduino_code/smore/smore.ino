@@ -92,45 +92,57 @@ String action(int act, int speed, int del){
     case 1:
       move(1,speed,1);
       move(0,speed,0);
-      message += "Moving Forward for " + String(del);
+      message = jsonResponse("text", "Moving Forward for " + String(del));
       break;
     case 2:
       move(1,speed,0);
       move(0,speed,1);
-      message += "Moving Backward for " + String(del); 
+      message += jsonResponse("text", "Moving Backward for " + String(del)); 
       break;
     case 3:
       move(1,speed,0);
       move(0,speed,0);
-      message += "Turning Left for " + String(del);
+      message += jsonResponse("text", "Turning Left for " + String(del));
       break;
     case 4:
       move(1,speed,1);
       move(0,speed,1);
-      message += "Turning Right for " + String(del);
+      message += jsonResponse("text", "Turning Right for " + String(del));
       break;
     case 5:
       move(2,speed,1);
-      move(3,speed,1);
-      message += "Moving the arm in direction 1 for " + String(del);
+      move(3,speed,0);
+      message += jsonResponse("text", "Moving the arm in direction 1 for " + String(del));
       whichStop = 1;
       break;
     case 6:
       move(2,speed,0);
-      move(3,speed,0);
-      message += "Moving the arm in direction 2 for " + String(del);
+      move(3,speed,1);
+      message += jsonResponse("text", "Moving the arm in direction 2 for " + String(del));
       whichStop = 1;
       break;
     case 7:
-      message += "Move key out";
-      whichStop = 2;
+      move(2,speed,1);
+      move(3,speed,1);
+      message += jsonResponse("text", "Spin the arm in direction 1 for " + String(del));
+      whichStop = 1;
       break;
     case 8:
-      message += "Move key in";
+      move(2,speed,0);
+      move(3,speed,0);
+      message += jsonResponse("text", "Spin the arm in direction 2 for " + String(del));
+      whichStop = 1;
+      break;
+    case 9:
+      message += jsonResponse("text", "Move key out");
+      whichStop = 2;
+      break;
+    case 10:
+      message += jsonResponse("text", "Move key in");
       whichStop = 2;
       break;
     case 99:
-      message += "Robot is Online";
+      message += jsonResponse("json", "{\"type\":\"smore\"}");
       break;
   }
 
@@ -204,4 +216,11 @@ void move(int motor, int speed, int direction){
       analogWrite(PWMD, speed);
       break;
   }
+}
+
+
+
+String jsonResponse(String content, String data){
+  String message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}";
+  return message;
 }

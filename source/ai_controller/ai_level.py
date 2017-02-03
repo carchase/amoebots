@@ -5,15 +5,14 @@ Created on Oct 11, 2016
 View the full repository here https://github.com/car-chase/amoebots
 '''
 
-from multiprocessing import Process, Queue
 from time import sleep
 from message import Message
 
 def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT):
-    MAIN_INPUT.put( Message('AI_LEVEL', 'MAIN_LOG', 'info', {'message': 'AI_level is running'}))
+    MAIN_INPUT.put(Message('AI_LEVEL', 'MAIN_LOG', 'info', {'message': 'AI_level is running'}))
 
     # Infinite loop to keep the process running
-    while(True):
+    while True:
         try:
             # Get items from input queue until it is not empty
             while not MAIN_INPUT.empty():
@@ -23,5 +22,5 @@ def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT):
 
             sleep(1)
 
-        except Exception as e:
-            MAIN_INPUT.put( Message('AI_LEVEL', 'MAIN_LOG', 'error', {'message': str(e)}))
+        except Exception as err:
+            MAIN_INPUT.put(Message('AI_LEVEL', 'MAIN_LOG', 'error', {'message': str(err)}))

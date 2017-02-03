@@ -14,41 +14,44 @@ import movement_level
 import ai_level
 from message import Message
 
-def mainLoop():
+def main_loop():
     # Make the global queues
-    MAIN_INPUT_QUEUE = Queue()
-    COM_INPUT_QUEUE = Queue()
-    MOVEMENT_INPUT_QUEUE = Queue()
-    AI_INPUT_QUEUE = Queue()
+    main_queue = Queue()
+    com_input_queue = Queue()
+    mov_input_queue = Queue()
+    ai_input_queue = Queue()
 
     # Instantiate the processes
-    COMMUNICATION_LEVEL = Process(target=communication_level.com_level_main, args=(COM_INPUT_QUEUE, MOVEMENT_INPUT_QUEUE, MAIN_INPUT_QUEUE))
-    MOVEMENT_LEVEL = Process(target=movement_level.movement_level_main, args=(MOVEMENT_INPUT_QUEUE, COM_INPUT_QUEUE, AI_INPUT_QUEUE, MAIN_INPUT_QUEUE))
-    # AI_LEVEL = Process(target=ai_level.ai_level_main, args=(AI_INPUT_QUEUE, MOVEMENT_INPUT_QUEUE, MAIN_INPUT_QUEUE))
-    
+    com_level_process = Process(target=communication_level.com_level_main,
+                                args=(com_input_queue, mov_input_queue, main_queue))
+    mov_level_process = Process(target=movement_level.movement_level_main,
+                                args=(mov_input_queue, com_input_queue, ai_input_queue, main_queue))
+    ai_level_process = Process(target=ai_level.ai_level_main,
+                               args=(ai_input_queue, mov_input_queue, main_queue))
+
     # Start the processes
-    COMMUNICATION_LEVEL.start()
-    MOVEMENT_LEVEL.start()
-    # AI_LEVEL.start()
+    com_level_process.start()
+    mov_level_process.start()
+    ai_level_process.start()
 
     # Infinite loop to keep checking the queue for information
-    while(True):
-        
+    while True:
+
         # Check the main input queue and display logs
-        checkLogs(MAIN_INPUT_QUEUE)
-        
+        check_logs(main_queue)
+
         sleep(.1)
 
-def checkLogs(MAIN_INPUT_QUEUE):
-    while not MAIN_INPUT_QUEUE.empty():
-        chunk = MAIN_INPUT_QUEUE.get()
-        
+def check_logs(log_queue):
+    while not log_queue.empty():
+        chunk = log_queue.get()
+
         # Ensure that the message is a log message
         if isinstance(chunk, Message):
-            print(chunk.toString())
+            print(chunk.to_string())
         else:
             # Otherwise print out the raw data
             print('RAW:', chunk)
 
 if __name__ == "__main__":
-    mainLoop()
+    main_loop()

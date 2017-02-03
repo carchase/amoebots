@@ -15,12 +15,12 @@ class Message:
         self.category = category.lower()
         self.data = data
 
-    def toString(self):
+    def to_string(self):
         category = "{:<8}".format((self.category)[:8])
-        destination = "{:<17}".format(('To: ' + self.destination)[:17]) 
+        destination = "{:<17}".format(('To: ' + self.destination)[:17])
         source = "{:<19}".format(('From: ' + self.origin)[:19])
-        if type(self.data) is dict:
-            if(self.data.get("message") != None):
+        if isinstance(self.data, dict):
+            if self.data.get("message") != None:
                 data = self.data.get("message")
             else:
                 data = json.dumps(self.data)

@@ -44,45 +44,45 @@ String action(int act, int speed, int del){
     case 1:
       move(1,speed,1);
       move(0,speed,0);
-      message += "Moving Forward for " + String(del);
+      message = jsonResponse("text", "Moving Forward for " + String(del));
       break;
     case 2:
       move(1,speed,0);
       move(0,speed,1);
-      message += "Moving Backward for " + String(del); 
+      message += jsonResponse("text", "Moving Backward for " + String(del)); 
       break;
     case 3:
       move(1,speed,0);
       move(0,speed,0);
-      message += "Turning Left for " + String(del);
+      message += jsonResponse("text", "Turning Left for " + String(del));
       break;
     case 4:
       move(1,speed,1);
       move(0,speed,1);
-      message += "Turning Right for " + String(del);
+      message += jsonResponse("text", "Turning Right for " + String(del));
       break;
     case 5:
       move(2,speed,1);
       move(3,speed,1);
-      message += "Moving the arm in direction 1 for " + String(del);
+      message += jsonResponse("text", "Moving the arm in direction 1 for " + String(del));
       whichStop = 1;
       break;
     case 6:
       move(2,speed,0);
       move(3,speed,0);
-      message += "Moving the arm in direction 2 for " + String(del);
+      message += jsonResponse("text", "Moving the arm in direction 2 for " + String(del));
       whichStop = 1;
       break;
     case 7:
-      message += "Move key out";
+      message += jsonResponse("text", "Move key out");
       whichStop = 2;
       break;
     case 8:
-      message += "Move key in";
+      message += jsonResponse("text", "Move key in");
       whichStop = 2;
       break;
     case 99:
-      message += "Robot is Online";
+      message += jsonResponse("json", "{\"type\":\"stubbot\"}");
       break;
   }
 
@@ -111,11 +111,6 @@ void Stop(int which){
   }
 }
 
-void standby(){
-//enable standby
-  Serial.println("function standby activiated");
-}
-
 void move(int motor, int speed, int direction){
 //Move specific motor at speed and direction
 //motor: 0 for B 1 for A 2 for C 3 for D
@@ -132,3 +127,9 @@ void move(int motor, int speed, int direction){
   
   digitalWrite(motor + 3,inPin1);
 }
+
+String jsonResponse(String content, String data){
+  String message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}";
+  return message;
+}
+

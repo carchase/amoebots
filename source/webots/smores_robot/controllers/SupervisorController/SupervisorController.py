@@ -20,11 +20,6 @@ class SupervisorController (Supervisor):
   # the SupervisorController class
   def run(self):
     
-    # 
-    robot_node = self.getFromDef('Module')
-    if robot_node is None:
-      print("Could not find robot")
-    
     # Main loop
     while True:
       # Perform a simulation step of 64 milliseconds
@@ -32,18 +27,29 @@ class SupervisorController (Supervisor):
       if self.step(64) == -1:
         break
       
-      # Read the sensors:
-      # Enter here functions to read sensor data, like:
-      #  val = ds.getValue()
-      trans = robot_node.getPosition()
-      
-      # Process sensor data here.
-      
-      # Enter here functions to send actuator commands, like:
-      #  led.set(1)
-      print(trans)
+      print(getRobotPosition(self, 'Module'))
+      print(getRobotOrientation(self, 'Module'))
     
     # Enter here exit cleanup code
+
+# Returns the position of the given robot
+# params: self, DEF name of robot
+# return: Position vector of robot, or None if robot is not found
+def getRobotPosition(self, robot):
+  robot_node = self.getFromDef(robot)
+  if robot_node is None:
+    return None
+  return robot_node.getPosition()
+
+# Returns the orientation of the given robot
+# params: self, DEF name of robot
+# return: 3x3 rotational matrix of robot, or None if robot is not found
+def getRobotOrientation(self, robot):
+  robot_node = self.getFromDef(robot)
+  if robot_node is None:
+    return None
+  o = robot_node.getOrientation()
+  return [[o[0], o[1], o[2]], [o[3], o[4], o[5]], [o[6], o[7], o[8]]]
 
 # The main program starts from here
 

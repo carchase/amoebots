@@ -51,38 +51,40 @@ class TCPIPControl(Robot):
 
         whichStop = 0
 
+
         if cmd == 1:
-            self.move(self.left_motor, vel, 1)
-            self.move(self.right_motor, vel, 1)
-            message = 'Moving forward for ' + str(delay)
+            move(self, left_motor, vel, 1)
+            move(self, right_motor, vel, 1)
+            message = jsonResponse('text', 'Moving forward for ' + str(delay))
         elif cmd == 2:
-            self.move(self.left_motor, vel, -1)
-            self.move(self.right_motor, vel, -1)
-            message = 'Moving backward for ' + str(delay)
+            move(self, left_motor, vel, -1)
+            move(self, right_motor, vel, -1)
+            message = jsonResponse('text', 'Moving backward for ' + str(delay))
         elif cmd == 3:
-            self.move(self.left_motor, vel, 1)
-            self.move(self.right_motor, vel, -1)
-            message = 'Turning left for ' + str(delay)
+            move(self, left_motor, vel, 1)
+            move(self, right_motor, vel, -1)
+            message = jsonResponse('text', 'Turning left for ' + str(delay))
         elif cmd == 4:
-            self.move(self.left_motor, vel, -1)
-            self.move(self.right_motor, vel, 1)
-            message = 'Turning right for ' + str(delay)
+            move(self, left_motor, vel, -1)
+            move(self, right_motor, vel, 1)
+            message = jsonResponse('text', 'Turning right for ' + str(delay))
         elif cmd == 5:
-            self.move(self.top_motor, vel, 1)
-            message = 'Moving the arm down ' + str(delay)
+            move(self, top_motor, vel, 1)
+            message = jsonResponse('text', 'Moving the arm down ' + str(delay))
             whichStop = 1
         elif cmd == 6:
-            self.move(self.top_motor, vel, -1)
-            message = 'Moving the arm up ' + str(delay)
+            move(self, top_motor, vel, -1)
+            message = jsonResponse('text', 'Moving the arm up ' + str(delay))
             whichStop = 1
         elif cmd == 7:
-            message = 'Move key out'
+            message = jsonResponse('text', 'Move key out')
             whichStop = 2
         elif cmd == 8:
-            message = 'Move key in'
+            message = jsonResponse('text', 'Move key in')
             whichStop = 2
-        else:
-            message = 'Invalid command ' + str(cmd)
+        elif cmd == 99:
+            message = jsonResponse('json', '{\"type\":\"smore\"}')
+
 
         # delay is used to allow the motor to move for a predetermined
         # amount of time before it's turned off
@@ -103,6 +105,10 @@ class TCPIPControl(Robot):
         # direction: 1 clockwise, -1 counter-clockwise
         motor.setPosition(float('inf'))
         motor.setVelocity(direction * speed)
+
+    def jsonResponse(content, data):
+        message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}"
+        return message
 
     def setup_new_host_port(self, hostport):
         host = hostport[0]

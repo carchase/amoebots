@@ -6,11 +6,13 @@ Created on Nov 1, 2016
 import socketserver
 import socket
 import json
+from time import sleep
 from message import Message
 
 SERVER_HOST = socket.gethostbyname(socket.gethostname())
 SERVER_PORT = 5000
 COM_INPUT_QUEUE = None
+INFINITE_LOOP = True
 
 '''
 The data should be an encided dictionary of the following
@@ -39,7 +41,7 @@ class TCPHandler(socketserver.BaseRequestHandler):
                 global COM_INPUT_QUEUE
 
                 COM_INPUT_QUEUE.put(Message("TCP:" + str(TCPHandler.nextPort),
-                                            'COM_INPUT', 'command',
+                                            'COM_LEVEL', 'command',
                                             {
                                                 'directive': 'add',
                                                 'args': self.data,
@@ -52,7 +54,9 @@ class TCPHandler(socketserver.BaseRequestHandler):
                 self.request.send(bytes("Unsupported robot type", "utf-8"))
 
         except Exception as err:
-            COM_INPUT_QUEUE.put(Message('TCP_LISTENER', 'MAIN_LOG', 'error', {'message': str(err)}))
+            COM_INPUT_QUEUE.put(Message('TCP_LISTENER', 'MAIN_LEVEL', 'error', {
+                'message': str(err)
+            }))
 
             # exception occurred, attempt to recover data
             self.request.send(bytes("Unsupported data type", "utf-8"))
@@ -64,15 +68,41 @@ class TCPHandler(socketserver.BaseRequestHandler):
 def tcp_listener_main(COM_INPUT, PROCESS_QUEUE):
     global COM_INPUT_QUEUE
     COM_INPUT_QUEUE = COM_INPUT
-    COM_INPUT.put(Message('TCP_LISTENER', 'MAIN_LOG', 'info', {
+    global INFINITE_LOOP
+    INFINITE_LOOP = True
+    COM_INPUT.put(Message('TCP_LISTENER', 'MAIN_LEVEL', 'info', {
         'message': 'TCP_listener is running'
     }))
 
     # create the server, binding the localhost to the assigned port.
     server = socketserver.TCPServer((SERVER_HOST, SERVER_PORT), TCPHandler)
+    server.socket.settimeout(1)
 
-    while True:
+    while INFINITE_LOOP:
         while not PROCESS_QUEUE.empty():
-            COM_INPUT_QUEUE.put(PROCESS_QUEUE.get())
+
+            message = PROCESS_QUEUE.get()
+
+            # Appropriately process the message depending on its category
+            if isinstance(message, Message) and message.category == 'command':
+                process_command(message)
+
+            else:
+                # Echo back the message if it doesn't know what to do
+                COM_INPUT_QUEUE.put(message)
 
         server.handle_request()
+
+    return
+
+def process_command(message):
+    global INFINITE_LOOP
+
+    if message.data.get('directive') == 'shutdown' and message.origin == 'COM_LEVEL':
+
+        # the listener has been told to shutdown.
+        COM_INPUT_QUEUE.put(Message('TCP_LISTENER', 'MAIN_LEVEL', 'info', {
+            'message': 'Shutting down TCP listener'
+        }))
+
+        INFINITE_LOOP = False

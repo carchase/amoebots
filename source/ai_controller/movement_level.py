@@ -14,14 +14,14 @@ from message import Message
 MOV_DICT = {}
 
 def movement_level_main(MOV_INPUT, COM_INPUT, AI_INPUT, MAIN_INPUT):
-    MAIN_INPUT.put(Message('MOV_LEVEL', 'MAIN_LOG', 'info', {
+    MAIN_INPUT.put(Message('MOV_LEVEL', 'MAIN_INPUT', 'info', {
         'message': 'Movement_level is running'
     }))
 
-    MOV_DICT['COM_LEVEL'] = [COM_INPUT]
-    MOV_DICT['MOV_LEVEL'] = [MOV_INPUT]
-    MOV_DICT['AI_LEVEL'] = [AI_INPUT]
-    MOV_DICT['MAIN_LOG'] = [MAIN_INPUT]
+    MOV_DICT['COM_LEVEL'] = COM_INPUT
+    MOV_DICT['MOV_LEVEL'] = MOV_INPUT
+    MOV_DICT['AI_LEVEL'] = AI_INPUT
+    MOV_DICT['MAIN_LEVEL'] = MAIN_INPUT
 
     # Infinite loop to keep the process running
     while True:
@@ -62,30 +62,30 @@ def movement_level_main(MOV_INPUT, COM_INPUT, AI_INPUT, MAIN_INPUT):
                             'duration': 2,
                             'message': 'Right movement command'
                         }))
-                        COM_INPUT.put(Message('MOV_LEVEL', response.origin, 'movement', {
-                            'command': 5,
-                            'velocity': 150,
-                            'duration': .5,
-                            'message': 'Arm direction 1 movement command'
-                        }))
-                        COM_INPUT.put(Message('MOV_LEVEL', response.origin, 'movement', {
-                            'command': 6,
-                            'velocity': 150,
-                            'duration': .5,
-                            'message': 'Arm direction 2 movement command'
-                        }))
-                        COM_INPUT.put(Message('MOV_LEVEL', response.origin, 'movement', {
-                            'command': 7,
-                            'velocity': 150,
-                            'duration': 2,
-                            'message': 'Arm direction 1 movement command'
-                        }))
-                        COM_INPUT.put(Message('MOV_LEVEL', response.origin, 'movement', {
-                            'command': 8,
-                            'velocity': 150,
-                            'duration': 2,
-                            'message': 'Arm direction 2 movement command'
-                        }))
+                        # COM_INPUT.put(Message('MOV_LEVEL', response.origin, 'movement', {
+                        #     'command': 5,
+                        #     'velocity': 150,
+                        #     'duration': .5,
+                        #     'message': 'Arm direction 1 movement command'
+                        # }))
+                        # COM_INPUT.put(Message('MOV_LEVEL', response.origin, 'movement', {
+                        #     'command': 6,
+                        #     'velocity': 150,
+                        #     'duration': .5,
+                        #     'message': 'Arm direction 2 movement command'
+                        # }))
+                        # COM_INPUT.put(Message('MOV_LEVEL', response.origin, 'movement', {
+                        #     'command': 7,
+                        #     'velocity': 150,
+                        #     'duration': 2,
+                        #     'message': 'Arm direction 1 movement command'
+                        # }))
+                        # COM_INPUT.put(Message('MOV_LEVEL', response.origin, 'movement', {
+                        #     'command': 8,
+                        #     'velocity': 150,
+                        #     'duration': 2,
+                        #     'message': 'Arm direction 2 movement command'
+                        # }))
 
                     elif (response.category == 'command'
                           and response.data.get('directive') == 'failure'):
@@ -95,7 +95,7 @@ def movement_level_main(MOV_INPUT, COM_INPUT, AI_INPUT, MAIN_INPUT):
 
                     elif response.category == 'response':
                         # TODO: Process response
-                        response.destination = "MAIN_LOG"
+                        response.destination = "MAIN_LEVEL"
 
                     #relay message to destination
                     if response.destination != "MOV_LEVEL":
@@ -119,4 +119,4 @@ def movement_level_main(MOV_INPUT, COM_INPUT, AI_INPUT, MAIN_INPUT):
             sleep(.1)
 
         except Exception as err:
-            MAIN_INPUT.put(Message('MOV_LEVEL', 'MAIN_LOG', 'error', {'message': str(err)}))
+            MAIN_INPUT.put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'error', {'message': str(err)}))

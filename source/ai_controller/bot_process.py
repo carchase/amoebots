@@ -13,7 +13,7 @@ BAUD = '115200'
 replied = False
 
 def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    COM_INPUT.put(Message(ADDRESS, 'MAIN_LOG', 'info', {
+    COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
         'message': 'Process_listener started on port ' + ADDRESS
     }))
 
@@ -51,15 +51,19 @@ def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
     return 0
 
 def bot_process_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    COM_INPUT.put(Message(ADDRESS, 'MAIN_LOG', 'info', {'message': 'Bot_process is running'}))
+    COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {'message': 'Bot_process is running'}))
 
     # Determine if the bot is TCP or COM
     try:
         if ADDRESS[0:3] == "COM":
-            COM_INPUT.put(Message(ADDRESS, 'MAIN_LOG', 'info', {'message': 'Bot is on a com port'}))
+            COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
+                'message': 'Bot is on a com port'
+            }))
             com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE)
         elif ADDRESS[0:3] == "TCP":
-            COM_INPUT.put(Message(ADDRESS, 'MAIN_LOG', 'info', {'message': 'Bot is on a tcp port'}))
+            COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
+                'message': 'Bot is on a tcp port'
+            }))
             tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE)
         else:
             COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'command', {
@@ -77,14 +81,16 @@ def bot_process_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
 
 def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
     with serial.Serial(ADDRESS, BAUD, timeout=10) as PORT:
-        COM_INPUT.put(Message(ADDRESS, 'MAIN_LOG', 'info', {'message': 'Connected to robot'}))
+        COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {'message': 'Connected to robot'}))
 
         # establish connection
         response = PORT.readline().strip().decode()
         while PORT.inWaiting() > 0:
             response = response + PORT.read(PORT.inWaiting()).strip().decode()
 
-        while True:
+        INFINITE_LOOP = True
+
+        while INFINITE_LOOP:
             waitForCommands(.1, PROCESS_QUEUE)
 
             # there is data in the queue
@@ -103,7 +109,7 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
 
                         movementStr = str(command) + " " + str(velocity) + " " + str(duration*1000)
 
-                        COM_INPUT.put(Message(ADDRESS, 'MAIN_LOG', 'info', {
+                        COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
                             'message': 'Given command: ' + movementStr
                         }))
 
@@ -129,9 +135,21 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
 
                             COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'response', parsed_res))
 
+                    elif (message.data.get('directive') == 'shutdown'
+                          and message.origin == 'COM_LEVEL'):
+
+                        PORT.close()
+
+                        # the listener has been told to shutdown.
+                        COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
+                            'message': 'Shutting down ' + ADDRESS
+                        }))
+
+                        INFINITE_LOOP = False
+
 def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as SOCKET:
-        COM_INPUT.put(Message(ADDRESS, 'MAIN_LOG', 'info', {'message': 'Connected to robot'}))
+        COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {'message': 'Connected to robot'}))
 
         # get the connection data
         connectionData = PROCESS_QUEUE.get()
@@ -140,7 +158,9 @@ def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
         sleep(2)
         SOCKET.connect((connectionData.get('ip'), int(ADDRESS[4:])))
 
-        while True:
+        INFINITE_LOOP = True
+
+        while INFINITE_LOOP:
             waitForCommands(.1, PROCESS_QUEUE)
 
             # there is data in the queue
@@ -156,8 +176,8 @@ def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
 
                     movementStr = str(command) + " " + str(velocity) + " " + str(duration * 1000)
 
-                    COM_INPUT.put(Message(ADDRESS, 'MAIN_LOG', 'info', {
-                        'message': 'Given command: ' + movementStr
+                    COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
+                        'message': 'Shutting down ' + ADDRESS
                     }))
 
                     # send data on the socket
@@ -170,6 +190,17 @@ def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                     COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'response', {
                         'message': 'Received the following response: '
                                    + response.replace('\r\n', ' ')}))
+
+                elif message.data.get('directive') == 'shutdown' and message.origin == 'COM_LEVEL':
+
+                    SOCKET.close()
+
+                    # the listener has been told to shutdown.
+                    COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
+                        'message': 'Shutting down ' + ADDRESS
+                    }))
+
+                    INFINITE_LOOP = False
 
 def waitForCommands(timeout, input):
     # wait until a command has been issued

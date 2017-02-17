@@ -3,8 +3,8 @@ WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation -0.99820079 0.014999622 -0.058053305 0.78099437
-  position 0.081047338 0.884544 0.870867
+  orientation -0.8481233 -0.52904042 0.028338981 0.39332258
+  position -0.20854323 0.37784274 0.97363773
 }
 Background {
   skyColor [
@@ -61,6 +61,10 @@ DEF WALL_4 Solid {
 Robot {
   translation 0 0.1 0
   children [
+    Compass {
+    }
+    GPS {
+    }
     DEF FRONT_CAM Camera {
       translation 0 0.02667 0.05715
       rotation 0 1 0 3.14159
@@ -83,7 +87,7 @@ Robot {
       children [
         HingeJoint {
           jointParameters HingeJointParameters {
-            axis 0 1 -1
+            axis 0 -1 1
           }
           device [
             RotationalMotor {
@@ -113,7 +117,7 @@ Robot {
         }
         HingeJoint {
           jointParameters HingeJointParameters {
-            axis 0 1 1
+            axis 0 -1 -1
           }
           device [
             RotationalMotor {
@@ -258,5 +262,5 @@ Robot {
   boundingObject USE BODY
   physics Physics {
   }
-  controller "eyebot_test"
+  controller "EyebotMovement"
 }

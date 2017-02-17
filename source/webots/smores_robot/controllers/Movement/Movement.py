@@ -20,6 +20,8 @@ top_conn = None
 left_conn = None
 right_conn = None
 back_conn = None
+gps = None
+compass = None
 
 # Here is the main class of your controller.
 # This class defines how to initialize and how to run your controller.
@@ -36,6 +38,8 @@ class Movement (Robot):
     global left_conn
     global right_conn
     global back_conn
+    global gps
+    global compass
 
     # You should insert a getDevice-like function in order to get the
     # instance of a device of the robot. Something like:
@@ -73,7 +77,7 @@ class Movement (Robot):
       #  val = ds.getValue()
 
       # read cmd, vel, delay here!
-      cmd = 3
+      cmd = 98
       vel = 1
       delay = 1000
       
@@ -81,9 +85,7 @@ class Movement (Robot):
       
       # Enter here functions to send actuator commands, like:
       #  led.set(1)
-      print getPosition(gps)
-      # print getBearing(compass)
-      # print action(self, cmd, vel, delay)
+      print action(self, cmd, vel, delay)
     
     # Enter here exit cleanup code
 
@@ -95,6 +97,8 @@ def action(self, cmd, vel, delay):
   global top_motor
   global left_motor
   global right_motor
+  global gps
+  global compass
 
   whichStop = 0
 
@@ -128,6 +132,10 @@ def action(self, cmd, vel, delay):
   elif cmd == 8:
     message = jsonResponse('text', 'Move key in')
     whichStop = 2
+  elif cmd == 97:
+    message = jsonResponse('text', 'Robot position: ' + str(getPosition(gps)))
+  elif cmd == 98:
+    message = jsonResponse('text', 'Robot orientation: ' + str(getBearing(compass)))
   elif cmd == 99:
     message = jsonResponse('json', '{\"type\":\"smore\"}')
 

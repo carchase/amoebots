@@ -33,6 +33,8 @@ class TCPIPControl(Robot):
         self.left_conn = None
         self.right_conn = None
         self.back_conn = None
+        self.gps = None
+        self.compass = None
 
         self.top_motor = self.getMotor("Bending Motor")
         # top_motor.setPosition(float('inf'))
@@ -50,10 +52,10 @@ class TCPIPControl(Robot):
         self.back_conn = self.getConnector("back conn")
         self.back_conn.enablePresence(64)
 
-        gps = self.getGPS("gps")
-        gps.enable(64)
-        compass = self.getCompass("compass")
-        compass.enable(64)
+        self.gps = self.getGPS("gps")
+        self.gps.enable(64)
+        self.compass = self.getCompass("compass")
+        self.compass.enable(64)
 
         whichStop = 0
 
@@ -88,6 +90,10 @@ class TCPIPControl(Robot):
         elif cmd == 8:
             message = jsonResponse('text', 'Move key in')
             whichStop = 2
+        elif cmd == 97:
+            message = jsonResponse('text', 'Robot position: ' + str(getPosition(gps)))
+        elif cmd == 98:
+            message = jsonResponse('text', 'Robot orientation: ' + str(getBearing(compass)))
         elif cmd == 99:
             message = jsonResponse('json', '{\"type\":\"smore\"}')
 

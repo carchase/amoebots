@@ -17,21 +17,23 @@ import ai_level
 from message import Message
 
 CON_DICT = {}
+INFINITE_LOOP = True
+MAIN_QUEUE = Queue()
+DUMP_MSGS_TO_MAIN = False # Show all messages in main log output
 
 def main_loop():
     # Make the global queues
-    main_queue = Queue()
     com_input_queue = Queue()
     mov_input_queue = Queue()
     ai_input_queue = Queue()
 
     # Instantiate the processes
     com_level_process = Process(target=communication_level.com_level_main,
-                                args=(com_input_queue, mov_input_queue, main_queue))
+                                args=(com_input_queue, mov_input_queue, MAIN_QUEUE, DUMP_MSGS_TO_MAIN))
     mov_level_process = Process(target=movement_level.movement_level_main,
-                                args=(mov_input_queue, com_input_queue, ai_input_queue, main_queue))
+                                args=(mov_input_queue, com_input_queue, ai_input_queue, MAIN_QUEUE, DUMP_MSGS_TO_MAIN))
     ai_level_process = Process(target=ai_level.ai_level_main,
-                               args=(ai_input_queue, mov_input_queue, main_queue))
+                               args=(ai_input_queue, mov_input_queue, MAIN_QUEUE, DUMP_MSGS_TO_MAIN))
 
     # Start the processes
     com_level_process.start()
@@ -43,17 +45,20 @@ def main_loop():
     CON_DICT["MOV_LEVEL"] = ["running", mov_input_queue, mov_level_process]
     CON_DICT["AI_LEVEL"] = ["running", ai_input_queue, ai_level_process]
 
+    global INFINITE_LOOP
+    INFINITE_LOOP = True
+
     # Infinite loop to keep checking the queue for information
-    while True:
+    while INFINITE_LOOP:
 
         # Check the main input queue and display logs
-        check_logs(main_queue)
+        check_logs()
 
         sleep(.1)
 
-def check_logs(log_queue):
-    while not log_queue.empty():
-        chunk = log_queue.get()
+def check_logs():
+    while not MAIN_QUEUE.empty():
+        chunk = MAIN_QUEUE.get()
 
         # Ensure that the message is a log message
         if isinstance(chunk, Message):
@@ -76,8 +81,14 @@ def signal_handler(signal, frame):
                 'message': 'Issuing shutdown command to ' + key,
                 'directive': 'shutdown',
             }))
-            # CON_DICT[key][2].join()
-            # CON_DICT[key][0] = "stopped"
+            CON_DICT[key][2].join()
+            CON_DICT[key][0] = "stopped"
+
+        check_logs()
+
+        # End the com_level
+        global INFINITE_LOOP
+        INFINITE_LOOP = False
 
     # Don't do anything for the other frames
 

@@ -11,7 +11,7 @@ from message import Message
 CON_DICT = {}
 INFINITE_LOOP = True
 
-def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT):
+def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT, DUMP_MSGS_TO_MAIN):
     MAIN_INPUT.put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {'message': 'AI_level is running'}))
 
     CON_DICT['AI_LEVEL'] = ['running', AI_INPUT, None]
@@ -35,14 +35,14 @@ def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT):
                     # Appropriately process the message depending on its category
                     if message.category == 'command':
                         process_command(message)
-                    
+
                     # relay message to destination
-                    if message.destination != "COM_LEVEL":
+                    if message.destination != "AI_LEVEL":
                         relay_to = CON_DICT[message.destination][1]
 
                         relay_to.put(message)
 
-                    else:
+                    elif DUMP_MSGS_TO_MAIN:
                         MAIN_INPUT.put(message)
 
             # Do rest of stuff

@@ -1,10 +1,10 @@
-#VRML_SIM V8.4.0 utf8
+#VRML_SIM V8.5 utf8
 WorldInfo {
   basicTimeStep 16
 }
 Viewpoint {
-  orientation -0.365769 0.90458 0.218972 0.47389
-  position 0.324078 0.2461 0.664599
+  orientation -0.99820079 0.014999622 -0.058053305 0.78099437
+  position 0.081047338 0.884544 0.870867
 }
 Background {
   skyColor [
@@ -82,41 +82,17 @@ Robot {
       rotation 0 0 1 1.5708
       children [
         HingeJoint {
-          device [
-            RotationalMotor {
-              name "back wheel motor"
-            }
-          ]
-          endPoint Solid {
-            translation 0 0 -0.04445
-            rotation 1 0 0 1.5708
-            children [
-              DEF BACK_WHEEL Shape {
-                appearance Appearance {
-                  material Material {
-                  }
-                }
-                geometry Cylinder {
-                  height 0.01
-                  radius 0.03
-                }
-              }
-            ]
-            name "BACK_WHEEL"
-            boundingObject USE BACK_WHEEL
-            physics Physics {
-            }
+          jointParameters HingeJointParameters {
+            axis 0 1 -1
           }
-        }
-        HingeJoint {
           device [
             RotationalMotor {
               name "left wheel motor"
             }
           ]
           endPoint Solid {
-            translation 0 -0.0381 0.0254
-            rotation 1 0 0 -0.5236
+            translation 0 -0.03 0.03
+            rotation -1 0 0 0.78539969
             children [
               DEF LEFT_WHEEL Shape {
                 appearance Appearance {
@@ -136,14 +112,17 @@ Robot {
           }
         }
         HingeJoint {
+          jointParameters HingeJointParameters {
+            axis 0 1 1
+          }
           device [
             RotationalMotor {
               name "right wheel motor"
             }
           ]
           endPoint Solid {
-            translation 0 0.0381 0.0254
-            rotation 1 0 0 0.5236
+            translation 0 0.03 0.03
+            rotation 1 0 0 0.78539969
             children [
               DEF RIGHT_WHEEL Shape {
                 appearance Appearance {
@@ -158,6 +137,36 @@ Robot {
             ]
             name "RIGHT_WHEEL"
             boundingObject USE RIGHT_WHEEL
+            physics Physics {
+            }
+          }
+        }
+        HingeJoint {
+          jointParameters HingeJointParameters {
+            axis 0 0 1
+          }
+          device [
+            RotationalMotor {
+              name "back wheel motor"
+            }
+          ]
+          endPoint Solid {
+            translation 0 0 -0.04
+            rotation 1 0 0 1.5708
+            children [
+              DEF BACK_WHEEL Shape {
+                appearance Appearance {
+                  material Material {
+                  }
+                }
+                geometry Cylinder {
+                  height 0.01
+                  radius 0.03
+                }
+              }
+            ]
+            name "BACK_WHEEL"
+            boundingObject USE BACK_WHEEL
             physics Physics {
             }
           }

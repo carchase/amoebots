@@ -49,6 +49,11 @@ class TCPIPControl(Robot):
         self.back_conn = self.getConnector("back conn")
         self.back_conn.enablePresence(64)
 
+        gps = self.getGPS("gps")
+        gps.enable(64)
+        compass = self.getCompass("compass")
+        compass.enable(64)
+
         whichStop = 0
 
 
@@ -105,6 +110,19 @@ class TCPIPControl(Robot):
         # direction: 1 clockwise, -1 counter-clockwise
         motor.setPosition(float('inf'))
         motor.setVelocity(direction * speed)
+
+    # returns the position of the given gps in a 3d vector <x, y, z>
+    def getPosition(gps):
+        return gps.getValues()
+
+    # returns the bearing of the given compass in degrees
+    def getBearings(compass):
+        north = compass.getValues()
+        rad = math.atan2(north[0], north[1])
+        bearing = (rad - 1.5708) / math.pi * 180.0
+        if bearing < 0.0:
+            bearing += 360.0
+        return bearing
 
     def jsonResponse(content, data):
         message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}"

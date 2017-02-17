@@ -11,6 +11,7 @@
 #  from controller import *
 from controller import Robot
 import time
+import math
 
 top_motor = None
 left_motor = None
@@ -54,6 +55,11 @@ class Movement (Robot):
     right_conn.enablePresence(64)
     back_conn = self.getConnector("back conn")
     back_conn.enablePresence(64)
+
+    gps = self.getGPS("gps")
+    gps.enable(64)
+    compass = self.getCompass("compass")
+    compass.enable(64)
     
     # Main loop
     while True:
@@ -67,7 +73,7 @@ class Movement (Robot):
       #  val = ds.getValue()
 
       # read cmd, vel, delay here!
-      cmd = 1
+      cmd = 3
       vel = 1
       delay = 1000
       
@@ -75,7 +81,9 @@ class Movement (Robot):
       
       # Enter here functions to send actuator commands, like:
       #  led.set(1)
-      print action(self, cmd, vel, delay)
+      print getPosition(gps)
+      # print getBearing(compass)
+      # print action(self, cmd, vel, delay)
     
     # Enter here exit cleanup code
 
@@ -143,6 +151,19 @@ def move(self, motor, speed, direction):
 
   motor.setPosition(float('inf'))
   motor.setVelocity(direction * speed)
+
+# returns the position of the given gps in a 3d vector <x, y, z>
+def getPosition(gps):
+  return gps.getValues()
+
+# returns the bearing of the given compass in degrees
+def getBearing(compass):
+  north = compass.getValues()
+  rad = math.atan2(north[0], north[1])
+  bearing = (rad - 1.5708) / math.pi * 180.0
+  if bearing < 0.0:
+    bearing += 360.0
+  return bearing
 
 def jsonResponse(content, data):
   message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}"

@@ -16,24 +16,50 @@ import movement_level
 import ai_level
 from message import Message
 
+# ***************** Constants used to configure the controller *****************
+OPTIONS = {
+    'DUMP_MSGS_TO_MAIN': False, # Show all messages in main log output
+    'NUMBER_OF_DEVICES': 5 # The number of devices that the controller expects to use
+}
+# ******************************************************************************
+
 CON_DICT = {}
 INFINITE_LOOP = True
 MAIN_QUEUE = Queue()
-DUMP_MSGS_TO_MAIN = False # Show all messages in main log output
 
 def main_loop():
-    # Make the global queues
+
+    init_levels()
+
+    global INFINITE_LOOP
+    INFINITE_LOOP = True
+
+    # Infinite loop to keep checking the queue for information
+    while INFINITE_LOOP:
+
+        # Check the main input queue and display logs
+        check_messages()
+
+        sleep(.1)
+
+def init_levels():
+    # Make the queues
     com_input_queue = Queue()
     mov_input_queue = Queue()
     ai_input_queue = Queue()
 
+    # Instantiate the levels
+    mov_level = movement_level.movement_level(OPTIONS)
+
     # Instantiate the processes
     com_level_process = Process(target=communication_level.com_level_main,
-                                args=(com_input_queue, mov_input_queue, MAIN_QUEUE, DUMP_MSGS_TO_MAIN))
-    mov_level_process = Process(target=movement_level.movement_level_main,
-                                args=(mov_input_queue, com_input_queue, ai_input_queue, MAIN_QUEUE, DUMP_MSGS_TO_MAIN))
+                                args=(com_input_queue, mov_input_queue,
+                                      MAIN_QUEUE, OPTIONS))
+    mov_level_process = Process(target=mov_level.movement_level_main,
+                                args=(mov_input_queue, com_input_queue, ai_input_queue, MAIN_QUEUE))
     ai_level_process = Process(target=ai_level.ai_level_main,
-                               args=(ai_input_queue, mov_input_queue, MAIN_QUEUE, DUMP_MSGS_TO_MAIN))
+                               args=(ai_input_queue, mov_input_queue,
+                                     MAIN_QUEUE, OPTIONS))
 
     # Start the processes
     com_level_process.start()
@@ -45,27 +71,16 @@ def main_loop():
     CON_DICT["MOV_LEVEL"] = ["running", mov_input_queue, mov_level_process]
     CON_DICT["AI_LEVEL"] = ["running", ai_input_queue, ai_level_process]
 
-    global INFINITE_LOOP
-    INFINITE_LOOP = True
-
-    # Infinite loop to keep checking the queue for information
-    while INFINITE_LOOP:
-
-        # Check the main input queue and display logs
-        check_logs()
-
-        sleep(.1)
-
-def check_logs():
+def check_messages():
     while not MAIN_QUEUE.empty():
-        chunk = MAIN_QUEUE.get()
+        message = MAIN_QUEUE.get()
 
         # Ensure that the message is a log message
-        if isinstance(chunk, Message):
-            print(chunk.to_string())
+        if isinstance(message, Message):
+            print(message.to_string())
         else:
             # Otherwise print out the raw data
-            print('RAW:', chunk)
+            print('RAW:', message)
 
 def signal_handler(signal, frame):
     # Get the origin of the SIGINT
@@ -83,8 +98,10 @@ def signal_handler(signal, frame):
             }))
             CON_DICT[key][2].join()
             CON_DICT[key][0] = "stopped"
+            check_messages()
 
-        check_logs()
+        # Check the logs one last time
+        check_messages()
 
         # End the com_level
         global INFINITE_LOOP

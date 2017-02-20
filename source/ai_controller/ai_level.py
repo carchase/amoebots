@@ -11,7 +11,7 @@ from message import Message
 CON_DICT = {}
 INFINITE_LOOP = True
 
-def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT, DUMP_MSGS_TO_MAIN):
+def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT, OPTIONS):
     MAIN_INPUT.put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {'message': 'AI_level is running'}))
 
     CON_DICT['AI_LEVEL'] = ['running', AI_INPUT, None]
@@ -42,7 +42,7 @@ def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT, DUMP_MSGS_TO_MAIN):
 
                         relay_to.put(message)
 
-                    elif DUMP_MSGS_TO_MAIN:
+                    elif OPTIONS['DUMP_MSGS_TO_MAIN']:
                         MAIN_INPUT.put(message)
 
             # Do rest of stuff
@@ -58,7 +58,7 @@ def process_command(message):
         # Loop over the child processes and shut them shutdown
 
         CON_DICT["MAIN_LEVEL"][1].put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {
-            'message': 'Shutting down AI level'
+            'message': 'Shutting down AI_LEVEL'
         }))
 
         # End the com_level

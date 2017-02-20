@@ -14,7 +14,7 @@ from message import Message
 CON_DICT = {}
 INFINITE_LOOP = True
 
-def com_level_main(COM_INPUT, MOV_INPUT, MAIN_INPUT, DUMP_MSGS_TO_MAIN):
+def com_level_main(COM_INPUT, MOV_INPUT, MAIN_INPUT, OPTIONS):
     MAIN_INPUT.put(Message('COM_LEVEL', 'MAIN_LEVEL', 'info', {'message': 'Com_level is running'}))
 
     CON_DICT['COM_LEVEL'] = ['running', COM_INPUT, None]
@@ -59,7 +59,7 @@ def com_level_main(COM_INPUT, MOV_INPUT, MAIN_INPUT, DUMP_MSGS_TO_MAIN):
 
                         relay_to.put(message)
 
-                    elif DUMP_MSGS_TO_MAIN:
+                    elif OPTIONS['DUMP_MSGS_TO_MAIN']:
                         MAIN_INPUT.put(message)
 
                 # un-handled message

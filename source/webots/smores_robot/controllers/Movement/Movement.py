@@ -13,7 +13,12 @@ from controller import Robot
 import time
 import math
 
+velocity = 1          # in rad/s
+cmPerSecond = 5
+degPerSecond = 52.5
+topDegPerSecond = 57.5
 top_motor = None
+top_wheel_motor = None
 left_motor = None
 right_motor = None
 top_conn = None
@@ -32,6 +37,7 @@ class Movement (Robot):
   # the Movement class
   def run(self):
     global top_motor
+    global top_wheel_motor
     global left_motor
     global right_motor
     global top_conn
@@ -46,6 +52,7 @@ class Movement (Robot):
     #  led = self.getLed('ledname')
     top_motor = self.getMotor("Bending Motor")
     # top_motor.setPosition(float('inf'))
+    top_wheel_motor = self.getMotor("Top Wheel Motor")
     left_motor = self.getMotor("Left Wheel Motor")
     # left_motor.setPosition(float('inf'))
     right_motor = self.getMotor("Right Wheel Motor")
@@ -76,16 +83,17 @@ class Movement (Robot):
       # Enter here functions to read sensor data, like:
       #  val = ds.getValue()
 
-      # read cmd, vel, delay here!
-      cmd = 98
-      vel = 1
-      delay = 1000
+      # read cmd, magnitude here!
+      cmd = 8
+      magnitude = 360
       
       # Process sensor data here.
       
       # Enter here functions to send actuator commands, like:
       #  led.set(1)
-      print action(self, cmd, vel, delay)
+      print action(self, cmd, magnitude)
+      print action(self, 97, 0)
+      break
     
     # Enter here exit cleanup code
 
@@ -93,7 +101,8 @@ class Movement (Robot):
 # vel indicates how fast motor will move
 # delay indicates the delay prior to the command being terminated
 # which may be used to indicate encoder position in the future
-def action(self, cmd, vel, delay):
+def action(self, cmd, magnitude):
+  global velocity
   global top_motor
   global left_motor
   global right_motor
@@ -103,33 +112,41 @@ def action(self, cmd, vel, delay):
   whichStop = 0
 
   if cmd == 1:
-    move(self, left_motor, vel, 1)
-    move(self, right_motor, vel, 1)
-    message = jsonResponse('text', 'Moving forward for ' + str(delay))
+    move(self, left_motor, velocity, 1)
+    move(self, right_motor, velocity, 1)
+    message = jsonResponse('text', 'Moving forward ' + str(magnitude) + ' cm')
   elif cmd == 2:
-    move(self, left_motor, vel, -1)
-    move(self, right_motor, vel, -1)
-    message = jsonResponse('text', 'Moving backward for ' + str(delay))
+    move(self, left_motor, velocity, -1)
+    move(self, right_motor, velocity, -1)
+    message = jsonResponse('text', 'Moving backward ' + str(magnitude) + ' cm')
   elif cmd == 3:
-    move(self, left_motor, vel, 1)
-    move(self, right_motor, vel, -1)
-    message = jsonResponse('text', 'Turning left for ' + str(delay))
+    move(self, left_motor, velocity, 1)
+    move(self, right_motor, velocity, -1)
+    message = jsonResponse('text', 'Turning left ' + str(magnitude) + ' degrees')
   elif cmd == 4:
-    move(self, left_motor, vel, -1)
-    move(self, right_motor, vel, 1)
-    message = jsonResponse('text', 'Turning right for ' + str(delay))
+    move(self, left_motor, velocity, -1)
+    move(self, right_motor, velocity, 1)
+    message = jsonResponse('text', 'Turning right for ' + str(magnitude) + ' degrees')
   elif cmd == 5:
-    move(self, top_motor, vel, 1)
-    message = jsonResponse('text', 'Moving the arm down ' + str(delay))
+    move(self, top_motor, velocity, 1)
+    message = jsonResponse('text', 'Moving the arm down ' + str(magnitude) + ' degrees')
     whichStop = 1
   elif cmd == 6:
-    move(self, top_motor, vel, -1)
-    message = jsonResponse('text', 'Moving the arm up ' + str(delay))
+    move(self, top_motor, velocity, -1)
+    message = jsonResponse('text', 'Moving the arm up ' + str(magnitude) + ' degrees')
     whichStop = 1
   elif cmd == 7:
+    move(self, top_wheel_motor, velocity, 1)
+    message = jsonResponse("text", "Spin the arm clockwise " + str(magnitude) + ' degrees');
+    whichStop = 1;
+  elif cmd == 8:
+    move(self, top_wheel_motor, velocity, -1)
+    message = jsonResponse("text", "Spin the arm in counterclockwise " + str(magnitude) + ' degrees');
+    whichStop = 1;
+  elif cmd == 9:
     message = jsonResponse('text', 'Move key out')
     whichStop = 2
-  elif cmd == 8:
+  elif cmd == 10:
     message = jsonResponse('text', 'Move key in')
     whichStop = 2
   elif cmd == 97:
@@ -141,7 +158,7 @@ def action(self, cmd, vel, delay):
 
   # delay is used to allow the motor to move for a predetermined
   # amount of time before it's turned off
-  self.step(delay)
+  self.step(getDelay(cmd, magnitude))
 
   # indicates which stop function is called
   if whichStop == 0:
@@ -149,6 +166,7 @@ def action(self, cmd, vel, delay):
     left_motor.setVelocity(0)
   elif whichStop == 1:
     top_motor.setVelocity(0)
+    top_wheel_motor.setVelocity(0)
 
   return message
 
@@ -176,6 +194,18 @@ def getBearing(compass):
 def jsonResponse(content, data):
   message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}"
   return message
+
+def getDelay(cmd, magnitude):
+  if cmd == 1 or cmd == 2:
+    return int(((1.0 * magnitude) / cmPerSecond) * 1000)
+  elif cmd == 3 or cmd == 4:
+    return int(((1.0 * magnitude) / degPerSecond) * 1000)
+  elif cmd == 5 or cmd == 6:
+    return int(((1.0 * magnitude) / topDegPerSecond) * 1000)
+  elif cmd == 7 or cmd == 8:
+    return int(((1.0 * magnitude) / topDegPerSecond) * 1000)
+  else:
+    return 1000
 
 # The main program starts from here
 

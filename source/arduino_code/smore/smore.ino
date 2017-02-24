@@ -37,7 +37,12 @@ int PWMC = 7;
 int DIN1 = 8;
 int PWMD = 9;
 
-
+//Magnitude constants
+int speed = 1;
+int cmPerSecond = 1;
+int degPerSecond = 1;
+int topDegPerSecond = 1;
+int topSpinDegPerSecond = 1;
 
 
 void setup(){
@@ -64,17 +69,18 @@ void setup(){
 //command list:(command, speed)
 //1 2 - move forward or backward
 //3 4 - turn left or right
-//5 - stop 6 -arm stop
-//7 8 - move the arm
-//11-16 function without time delay
+//5 6 - move arm up or down
+//7 8 - spin the arm cw or ccw
+//9 10 - move key in or out
+//99 - get robot type
 
 void loop(){
   while(Serial.available() > 0){
     int f = Serial.parseInt();//1,2,3,4,5,6-forward backward left right
-    int v = Serial.parseInt();//- stop standby, v range from 130-255
-    int d = Serial.parseInt();//the amount of delay prior to stoping the motors
+    int m = Serial.parseInt();//- stop standby, v range from 130-255
+    // int d = Serial.parseInt();//the amount of delay prior to stoping the motors
                               //may be used for encoder position in the future
-    Serial.println(action(f, v, d));
+    Serial.println(action(f, m));
   }  
 }
 
@@ -84,7 +90,7 @@ void loop(){
  * del indicates the delay prior to the command being terminated
  * which may be used to indicate encoder position in the future
  */
-String action(int act, int speed, int del){
+String action(int act, int magnitude){
   String message = "";
   int whichStop = 0;
 
@@ -92,45 +98,45 @@ String action(int act, int speed, int del){
     case 1:
       move(1,speed,1);
       move(0,speed,0);
-      message = jsonResponse("text", "Moving Forward for " + String(del));
+      message = jsonResponse("text", "Moving Forward " + String(magnitude) + " cm");
       break;
     case 2:
       move(1,speed,0);
       move(0,speed,1);
-      message += jsonResponse("text", "Moving Backward for " + String(del)); 
+      message += jsonResponse("text", "Moving Backward " + String(magnitude) + " cm");
       break;
     case 3:
       move(1,speed,0);
       move(0,speed,0);
-      message += jsonResponse("text", "Turning Left for " + String(del));
+      message += jsonResponse("text", "Turning Left " + String(magnitude) + " degrees");
       break;
     case 4:
       move(1,speed,1);
       move(0,speed,1);
-      message += jsonResponse("text", "Turning Right for " + String(del));
+      message += jsonResponse("text", "Turning Right " + String(magnitude) + " degrees");
       break;
     case 5:
       move(2,speed,1);
       move(3,speed,0);
-      message += jsonResponse("text", "Moving the arm in direction 1 for " + String(del));
+      message += jsonResponse("text", "Moving the arm in direction 1 " + String(magnitude) + " degrees");
       whichStop = 1;
       break;
     case 6:
       move(2,speed,0);
       move(3,speed,1);
-      message += jsonResponse("text", "Moving the arm in direction 2 for " + String(del));
+      message += jsonResponse("text", "Moving the arm in direction 2 " + String(magnitude) + " degrees");
       whichStop = 1;
       break;
     case 7:
       move(2,speed,1);
       move(3,speed,1);
-      message += jsonResponse("text", "Spin the arm in direction 1 for " + String(del));
+      message += jsonResponse("text", "Spin the arm in direction 1 " + String(magnitude) + " degrees");
       whichStop = 1;
       break;
     case 8:
       move(2,speed,0);
       move(3,speed,0);
-      message += jsonResponse("text", "Spin the arm in direction 2 for " + String(del));
+      message += jsonResponse("text", "Spin the arm in direction 2 " + String(magnitude) + " degrees");
       whichStop = 1;
       break;
     case 9:
@@ -148,7 +154,7 @@ String action(int act, int speed, int del){
 
   //delay is used to allow the motor to move for a predetermined
   //amount of time before it's turned off
-  delay(del);
+  delay(getDelay(act, magnitude));
 
   //indicates which stop function is called
   Stop(whichStop);
@@ -218,7 +224,21 @@ void move(int motor, int speed, int direction){
   }
 }
 
-
+double getDelay(int cmd, int magnitude){
+//Calculates the duration of the action based on what the command is
+//Different wheels move at different speeds
+  if(cmd == 1 || cmd == 2) {
+    return ((1.0 * magnitude) / cmPerSecond) * 1000;
+  } else if (cmd == 3 || cmd == 4) {
+    return ((1.0 * magnitude) / degPerSecond) * 1000;
+  } else if (cmd == 5 || cmd == 6) {
+    return ((1.0 * magnitude) / topDegPerSecond) * 1000;
+  } else if (cmd == 7 || cmd == 8) {
+    return ((1.0 * magnitude) / topSpinDegPerSecond) * 1000;
+  }
+  // return 1 second as a default
+  return 1000;
+}
 
 String jsonResponse(String content, String data){
   String message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}";

@@ -1,41 +1,63 @@
 '''
-This file contains the code for managing the world model.  It updates the world model
-with data from the communication level and gives the model to the AI level.  It also
-converts AI movement commands into low-level commands which are sent to the
-communication level.
+This file is part of the amoebots project developed under the IPFW Senior Design Capstone.
 
 Created on Oct 11, 2016
+
 View the full repository here https://github.com/car-chase/amoebots
 '''
 
 from time import sleep
 from message import Message
 
-class movement_level:
-    con_dict = {}
+class MovementLevel:
+    """
+    The movement level of the AI controller.  This level consolidates all the sensor data into a
+    world model that can be processed by the AI level.  This level also converts high-level
+    movement commands into low-level commands that the robots can interpret.
+
+    Args:
+        options (dict): The dictionary containing the program settings.
+
+    Attributes:
+        options (dict): The dictionary containing the program settings.
+        keep_running (bool): Boolean that keeps the main event loop running.
+        connections (dict): A dictionary that maps the program levels to their respective queues.
+    """
 
     def __init__(self, options):
         self.options = options
-        self.infinite_loop = True
+        self.keep_running = True
+        self.connections = {}
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
-        self.con_dict['COM_LEVEL'] = com_input
-        self.con_dict['MOV_LEVEL'] = mov_input
-        self.con_dict['AI_LEVEL'] = ai_input
-        self.con_dict['MAIN_LEVEL'] = main_input
+        """
+        The main event loop of the movement level.  The loop checks for messages to the level,
+        interprets the message, and performs the appropriate action.
 
-        self.con_dict["MAIN_LEVEL"].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'info', {
-            'message': 'Movement_level is running'
+        Args:
+            mov_input (Queue): The queue for receiving messages in the movement level.
+            com_input (Queue): The queue for sending messages to the communication level.
+            ai_input (Queue): The queue for sending messages to the AI level.
+            main_input (Queue): The queue for sending messages to the main level.
+        """
+
+        self.connections['COM_LEVEL'] = ['running', com_input, None]
+        self.connections['MOV_LEVEL'] = ['running', mov_input, None]
+        self.connections['AI_LEVEL'] = ['running', ai_input, None]
+        self.connections['MAIN_LEVEL'] = ['running', main_input, None]
+
+        self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'info', {
+            'message': 'MOV_LEVEL is running'
         }))
 
         # Infinite loop to keep the process running
-        while self.infinite_loop:
+        while self.keep_running:
             try:
 
                 # Get items from input queue until it is not empty
-                while not self.con_dict['MOV_LEVEL'].empty():
+                while not self.connections['MOV_LEVEL'][1].empty():
 
-                    message = self.con_dict['MOV_LEVEL'].get()
+                    message = self.connections['MOV_LEVEL'][1].get()
 
                     # make sure the response is a list object
                     if isinstance(message, Message):
@@ -50,94 +72,255 @@ class movement_level:
 
                         #relay message to destination
                         if message.destination != "MOV_LEVEL":
-                            relay_to = self.con_dict[message.destination][0]
+                            relay_to = self.connections[message.destination][1]
                             relay_to.put(message)
 
                         elif self.options['DUMP_MSGS_TO_MAIN']:
-                            self.con_dict["MAIN_LEVEL"].put(message)
+                            self.connections["MAIN_LEVEL"][1].put(message)
 
                     else:
                         # un-handled message
                         # send this un-handled message to main
                         # for raw output to the screen
-                        self.con_dict["MAIN_LEVEL"].put(message)
+                        self.connections["MAIN_LEVEL"][1].put(message)
 
                 # Do rest of stuff
 
                 sleep(.1)
 
             except Exception as err:
-                self.con_dict["MAIN_LEVEL"].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'error', {
+                # Catch all exceptions and log them.
+                self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'error', {
                     'message': str(err)
                 }))
+                # Raise the exception again so it isn't lost.
+                raise
 
     def process_command(self, message):
+        """
+        The command processor of the movement level.  It processes messages categorized as
+        "commands".
+
+        Args:
+            message (Message): The message object to be processed.
+        """
 
         if message.data.get('directive') == 'add':
             self.cycle_commands(message.origin)
 
         elif message.category == 'command' and message.data.get('directive') == 'failure':
             # if the item is a 'failure', remove the process from the CON_DICT
-            if self.con_dict.get(message.origin) != None:
-                del self.con_dict[message.origin]
+            if self.connections.get(message.origin) != None:
+                del self.connections[message.origin]
 
         elif message.data.get('directive') == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # The level has been told to shutdown.  Kill all the children!!!
             # Loop over the child processes and shut them shutdown
 
-            self.con_dict["MAIN_LEVEL"].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'info', {
+            self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'info', {
                 'message': 'Shutting down MOV_LEVEL'
             }))
 
             # End the com_level
-            self.infinite_loop = False
+            self.keep_running = False
 
     def cycle_commands(self, destination):
-        self.con_dict['COM_LEVEL'].put(Message('MOV_LEVEL', destination, 'movement', {
+        """
+        A dummy function that cycles all the commands available to the robot.
+
+        Args:
+            destination (str): The destination com/tcp port for the commands.
+        """
+
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 1,
             'velocity': 150,
             'duration': 2,
             'message': 'Forward movement command'
         }))
-        self.con_dict['COM_LEVEL'].put(Message('MOV_LEVEL', destination, 'movement', {
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 2,
             'velocity': 150,
             'duration': 2,
             'message': 'Backward movement command'
         }))
-        self.con_dict['COM_LEVEL'].put(Message('MOV_LEVEL', destination, 'movement', {
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 3,
             'velocity': 150,
             'duration': 2,
             'message': 'Left movement command'
         }))
-        self.con_dict['COM_LEVEL'].put(Message('MOV_LEVEL', destination, 'movement', {
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 4,
             'velocity': 150,
             'duration': 2,
             'message': 'Right movement command'
         }))
-        self.con_dict['COM_LEVEL'].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 5,
-            'velocity': 150,
-            'duration': .5,
-            'message': 'Arm direction 1 movement command'
-        }))
-        self.con_dict['COM_LEVEL'].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 6,
-            'velocity': 150,
-            'duration': .5,
-            'message': 'Arm direction 2 movement command'
-        }))
-        self.con_dict['COM_LEVEL'].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 7,
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 1,
             'velocity': 150,
             'duration': 2,
-            'message': 'Arm direction 1 movement command'
+            'message': 'Forward movement command'
         }))
-        self.con_dict['COM_LEVEL'].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 8,
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 2,
             'velocity': 150,
             'duration': 2,
-            'message': 'Arm direction 2 movement command'
+            'message': 'Backward movement command'
         }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 3,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Left movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 4,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Right movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 1,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Forward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 2,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Backward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 3,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Left movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 4,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Right movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 1,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Forward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 2,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Backward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 3,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Left movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 4,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Right movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 1,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Forward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 2,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Backward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 3,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Left movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 4,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Right movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 1,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Forward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 2,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Backward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 3,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Left movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 4,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Right movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 1,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Forward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 2,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Backward movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 3,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Left movement command'
+        }))
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 4,
+            'velocity': 150,
+            'duration': 2,
+            'message': 'Right movement command'
+        }))
+        # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+        #     'command': 5,
+        #     'velocity': 150,
+        #     'duration': .5,
+        #     'message': 'Arm direction 1 movement command'
+        # }))
+        # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+        #     'command': 6,
+        #     'velocity': 150,
+        #     'duration': .5,
+        #     'message': 'Arm direction 2 movement command'
+        # }))
+        # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+        #     'command': 7,
+        #     'velocity': 150,
+        #     'duration': 2,
+        #     'message': 'Arm direction 1 spin command'
+        # }))
+        # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+        #     'command': 8,
+        #     'velocity': 150,
+        #     'duration': 2,
+        #     'message': 'Arm direction 2 spin command'
+        # }))

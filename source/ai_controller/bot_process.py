@@ -1,13 +1,18 @@
 '''
+This file is part of the amoebots project developed under the IPFW Senior Design Capstone.
+
 Created on Nov 1, 2016
 
-@author: Trevor
+View the full repository here https://github.com/car-chase/amoebots
 '''
+
 from time import sleep
 import serial
 import socket
 import json
 from message import Message
+
+socket.setdefaulttimeout(10)
 
 BAUD = '115200'
 replied = False
@@ -177,12 +182,10 @@ def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                     movementStr = str(command) + " " + str(velocity) + " " + str(duration * 1000)
 
                     COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
-                        'message': 'Shutting down ' + ADDRESS
+                        'message': 'Given command: ' + movementStr
                     }))
 
                     # send data on the socket
-
-                    # establish the connection
                     SOCKET.send(bytes(movementStr, "utf-8"))
 
                     response = SOCKET.recv(1024).strip().decode()

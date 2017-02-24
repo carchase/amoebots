@@ -1,66 +1,104 @@
 '''
-This file contains the code for the AI control algorithms.
+This file is part of the amoebots project developed under the IPFW Senior Design Capstone.
 
 Created on Oct 11, 2016
+
 View the full repository here https://github.com/car-chase/amoebots
 '''
 
 from time import sleep
 from message import Message
 
-CON_DICT = {}
-INFINITE_LOOP = True
+class AiLevel:
+    """
+    The AI level of the AI controller.  This level performs the pathfinding on the world and
+    generates the commands for the robot to execute.
 
-def ai_level_main(AI_INPUT, MOV_INPUT, MAIN_INPUT, OPTIONS):
-    MAIN_INPUT.put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {'message': 'AI_level is running'}))
+    Args:
+        options (dict): The dictionary containing the program settings.
 
-    CON_DICT['AI_LEVEL'] = ['running', AI_INPUT, None]
-    CON_DICT['MOV_LEVEL'] = ['running', MOV_INPUT, None]
-    CON_DICT['MAIN_LEVEL'] = ['running', MAIN_INPUT, None]
+    Attributes:
+        options (dict): The dictionary containing the program settings.
+        keep_running (bool): Boolean that keeps the main event loop running.
+        connections (dict): A dictionary that maps the program levels to their respective queues.
+    """
 
-    global INFINITE_LOOP
-    INFINITE_LOOP = True
+    def __init__(self, options):
+        self.options = options
+        self.keep_running = True
+        self.connections = {}
 
-    # Infinite loop to keep the process running
-    while INFINITE_LOOP:
-        try:
-            # Get items from input queue until it is not empty
-            while not AI_INPUT.empty():
+    def ai_level_main(self, ai_input, mov_input, main_input):
+        """
+        The main event loop of the movement level.  The loop checks for messages to the level,
+        interprets the message, and performs the appropriate action.
 
-                message = AI_INPUT.get()
+        Args:
+            ai_input (Queue): The queue for receiving messages in the AI level.
+            mov_input (Queue): The queue for sending messages to the movement level.
+            main_input (Queue): The queue for sending messages to the main level.
+        """
 
-                # make sure the message is a Message object
-                if isinstance(message, Message):
+        self.connections['AI_LEVEL'] = ['running', ai_input, None]
+        self.connections['MOV_LEVEL'] = ['running', mov_input, None]
+        self.connections['MAIN_LEVEL'] = ['running', main_input, None]
 
-                    # Appropriately process the message depending on its category
-                    if message.category == 'command':
-                        process_command(message)
-
-                    # relay message to destination
-                    if message.destination != "AI_LEVEL":
-                        relay_to = CON_DICT[message.destination][1]
-
-                        relay_to.put(message)
-
-                    elif OPTIONS['DUMP_MSGS_TO_MAIN']:
-                        MAIN_INPUT.put(message)
-
-            # Do rest of stuff
-
-            sleep(.1)
-
-        except Exception as err:
-            MAIN_INPUT.put(Message('AI_LEVEL', 'MAIN_LEVEL', 'error', {'message': str(err)}))
-
-def process_command(message):
-    if message.data.get('directive') == 'shutdown' and message.origin == 'MAIN_LEVEL':
-        # the level has been told to shutdown.  Kill all the children!!!
-        # Loop over the child processes and shut them shutdown
-
-        CON_DICT["MAIN_LEVEL"][1].put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {
-            'message': 'Shutting down AI_LEVEL'
+        main_input.put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {
+            'message': 'AI_LEVEL is running'
         }))
 
-        # End the com_level
-        global INFINITE_LOOP
-        INFINITE_LOOP = False
+        # Infinite loop to keep the process running
+        while self.keep_running:
+            try:
+                # Get items from input queue until it is not empty
+                while not self.connections["AI_LEVEL"][1].empty():
+
+                    message = self.connections["AI_LEVEL"][1].get()
+
+                    # make sure the message is a Message object
+                    if isinstance(message, Message):
+
+                        # Appropriately process the message depending on its category
+                        if message.category == 'command':
+                            self.process_command(message)
+
+                        # relay message to destination
+                        if message.destination != "AI_LEVEL":
+                            relay_to = self.connections[message.destination][1]
+
+                            relay_to.put(message)
+
+                        elif self.options['DUMP_MSGS_TO_MAIN']:
+                            main_input.put(message)
+
+                # Do rest of stuff
+
+                sleep(.1)
+
+            except Exception as err:
+                # Catch all exceptions and log them.
+                self.connections["MAIN_LEVEL"][1].put(Message('AI_LEVEL', 'MAIN_LEVEL', 'error', {
+                    'message': str(err)
+                }))
+                # Raise the exception again so it isn't lost.
+                raise
+
+    def process_command(self, message):
+        """
+        The command processor of the AI level.  It processes messages categorized as
+        "commands".
+
+        Args:
+            message (Message): The message object to be processed.
+        """
+
+        if message.data.get('directive') == 'shutdown' and message.origin == 'MAIN_LEVEL':
+            # the level has been told to shutdown.  Kill all the children!!!
+            # Loop over the child processes and shut them shutdown
+
+            self.connections["MAIN_LEVEL"][1].put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {
+                'message': 'Shutting down AI_LEVEL'
+            }))
+
+            # End the com_level
+            self.keep_running = False

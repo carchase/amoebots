@@ -7,103 +7,177 @@ View the full repository here https://github.com/car-chase/amoebots
 '''
 
 from time import sleep
-import serial
 import socket
 import json
+from serial import Serial
 from message import Message
 
 socket.setdefaulttimeout(10)
 
-BAUD = '115200'
-replied = False
+class BotProcess:
+    """
+    Facilitates communication with a robot.  Both TCP and COM processes use this class.
 
-def bot_listener_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
-        'message': 'Process_listener started on port ' + ADDRESS
-    }))
+    Args:
+        address (str): The COM/TCP address that the robot is using.
+        options (dict): The dictionary containing the program settings.
 
-    try:
-        with serial.Serial(ADDRESS, BAUD, timeout=10) as PORT:
+    Attributes:
+        bot_input (Queue): The queue for receiving messages in the bot process.
+        com_input (Queue): The queue for sending messages to the communication level.
+        keep_running (bool): Boolean that keeps the main event loop running.
+    """
 
-            # Call the ping command
-            PORT.write(bytes("99 0 0", "utf-8"))
+    def __init__(self, address, options):
+        self.address = address
+        self.options = options
+        self.bot_input = None
+        self.com_input = None
+        self.keep_running = True
 
-            response = PORT.readline().strip().decode()
+    def bot_process_main(self, bot_input, com_input):
+        """
+        The main function of a bot process.  It checks the connection type (TCP/COM) and hands off
+        processing to the appropriate handler.
 
-            if not response == '':
-                # Clean out the buffer
-                while PORT.inWaiting() > 0:
-                    response = response + PORT.read(PORT.inWaiting()).strip().decode()
+        Args:
+            com_input (Queue): The queue for sending messages to the communication level.
+            bot_input (Queue): The queue for receiving messages in the bot process.
+        """
 
-                COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'command', {
-                    'directive': 'add',
-                    'message': 'Added a robot on port ' + ADDRESS
+        self.bot_input = bot_input
+        self.com_input = com_input
+
+        self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+            'message': 'BOT_PROCESS is running on ' + self.address
+        }))
+
+        # Determine if the bot is TCP or COM
+        try:
+            if self.address[0:3] == "COM":
+                self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                    'message': 'Bot is on a com port'
                 }))
+                self.com_process()
+            elif self.address[0:3] == "TCP":
+                self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                    'message': 'Bot is on a tcp port'
+                }))
+                self.tcp_process()
             else:
-                COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'command', {
+                self.com_input.put(Message(self.address, 'COM_LEVEL', 'command', {
                     'directive': 'failure',
-                    'message': 'Could not add robot on port ' + ADDRESS
+                    'message': 'Bot is on an unsupported port type'
                 }))
 
-            PORT.close()
-
-    except Exception as e:
-        COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'command', {
-            'directive': 'failure',
-            'message': 'Failed with the following error: ' + str(e)
-        }))
-
-    return 0
-
-def bot_process_main(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {'message': 'Bot_process is running'}))
-
-    # Determine if the bot is TCP or COM
-    try:
-        if ADDRESS[0:3] == "COM":
-            COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
-                'message': 'Bot is on a com port'
-            }))
-            com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE)
-        elif ADDRESS[0:3] == "TCP":
-            COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
-                'message': 'Bot is on a tcp port'
-            }))
-            tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE)
-        else:
-            COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'command', {
+        except Exception as err:
+            # Catch all exceptions and log them.
+            self.com_input.put(Message(self.address, 'COM_LEVEL', 'command', {
                 'directive': 'failure',
-                'message': 'Bot is on an unsupported port type'
+                'message': 'Failed with the following error: ' + str(err)
             }))
 
-    except Exception as e:
-        COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'command', {
-            'directive': 'failure',
-            'message': 'Failed with the following error: ' + str(e)
-        }))
+            # Raise the exception again so it isn't lost.
+            raise
 
-    return 0
+        return 0
 
-def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    with serial.Serial(ADDRESS, BAUD, timeout=10) as PORT:
-        COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {'message': 'Connected to robot'}))
+    def com_process(self):
+        """
+        The main event loop of a COM port robot.
+        """
+        with Serial(self.address, self.options["BAUD"], port=10) as connection:
+            self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                'message': 'Connected to robot'
+            }))
 
-        # establish connection
-        response = PORT.readline().strip().decode()
-        while PORT.inWaiting() > 0:
-            response = response + PORT.read(PORT.inWaiting()).strip().decode()
+            # establish connection
+            response = connection.readline().strip().decode()
+            while connection.inWaiting() > 0:
+                response = response + connection.read(connection.inWaiting()).strip().decode()
 
-        INFINITE_LOOP = True
+            while self.keep_running:
+                self.wait_for_commands(.1)
 
-        while INFINITE_LOOP:
-            waitForCommands(.1, PROCESS_QUEUE)
+                # there is data in the queue
+                while not self.bot_input.empty():
+                    message = self.bot_input.get()
 
-            # there is data in the queue
-            while not PROCESS_QUEUE.empty():
-                message = PROCESS_QUEUE.get()
+                    # make sure the message is a list object
+                    if isinstance(message, Message):
 
-                # make sure the message is a list object
-                if isinstance(message, Message):
+                        # check if the message is a movement command
+                        if message.category == 'movement':
+
+                            command = message.data.get("command")
+                            velocity = message.data.get("velocity")
+                            duration = message.data.get("duration")
+
+                            mov_str = str(command) + " " + str(velocity) + " " + str(duration*1000)
+
+                            self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                                'message': 'Given command: ' + mov_str
+                            }))
+
+                            connection.write(bytes(mov_str, "utf-8"))
+
+                            sleep(duration + 4)
+
+                            response = ''
+                            while connection.inWaiting() > 0:
+                                response = response + connection.read(
+                                    connection.inWaiting()).strip().decode()
+
+                            if response == '':
+                                self.com_input.put(Message(self.address, 'COM_LEVEL', 'command', {
+                                    'directive': 'failure',
+                                    'message': 'Failed to get a response from robot'
+                                }))
+
+                                return 0
+
+                            else:
+
+                                parsed_res = json.loads(response)
+
+                                self.com_input.put(
+                                    Message(self.address, 'COM_LEVEL', 'response', parsed_res)
+                                )
+
+                        elif (message.data.get('directive') == 'shutdown'
+                              and message.origin == 'COM_LEVEL'):
+
+                            connection.close()
+
+                            # the listener has been told to shutdown.
+                            self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                                'message': 'Shutting down ' + self.address
+                            }))
+
+                            self.keep_running = False
+
+    def tcp_process(self):
+        """
+        The main event loop of a COM port robot.
+        """
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as connection:
+            self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                'message': 'Connected to robot'
+            }))
+
+            # Get the connection data
+            connection_data = self.bot_input.get()
+
+            # Sleep for a few seconds to let the TCP client get setup
+            sleep(2)
+            connection.connect((connection_data.get('ip'), int(self.address[4:])))
+
+            while self.keep_running:
+                self.wait_for_commands(.1)
+
+                # there is data in the queue
+                while not self.bot_input.empty():
+                    message = self.bot_input.get()
 
                     # check if the message is a movement command
                     if message.category == 'movement':
@@ -112,100 +186,40 @@ def com_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
                         velocity = message.data.get("velocity")
                         duration = message.data.get("duration")
 
-                        movementStr = str(command) + " " + str(velocity) + " " + str(duration*1000)
+                        mov_str = str(command) + " " + str(velocity) + " " + str(duration * 1000)
 
-                        COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
-                            'message': 'Given command: ' + movementStr
+                        self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                            'message': 'Given command: ' + mov_str
                         }))
 
-                        PORT.write(bytes(movementStr, "utf-8"))
+                        # send data on the socket
+                        connection.send(bytes(mov_str, "utf-8"))
 
-                        sleep(duration + 4)
+                        response = connection.recv(1024).strip().decode()
 
-                        response = ''
-                        while PORT.inWaiting() > 0:
-                            response = response + PORT.read(PORT.inWaiting()).strip().decode()
-
-                        if response == '':
-                            COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'command', {
-                                'directive': 'failure',
-                                'message': 'Failed to get a response from robot'
-                            }))
-
-                            return 0
-
-                        else:
-
-                            parsed_res = json.loads(response)
-
-                            COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'response', parsed_res))
+                        self.com_input.put(Message(self.address, 'COM_LEVEL', 'response', {
+                            'message': 'Received the following response: '
+                                       + response.replace('\r\n', ' ')}))
 
                     elif (message.data.get('directive') == 'shutdown'
                           and message.origin == 'COM_LEVEL'):
 
-                        PORT.close()
+                        connection.close()
 
                         # the listener has been told to shutdown.
-                        COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
-                            'message': 'Shutting down ' + ADDRESS
+                        self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                            'message': 'Shutting down ' + self.address
                         }))
 
-                        INFINITE_LOOP = False
+                        self.keep_running = False
 
-def tcp_process(ADDRESS, COM_INPUT, PROCESS_QUEUE):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as SOCKET:
-        COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {'message': 'Connected to robot'}))
+    def wait_for_commands(self, timeout):
+        """
+        Loops forever until a command is put in the bot_input
 
-        # get the connection data
-        connectionData = PROCESS_QUEUE.get()
-
-        # sleep for a few seconds to let the simulator get setup
-        sleep(2)
-        SOCKET.connect((connectionData.get('ip'), int(ADDRESS[4:])))
-
-        INFINITE_LOOP = True
-
-        while INFINITE_LOOP:
-            waitForCommands(.1, PROCESS_QUEUE)
-
-            # there is data in the queue
-            while not PROCESS_QUEUE.empty():
-                message = PROCESS_QUEUE.get()
-
-                # check if the message is a movement command
-                if message.category == 'movement':
-
-                    command = message.data.get("command")
-                    velocity = message.data.get("velocity")
-                    duration = message.data.get("duration")
-
-                    movementStr = str(command) + " " + str(velocity) + " " + str(duration * 1000)
-
-                    COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
-                        'message': 'Given command: ' + movementStr
-                    }))
-
-                    # send data on the socket
-                    SOCKET.send(bytes(movementStr, "utf-8"))
-
-                    response = SOCKET.recv(1024).strip().decode()
-
-                    COM_INPUT.put(Message(ADDRESS, 'COM_LEVEL', 'response', {
-                        'message': 'Received the following response: '
-                                   + response.replace('\r\n', ' ')}))
-
-                elif message.data.get('directive') == 'shutdown' and message.origin == 'COM_LEVEL':
-
-                    SOCKET.close()
-
-                    # the listener has been told to shutdown.
-                    COM_INPUT.put(Message(ADDRESS, 'MAIN_LEVEL', 'info', {
-                        'message': 'Shutting down ' + ADDRESS
-                    }))
-
-                    INFINITE_LOOP = False
-
-def waitForCommands(timeout, input):
-    # wait until a command has been issued
-    while input.empty():
-        sleep(timeout)
+        Args:
+            timeout (float): The time in seconds that the loop should wait before checking for data.
+        """
+        # wait until a command has been issued
+        while self.bot_input.empty():
+            sleep(timeout)

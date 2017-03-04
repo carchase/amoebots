@@ -8,12 +8,17 @@ View the full repository here https://github.com/car-chase/amoebots
 
 import signal
 import inspect
+import socket
 from main_level import MainLevel
 
 # ***************** Constants used to configure the controller *****************
 OPTIONS = {
-    'DUMP_MSGS_TO_MAIN': True, # Show all messages in main log output
-    'NUMBER_OF_DEVICES': 5 # The number of devices that the controller expects to use
+    'DUMP_MSGS_TO_MAIN': False, # Show all messages in main log output
+    'NUMBER_OF_DEVICES': 5, # The number of devices that the controller expects to use
+    'BAUD': '115200', # The baud rate used by the com ports
+    'TCP_LISTENER_IP': socket.gethostbyname(socket.gethostname()), # Hostname the TCP listener uses
+    'TCP_LISTENER_PORT': 5000, # The port the TCP listener uses
+    'TCP_LISTENER_START_PORT': 10000 # The starting port for TCP bots to use.
 }
 # ******************************************************************************
 

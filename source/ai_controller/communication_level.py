@@ -8,7 +8,8 @@ View the full repository here https://github.com/car-chase/amoebots
 
 from multiprocessing import Process, Queue
 from time import sleep
-import bot_process
+from bot_process import BotProcess
+from com_listener import COMListener
 from tcp_listener import TCPListener
 from serial.tools import list_ports
 from message import Message
@@ -52,12 +53,12 @@ class CommunicationLevel:
         }))
 
         # start the tcp listener
-        tcp_listener_queue = Queue()
+        tcp_listener_input = Queue()
         tcp_listener = TCPListener(self.options)
         tcp_listener_process = Process(target=tcp_listener.tcp_listener_main,
-                                       args=(self.connections["COM_LEVEL"][1], tcp_listener_queue))
+                                       args=(tcp_listener_input, self.connections["COM_LEVEL"][1]))
         tcp_listener_process.start()
-        self.connections['TCP_LISTENER'] = ['running', tcp_listener_queue, tcp_listener_process]
+        self.connections['TCP_LISTENER'] = ['running', tcp_listener_input, tcp_listener_process]
 
         # infinite loop to keep checking the queue for information
         while self.keep_running:
@@ -121,22 +122,19 @@ class CommunicationLevel:
         """
 
         if message.data.get('directive') == 'add':
-            # if the command is an 'add' directive then start a new botProcess
-            # and add the new process to the CON_DICT
-            process_queue = Queue()
+            # if the command is an 'add' directive start a new BotProcess
+            bot_input = Queue()
+            bot = BotProcess(message.origin, self.options)
+            bot_process = Process(target=bot.bot_process_main,
+                                  args=(bot_input, self.connections["COM_LEVEL"][1]))
 
-            # start new process if the serial port is not already open
-            process = Process(target=bot_process.bot_process_main,
-                              args=(message.origin, self.connections["COM_LEVEL"][1],
-                                    process_queue))
-
-            # push the data to the process
+            # push the data to the new bot process
             if message.data.get("args") != None:
-                process_queue.put(message.data.get("args"))
+                bot_input.put(message.data.get("args"))
 
-            process.start()
+            bot_process.start()
 
-            self.connections[message.origin] = ['running', process_queue, process]
+            self.connections[message.origin] = ['running', bot_input, bot_process]
 
             # forward to the mov level
             message.destination = "MOV_LEVEL"
@@ -189,8 +187,6 @@ class CommunicationLevel:
 
             address = port[0]
 
-            process_queue = Queue()
-
             if address not in self.connections:
 
                 self.connections["MAIN_LEVEL"][1].put(Message('COM_LEVEL', 'MAIN_LEVEL', 'info', {
@@ -198,8 +194,10 @@ class CommunicationLevel:
                 }))
 
                 #start new process if the serial port is not already open
-                process = Process(target=bot_process.bot_listener_main,
-                                  args=(address, self.connections["COM_LEVEL"][1], process_queue))
-                process.start()
-
-                self.connections[address] = ['checking', process_queue, process]
+                com_listener_input = Queue()
+                com_listener = COMListener(self.options)
+                com_listener_process = Process(target=com_listener.com_listener_main,
+                                               args=(address, self.connections["COM_LEVEL"][1],
+                                                     com_listener_input))
+                com_listener_process.start()
+                self.connections[address] = ['checking', com_listener_input, com_listener_process]

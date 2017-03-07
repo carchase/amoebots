@@ -18,7 +18,7 @@ So, to make up for the room for error, we're going to need to make these pixel v
 Try to create some actions that let the robots move diagonally.
 
 To explain some of the variables:
-robot: this referrs to the robots that will be in the arena.
+robot: this refers to the robots that will be in the arena.
 x and y: are the current position of the robot.
 posX, posY, negX, and negY: These variables indicate when the robot is moving.
     neg being negative, and pos being positive.
@@ -37,12 +37,15 @@ def problem(verbose):
                 ('position', 'y+1'),
             ),
             preconditions=(
-                # ('empty', 'x', 'y+1'),
+                ('dec', 'y+1', 'y'),
+                ('blank', 'x', 'y+1'),
+                neg(('at', 'r', 'x', 'y+1')),
                 ('at', 'r', 'x', 'y'),
             ),
             effects=(
-                # neg(('empty', 'x', 'y+1')),
+                neg(('blank', 'x', 'y+1')),
                 neg(('at', 'r', 'x', 'y')),
+                ('at', 'blank', 'x', 'y'),
                 ('at', 'r', 'x', 'y+1'),
             ),
         ),
@@ -54,12 +57,15 @@ def problem(verbose):
                 ('position', 'y-1'),
             ),
             preconditions=(
-                # ('empty', 'x', 'y-1'),
+                ('inc', 'y-1', 'y'),
+                ('blank', 'x', 'y-1'),
+                neg(('at', 'r', 'x', 'y-1')),
                 ('at', 'r', 'x', 'y'),
             ),
             effects=(
-                # neg(('empty', 'x', 'y-1')),
+                neg(('blank', 'x', 'y-1')),
                 neg(('at', 'r', 'x', 'y')),
+                ('at', 'blank', 'x', 'y'),
                 ('at', 'r', 'x', 'y-1'),
             ),
         ),
@@ -71,12 +77,15 @@ def problem(verbose):
                 ('position', 'x-1'),
             ),
             preconditions=(
-                # ('empty', 'x', 'x-1'),
+                ('dec', 'x-1', 'x'),
+                ('blank', 'x-1', 'y'),
+                neg(('at', 'r', 'x-1', 'y')),
                 ('at', 'r', 'x', 'y'),
             ),
             effects=(
-                # neg(('empty', 'x', 'x-1')),
+                neg(('blank', 'x', 'x-1')),
                 neg(('at', 'r', 'x', 'y')),
+                ('at', 'blank', 'x', 'y'),
                 ('at', 'r', 'x-1', 'y'),
             ),
         ),
@@ -88,34 +97,36 @@ def problem(verbose):
                 ('position', 'x+1'),
             ),
             preconditions=(
-                # ('empty', 'x', 'x+1'),
+                ('inc', 'x+1', 'x'),
+                ('blank', 'x+1', 'y'),
                 ('at', 'r', 'x', 'y'),
             ),
             effects=(
-                # neg(('empty', 'x', 'x+1')),
+                neg(('blank', 'x', 'x+1')),
                 neg(('at', 'r', 'x', 'y')),
+                ('at', 'blank', 'x', 'y'),
                 ('at', 'r', 'x+1', 'y'),
             ),
         ),
     ))
     problem = Problem(
         domain,
-        {'robot': ('r1', 'r2', 'r3', 'r4', 'r5'),
+        {'robot': (1, 2, 3, 4, 5),
          'position': (0, 1, 2),
          },
         init=(
-            ('at', 'r1', 0, 0),
-            ('at', 'r2', 1, 1),
-            ('at', 'r3', 2, 2),
-            ('at', 'r4', 2, 1),
-            ('at', 'r5', 0, 2),
+            ('at', 1, 0, 0),
+            ('at', 2, 1, 1),
+            ('at', 3, 2, 2),
+            ('at', 4, 2, 1),
+            ('at', 5, 0, 2),
         ),
         goal=(
-            ('at', 'r1', 1, 0),
-            ('at', 'r2', 1, 1),
-            ('at', 'r3', 1, 2),
-            ('at', 'r4', 2, 1),
-            ('at', 'r5', 0, 1),
+            ('at', 1, 1, 0),
+            ('at', 2, 1, 1),
+            ('at', 3, 1, 2),
+            ('at', 4, 2, 1),
+            ('at', 5, 0, 1),
         )
     )
 

@@ -86,7 +86,7 @@ class BotProcess:
         """
         The main event loop of a COM port robot.
         """
-        with Serial(self.address, self.options["BAUD"], port=10) as connection:
+        with Serial(self.address, self.options["BAUD"], timeout=10) as connection:
             self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
                 'message': 'Connected to robot'
             }))

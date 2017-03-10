@@ -197,7 +197,7 @@ class CommunicationLevel:
                 com_listener_input = Queue()
                 com_listener = COMListener(self.options)
                 com_listener_process = Process(target=com_listener.com_listener_main,
-                                               args=(address, self.connections["COM_LEVEL"][1],
-                                                     com_listener_input))
+                                               args=(address, com_listener_input,
+                                                     self.connections["COM_LEVEL"][1]))
                 com_listener_process.start()
                 self.connections[address] = ['checking', com_listener_input, com_listener_process]

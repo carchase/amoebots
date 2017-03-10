@@ -25,6 +25,7 @@ class TCPListener:
         options (dict): The dictionary containing the program settings.
 
     Attributes:
+        options (dict): The dictionary containing the program settings.
         static_com_input (Queue): Static value. Queue for pushing commands from the TCPHandler
         static_next_port (int): Static value. The next available port for a TCP robot to use.
         listener_input (Queue): The queue for receiving messages in the listener level.
@@ -39,10 +40,10 @@ class TCPListener:
     static_next_port = 10000
 
     def __init__(self, options):
+        self.options = options
         self.listener_input = None
         self.com_input = None
         self.keep_running = True
-        self.options = options
         TCPListener.static_next_port = self.options["TCP_LISTENER_START_PORT"]
 
     def tcp_listener_main(self, listener_input, com_input):

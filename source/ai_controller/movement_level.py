@@ -135,169 +135,25 @@ class MovementLevel:
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 1,
             'velocity': 150,
-            'duration': 2,
+            'duration': 10,
             'message': 'Forward movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 2,
             'velocity': 150,
-            'duration': 2,
+            'duration': 10,
             'message': 'Backward movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 3,
             'velocity': 150,
-            'duration': 2,
+            'duration': 10,
             'message': 'Left movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 4,
             'velocity': 150,
-            'duration': 2,
-            'message': 'Right movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 1,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Forward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 2,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Backward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 3,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Left movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 4,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Right movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 1,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Forward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 2,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Backward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 3,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Left movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 4,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Right movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 1,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Forward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 2,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Backward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 3,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Left movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 4,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Right movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 1,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Forward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 2,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Backward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 3,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Left movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 4,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Right movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 1,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Forward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 2,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Backward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 3,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Left movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 4,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Right movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 1,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Forward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 2,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Backward movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 3,
-            'velocity': 150,
-            'duration': 2,
-            'message': 'Left movement command'
-        }))
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-            'command': 4,
-            'velocity': 150,
-            'duration': 2,
+            'duration': 10,
             'message': 'Right movement command'
         }))
         # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {

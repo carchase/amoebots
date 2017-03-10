@@ -13,7 +13,8 @@ from main_level import MainLevel
 
 # ***************** Constants used to configure the controller *****************
 OPTIONS = {
-    'DUMP_MSGS_TO_MAIN': False, # Show all messages in main log output
+    'DUMP_MSGS_TO_MAIN': True, # Show all messages in main log output
+    'RAISE_ERRORS_AFTER_CATCH': False, # Raises errors after catching
     'NUMBER_OF_DEVICES': 5, # Number of devices that the controller expects to use
     'BAUD': 115200, # Baud rate used by the COM ports
     'TCP_LISTENER_IP': socket.gethostbyname(socket.gethostname()), # Hostname the TCP listener uses

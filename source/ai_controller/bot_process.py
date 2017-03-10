@@ -79,7 +79,8 @@ class BotProcess:
             }))
 
             # Raise the exception again so it isn't lost.
-            raise
+            if self.options["RAISE_ERRORS_AFTER_CATCH"]:
+                raise
 
         return 0
 

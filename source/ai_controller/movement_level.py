@@ -93,8 +93,10 @@ class MovementLevel:
                 self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'error', {
                     'message': str(err)
                 }))
+
                 # Raise the exception again so it isn't lost.
-                raise
+                if self.options["RAISE_ERRORS_AFTER_CATCH"]:
+                    raise
 
     def process_command(self, message):
         """

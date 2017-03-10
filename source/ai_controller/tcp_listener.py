@@ -151,9 +151,6 @@ class TCPListener:
                 # exception occurred, attempt to inform the client of the error.
                 self.request.send(bytes("Unsupported data type", "utf-8"))
 
-                # Raise the exception again so it isn't lost.
-                raise
-
             finally:
                 # close the socket
                 self.request.close()

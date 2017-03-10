@@ -86,7 +86,7 @@ class MovementLevel:
 
                 # Do rest of stuff
 
-                sleep(.1)
+                sleep(self.options["MOV_LOOP_SLEEP_INTERVAL"])
 
             except Exception as err:
                 # Catch all exceptions and log them.
@@ -134,26 +134,22 @@ class MovementLevel:
 
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 1,
-            'velocity': 150,
-            'duration': 10,
+            'magnitude': 5,
             'message': 'Forward movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 2,
-            'velocity': 150,
-            'duration': 10,
+            'magnitude': 5,
             'message': 'Backward movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 3,
-            'velocity': 150,
-            'duration': 10,
+            'magnitude': 5,
             'message': 'Left movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 4,
-            'velocity': 150,
-            'duration': 10,
+            'magnitude': 5,
             'message': 'Right movement command'
         }))
         # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {

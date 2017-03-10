@@ -48,10 +48,11 @@ class COMListener:
         }))
 
         try:
-            with Serial(address, self.options["BAUD"], timeout=10) as port:
+            with Serial(address, self.options["BAUD"],
+                        timeout=self.options["COM_PORT_TIMEOUT"]) as port:
 
                 # Call the ping command
-                port.write(bytes("99 0 0", "utf-8"))
+                port.write(bytes("99 0", "utf-8"))
 
                 response = port.readline().strip().decode()
 

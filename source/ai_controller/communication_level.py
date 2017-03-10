@@ -102,7 +102,7 @@ class CommunicationLevel:
                 self.scan_com_ports()
 
                 # sleep so that this is not constantly eating processing time
-                sleep(.1)
+                sleep(self.options["COM_LOOP_SLEEP_INTERVAL"])
 
             except Exception as err:
                 # Catch all exceptions and log them.

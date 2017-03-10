@@ -47,7 +47,7 @@ class MainLevel:
             # Check the main input queue and display logs
             self.check_messages()
 
-            sleep(.1)
+            sleep(self.options["MAIN_LOOP_SLEEP_INTERVAL"])
 
     def init_levels(self):
         """

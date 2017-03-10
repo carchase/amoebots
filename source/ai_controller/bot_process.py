@@ -12,8 +12,6 @@ import json
 from serial import Serial
 from message import Message
 
-socket.setdefaulttimeout(10)
-
 class BotProcess:
     """
     Facilitates communication with a robot.  Both TCP and COM processes use this class.
@@ -34,6 +32,9 @@ class BotProcess:
         self.bot_input = None
         self.com_input = None
         self.keep_running = True
+
+        # Set the TCP socket timeout
+        socket.setdefaulttimeout(self.options["TCP_PORT_TIMEOUT"])
 
     def bot_process_main(self, bot_input, com_input):
         """
@@ -86,18 +87,21 @@ class BotProcess:
         """
         The main event loop of a COM port robot.
         """
-        with Serial(self.address, self.options["BAUD"], timeout=10) as connection:
+        with Serial(self.address, self.options["BAUD"],
+                    timeout=self.options["COM_PORT_TIMEOUT"]) as connection:
+
             self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
                 'message': 'Connected to robot'
             }))
 
-            # establish connection
-            response = connection.readline().strip().decode()
+            # establish connection and clear the buffer from the robot
+            response = connection.readline()
             while connection.inWaiting() > 0:
-                response = response + connection.read(connection.inWaiting()).strip().decode()
+                response = connection.read(connection.inWaiting())
 
             while self.keep_running:
-                self.wait_for_commands(.1)
+                self.wait_for_commands(self.options["BOT_LOOP_SLEEP_INTERVAL"],
+                                       self.options["BOT_SLEEP_INTERVALS_PER_PING"])
 
                 # there is data in the queue
                 while not self.bot_input.empty():
@@ -110,10 +114,9 @@ class BotProcess:
                         if message.category == 'movement':
 
                             command = message.data.get("command")
-                            velocity = message.data.get("velocity")
-                            duration = message.data.get("duration")
+                            magnitude = message.data.get("magnitude")
 
-                            mov_str = str(command) + " " + str(velocity) + " " + str(duration*1000)
+                            mov_str = str(command) + " " + str(magnitude)
 
                             self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
                                 'message': 'Given command: ' + mov_str
@@ -121,9 +124,8 @@ class BotProcess:
 
                             connection.write(bytes(mov_str, "utf-8"))
 
-                            sleep(duration + 4)
+                            response = connection.readline().strip().decode()
 
-                            response = ''
                             while connection.inWaiting() > 0:
                                 response = response + connection.read(
                                     connection.inWaiting()).strip().decode()
@@ -137,7 +139,6 @@ class BotProcess:
                                 return 0
 
                             else:
-
                                 parsed_res = json.loads(response)
 
                                 self.com_input.put(
@@ -173,7 +174,8 @@ class BotProcess:
             connection.connect((connection_data.get('ip'), int(self.address[4:])))
 
             while self.keep_running:
-                self.wait_for_commands(.1)
+                self.wait_for_commands(self.options["BOT_LOOP_SLEEP_INTERVAL"],
+                                       self.options["BOT_SLEEP_INTERVALS_PER_PING"])
 
                 # there is data in the queue
                 while not self.bot_input.empty():
@@ -183,10 +185,9 @@ class BotProcess:
                     if message.category == 'movement':
 
                         command = message.data.get("command")
-                        velocity = message.data.get("velocity")
-                        duration = message.data.get("duration")
+                        magnitude = message.data.get("magnitude")
 
-                        mov_str = str(command) + " " + str(velocity) + " " + str(duration * 1000)
+                        mov_str = str(command) + " " + str(magnitude)
 
                         self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
                             'message': 'Given command: ' + mov_str
@@ -213,13 +214,25 @@ class BotProcess:
 
                         self.keep_running = False
 
-    def wait_for_commands(self, timeout):
+    def wait_for_commands(self, timeout, intervals_per_ping):
         """
-        Loops forever until a command is put in the bot_input
+        Loops forever until a command is put in the bot_input.  Pings the robot periodically to
+        ensure the connection is still active.
 
         Args:
             timeout (float): The time in seconds that the loop should wait before checking for data.
+            intervals_per_ping (int): Number of intervals that should run before a ping is sent.
         """
+
+        interval = 0
+
         # wait until a command has been issued
         while self.bot_input.empty():
             sleep(timeout)
+            interval = interval + 1
+            if interval >= intervals_per_ping:
+                self.bot_input.put(Message(self.address, self.address, 'movement', {
+                    'command': 99, # Ping command
+                    'magnitude': 0,
+                    'message': 'Pinging Robot'
+                }))

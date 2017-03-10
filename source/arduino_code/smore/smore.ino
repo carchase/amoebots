@@ -20,7 +20,7 @@
 int STBY = 12; //standby
 
 //Motor A Left motor
-int PWMA = 3; //Speed control 
+int PWMA = 3; //Speed control
 //int AIN2 = 3; //Direction
 int AIN1 = 2; //Direction
 
@@ -38,14 +38,14 @@ int DIN1 = 8;
 int PWMD = 9;
 
 //Magnitude constants
-int speed = 1;
+int speed = 150;
 int cmPerSecond = 1;
 int degPerSecond = 1;
 int topDegPerSecond = 1;
 int topSpinDegPerSecond = 1;
 
 
-void setup(){
+void setup() {
   pinMode(STBY, OUTPUT);
 
   pinMode(PWMA, OUTPUT);
@@ -74,68 +74,68 @@ void setup(){
 //9 10 - move key in or out
 //99 - get robot type
 
-void loop(){
-  while(Serial.available() > 0){
+void loop() {
+  while (Serial.available() > 0) {
     int f = Serial.parseInt();//1,2,3,4,5,6-forward backward left right
     int m = Serial.parseInt();//- stop standby, v range from 130-255
     // int d = Serial.parseInt();//the amount of delay prior to stoping the motors
-                              //may be used for encoder position in the future
+    //may be used for encoder position in the future
     Serial.println(action(f, m));
-  }  
+  }
 }
 
 /*
- * act signifies which action the robot will take
- * speed indicates how fast the motor will move
- * del indicates the delay prior to the command being terminated
- * which may be used to indicate encoder position in the future
- */
-String action(int act, int magnitude){
+   act signifies which action the robot will take
+   speed indicates how fast the motor will move
+   del indicates the delay prior to the command being terminated
+   which may be used to indicate encoder position in the future
+*/
+String action(int act, int magnitude) {
   String message = "";
   int whichStop = 0;
 
-  switch(act){
+  switch (act) {
     case 1:
-      move(1,speed,1);
-      move(0,speed,0);
+      move(1, speed, 1);
+      move(0, speed, 0);
       message = jsonResponse("text", "Moving Forward " + String(magnitude) + " cm");
       break;
     case 2:
-      move(1,speed,0);
-      move(0,speed,1);
+      move(1, speed, 0);
+      move(0, speed, 1);
       message += jsonResponse("text", "Moving Backward " + String(magnitude) + " cm");
       break;
     case 3:
-      move(1,speed,0);
-      move(0,speed,0);
+      move(1, speed, 0);
+      move(0, speed, 0);
       message += jsonResponse("text", "Turning Left " + String(magnitude) + " degrees");
       break;
     case 4:
-      move(1,speed,1);
-      move(0,speed,1);
+      move(1, speed, 1);
+      move(0, speed, 1);
       message += jsonResponse("text", "Turning Right " + String(magnitude) + " degrees");
       break;
     case 5:
-      move(2,speed,1);
-      move(3,speed,0);
+      move(2, speed, 1);
+      move(3, speed, 0);
       message += jsonResponse("text", "Moving the arm in direction 1 " + String(magnitude) + " degrees");
       whichStop = 1;
       break;
     case 6:
-      move(2,speed,0);
-      move(3,speed,1);
+      move(2, speed, 0);
+      move(3, speed, 1);
       message += jsonResponse("text", "Moving the arm in direction 2 " + String(magnitude) + " degrees");
       whichStop = 1;
       break;
     case 7:
-      move(2,speed,1);
-      move(3,speed,1);
+      move(2, speed, 1);
+      move(3, speed, 1);
       message += jsonResponse("text", "Spin the arm in direction 1 " + String(magnitude) + " degrees");
       whichStop = 1;
       break;
     case 8:
-      move(2,speed,0);
-      move(3,speed,0);
+      move(2, speed, 0);
+      move(3, speed, 0);
       message += jsonResponse("text", "Spin the arm in direction 2 " + String(magnitude) + " degrees");
       whichStop = 1;
       break;
@@ -162,15 +162,15 @@ String action(int act, int magnitude){
   return message;
 }
 
-void Stop(int which){
-//This stops the motor by setting both IN pins to LOW
-  if (which == 0){
+void Stop(int which) {
+  //This stops the motor by setting both IN pins to LOW
+  if (which == 0) {
     //stops the robot movement
     digitalWrite(AIN1, LOW);
     digitalWrite(BIN1, LOW);
     analogWrite(PWMA, 0);
     analogWrite(PWMB, 0);
-  } else if (which == 1){
+  } else if (which == 1) {
     //stops the arm
     digitalWrite(CIN1, LOW);
     digitalWrite(DIN1, LOW);
@@ -178,33 +178,33 @@ void Stop(int which){
     analogWrite(PWMD, 0);
   } else {
     //stops the key
-    
+
   }
 }
 
-void standby(){
-//enable standby
-  Serial.println("function standby activiated");  
-  digitalWrite(STBY, LOW); 
+void standby() {
+  //enable standby
+  Serial.println("function standby activiated");
+  digitalWrite(STBY, LOW);
 }
 
-void move(int motor, int speed, int direction){
-//Move specific motor at speed and direction
-//motor: 0 for B 1 for A 2 for C 3 for D
-//speed: 0 is off, and 255 is full speed
-//direction: 0 clockwise, 1 counter-clockwise
+void move(int motor, int speed, int direction) {
+  //Move specific motor at speed and direction
+  //motor: 0 for B 1 for A 2 for C 3 for D
+  //speed: 0 is off, and 255 is full speed
+  //direction: 0 clockwise, 1 counter-clockwise
 
   digitalWrite(STBY, HIGH); //disable standby
 
   boolean inPin1 = LOW;
   boolean inPin2 = HIGH;
 
-  if(direction == 1){
+  if (direction == 1) {
     inPin1 = HIGH;
     inPin2 = LOW;
   }
 
-  switch(motor){
+  switch (motor) {
     case 0:
       digitalWrite(BIN1, inPin1);
       analogWrite(PWMB, speed);
@@ -224,10 +224,10 @@ void move(int motor, int speed, int direction){
   }
 }
 
-double getDelay(int cmd, int magnitude){
-//Calculates the duration of the action based on what the command is
-//Different wheels move at different speeds
-  if(cmd == 1 || cmd == 2) {
+double getDelay(int cmd, int magnitude) {
+  //Calculates the duration of the action based on what the command is
+  //Different wheels move at different speeds
+  if (cmd == 1 || cmd == 2) {
     return ((1.0 * magnitude) / cmPerSecond) * 1000;
   } else if (cmd == 3 || cmd == 4) {
     return ((1.0 * magnitude) / degPerSecond) * 1000;
@@ -240,7 +240,13 @@ double getDelay(int cmd, int magnitude){
   return 1000;
 }
 
-String jsonResponse(String content, String data){
-  String message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}";
+String jsonResponse(String content, String data) {
+  String message = "";
+  if (content.equals("json")) {
+    message = "{\"content\":\"" + content + "\",\"data\":" + data + "}";
+  }
+  else {
+    message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}";
+  }
   return message;
 }

@@ -73,7 +73,7 @@ class AiLevel:
 
                 # Do rest of stuff
 
-                sleep(.1)
+                sleep(self.options["AI_LOOP_SLEEP_INTERVAL"])
 
             except Exception as err:
                 # Catch all exceptions and log them.

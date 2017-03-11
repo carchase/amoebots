@@ -16,6 +16,11 @@ from multiprocessing import Queue
 from time import sleep
 import math
 
+velocity = 1          # in rad/s
+cmPerSecond = 5
+degPerSecond = 52.5
+topDegPerSecond = 57.5
+
 # Here is the main class of your controller.
 # This class defines how to initialize and how to run your controller.
 # Note that this class derives Robot and so inherits all its functions
@@ -23,10 +28,11 @@ import math
 class TCPIPControl(Robot):
     # User defined function for initializing and running
     # the TCPIPControl class
-    def handle_input(self, cmd, vel, delay):
+    def handle_input(self, cmd, magnitude):
 
         # variables for the motors
         self.top_motor = None
+        self.top_wheel_motor = None
         self.left_motor = None
         self.right_motor = None
         self.top_conn = None
@@ -38,6 +44,7 @@ class TCPIPControl(Robot):
 
         self.top_motor = self.getMotor("Bending Motor")
         # top_motor.setPosition(float('inf'))
+        top_wheel_motor = self.getMotor("Top Wheel Motor")
         self.left_motor = self.getMotor("Left Wheel Motor")
         # left_motor.setPosition(float('inf'))
         self.right_motor = self.getMotor("Right Wheel Motor")
@@ -61,46 +68,52 @@ class TCPIPControl(Robot):
 
 
         if cmd == 1:
-            move(self, left_motor, vel, 1)
-            move(self, right_motor, vel, 1)
-            message = jsonResponse('text', 'Moving forward for ' + str(delay))
+            self.move(self.left_motor, velocity, 1)
+            self.move(self.right_motor, velocity, 1)
+            message = self.jsonResponse('text', 'Moving forward ' + str(magnitude) + ' cm')
         elif cmd == 2:
-            move(self, left_motor, vel, -1)
-            move(self, right_motor, vel, -1)
-            message = jsonResponse('text', 'Moving backward for ' + str(delay))
+            self.move(self.left_motor, velocity, -1)
+            self.move(self.right_motor, velocity, -1)
+            message = self.jsonResponse('text', 'Moving backward ' + str(magnitude) + ' cm')
         elif cmd == 3:
-            move(self, left_motor, vel, 1)
-            move(self, right_motor, vel, -1)
-            message = jsonResponse('text', 'Turning left for ' + str(delay))
+            self.move(self.left_motor, velocity, 1)
+            self.move(self.right_motor, velocity, -1)
+            message = self.jsonResponse('text', 'Turning left ' + str(magnitude) + ' degrees')
         elif cmd == 4:
-            move(self, left_motor, vel, -1)
-            move(self, right_motor, vel, 1)
-            message = jsonResponse('text', 'Turning right for ' + str(delay))
+            self.move(self.left_motor, velocity, -1)
+            self.move(self.right_motor, velocity, 1)
+            message = self.jsonResponse('text', 'Turning right for ' + str(magnitude) + ' degrees')
         elif cmd == 5:
-            move(self, top_motor, vel, 1)
-            message = jsonResponse('text', 'Moving the arm down ' + str(delay))
+            self.move(self.top_motor, velocity, 1)
+            message = self.jsonResponse('text', 'Moving the arm down ' + str(magnitude) + ' degrees')
             whichStop = 1
         elif cmd == 6:
-            move(self, top_motor, vel, -1)
-            message = jsonResponse('text', 'Moving the arm up ' + str(delay))
+            self.move(self.top_motor, velocity, -1)
+            message = self.jsonResponse('text', 'Moving the arm up ' + str(magnitude) + ' degrees')
             whichStop = 1
         elif cmd == 7:
-            message = jsonResponse('text', 'Move key out')
-            whichStop = 2
+            self.move(self.top_wheel_motor, velocity, 1)
+            message = self.jsonResponse("text", "Spin the arm clockwise " + str(magnitude) + ' degrees');
+            whichStop = 1;
         elif cmd == 8:
-            message = jsonResponse('text', 'Move key in')
+            self.move(self.top_wheel_motor, velocity, -1)
+            message = self.jsonResponse("text", "Spin the arm in counterclockwise " + str(magnitude) + ' degrees');
+            whichStop = 1;
+        elif cmd == 9:
+            message = self.jsonResponse('text', 'Move key out')
             whichStop = 2
-        elif cmd == 97:
-            message = jsonResponse('text', 'Robot position: ' + str(getPosition(gps)))
+        elif cmd == 10:
+            message = self.jsonResponse('text', 'Move key in')
+            whichStop = 2
         elif cmd == 98:
-            message = jsonResponse('text', 'Robot orientation: ' + str(getBearing(compass)))
+            message = self.jsonResponse('json', '{\"position\":' + getPosition(gps) + ',\"heading\":' + getBearing(compass) + '}')
         elif cmd == 99:
-            message = jsonResponse('json', '{\"type\":\"smore\"}')
+            message = self.jsonResponse('json', '{\"type\":\"smore\"}')
 
 
         # delay is used to allow the motor to move for a predetermined
         # amount of time before it's turned off
-        self.step(delay)
+        self.step(self.getDelay(cmd, magnitude))
 
         # indicates which stop function is called
         if whichStop == 0:
@@ -119,11 +132,11 @@ class TCPIPControl(Robot):
         motor.setVelocity(direction * speed)
 
     # returns the position of the given gps in a 3d vector <x, y, z>
-    def getPosition(gps):
+    def getPosition(self, gps):
         return gps.getValues()
 
     # returns the bearing of the given compass in degrees
-    def getBearings(compass):
+    def getBearings(self, compass):
         north = compass.getValues()
         rad = math.atan2(north[0], north[1])
         bearing = (rad - 1.5708) / math.pi * 180.0
@@ -131,9 +144,24 @@ class TCPIPControl(Robot):
             bearing += 360.0
         return bearing
 
-    def jsonResponse(content, data):
-        message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}"
+    def jsonResponse(self, content, data):
+        if content == 'json':
+            message = "{\"content\":\"" + content + "\",\"data\":" + data + "}"
+        else:
+            message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}"
         return message
+
+    def getDelay(self, cmd, magnitude):
+        if cmd == 1 or cmd == 2:
+            return int(((1.0 * magnitude) / cmPerSecond) * 1000)
+        elif cmd == 3 or cmd == 4:
+            return int(((1.0 * magnitude) / degPerSecond) * 1000)
+        elif cmd == 5 or cmd == 6:
+            return int(((1.0 * magnitude) / topDegPerSecond) * 1000)
+        elif cmd == 7 or cmd == 8:
+            return int(((1.0 * magnitude) / topDegPerSecond) * 1000)
+        else:
+            return 1000
 
     def setup_new_host_port(self, hostport):
         host = hostport[0]
@@ -144,8 +172,8 @@ class TCPIPControl(Robot):
         # The host gethostbyname method is only working on my (Ben Smith's) computer because the
         # host that it's connecting to is my own computer. This will need to change if the connection
         # is external.
-        # host, port = socket.gethostbyname(socket.gethostname()), 5000
-        host, port = '10.100.239.200', 5000
+        host, port = socket.gethostbyname(socket.gethostname()), 5000
+        # host, port = '10.100.239.200', 5000
         # data = 'My ID is: 1'.join(sys.argv[1:])
         data = (b'{\"type\": \"SMORES\",\"id\": \"1\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) + b'\"}')
         # data = 'My ID is: 1'
@@ -227,10 +255,10 @@ class TCPIPControl(Robot):
             fromTCPLock.acquire()
             command = fromTCPQueue.get()
 
-            print "Commands from queue: ", command[0], '...', command[1], '...', command[2]
+            print "Commands from queue: ", command[0], '...', command[1] #, '...', command[2]
             # The first two commands are sent to the command function using the command
             # type and then the velocity.
-            response = self.handle_input(int(command[0]), int(command[1])/100, int(command[2]))
+            response = self.handle_input(int(command[0]), int(command[1]))# /100, int(command[2]))
             toTCPQueue.put(response)
             toTCPLock.release()
 

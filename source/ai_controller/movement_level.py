@@ -28,6 +28,7 @@ class MovementLevel:
         self.options = options
         self.keep_running = True
         self.connections = {}
+        self.first_connect = True
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -108,6 +109,10 @@ class MovementLevel:
         """
 
         if message.data.get('directive') == 'add':
+            if self.first_connect:
+                self.first_connect = False
+                sleep(12)
+
             self.cycle_commands(message.origin)
 
         elif message.category == 'command' and message.data.get('directive') == 'failure':
@@ -136,12 +141,12 @@ class MovementLevel:
 
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 1,
-            'magnitude': 5,
+            'magnitude': 2,
             'message': 'Forward movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 2,
-            'magnitude': 5,
+            'magnitude': 2,
             'message': 'Backward movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {

@@ -141,22 +141,22 @@ class MovementLevel:
 
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 1,
-            'magnitude': 2,
+            'magnitude': 15,
             'message': 'Forward movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 2,
-            'magnitude': 2,
+            'magnitude': 15,
             'message': 'Backward movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 3,
-            'magnitude': 5,
+            'magnitude': 180,
             'message': 'Left movement command'
         }))
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
             'command': 4,
-            'magnitude': 5,
+            'magnitude': 180,
             'message': 'Right movement command'
         }))
         # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {

@@ -27,7 +27,7 @@ def problem(verbose):
     problem = Problem(domain,
                       {'robot': (1, 2),
                        'position': (0, 1), },
-                      init=(('inc', 0, 1), ('dec', 0, 1), ('at', 1, 0, 0), ('at', 2, 1, 1),),
+                      init=(('inc', 0, 1), ('dec', 1, 0), ('at', 1, 0, 0), ('at', 2, 1, 1),),
                       goal=(('at', 1, 0, 1), ('at', 2, 1, 0),))
 
     plan = planner(problem, verbose=verbose)

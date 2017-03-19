@@ -204,6 +204,7 @@ class MovementLevel:
                 'message': 'Right movement command'
             }))
             self.one = True
+
         # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
         #     'command': 5,
         #     'velocity': 150,

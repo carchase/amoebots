@@ -26,8 +26,10 @@ class LinkUART
 {
 public:
   
-  void init()
+  void init(int x, int y)
   {
+    SoftwareSerial temp = SoftwareSerial(x, y);
+    Serial1 = temp;
     Serial1.begin(9600);
   }
   void setArg(uint16_t arg)

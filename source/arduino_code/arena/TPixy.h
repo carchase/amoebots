@@ -95,7 +95,7 @@ public:
   int8_t setServos(uint16_t s0, uint16_t s1);
   int8_t setBrightness(uint8_t brightness);
   int8_t setLED(uint8_t r, uint8_t g, uint8_t b);
-  void init();
+  void init(int x, int y);
   
   Block *blocks;
 	
@@ -120,9 +120,9 @@ template <class LinkType> TPixy<LinkType>::TPixy(uint16_t arg)
   link.setArg(arg);
 }
 
-template <class LinkType> void TPixy<LinkType>::init()
+template <class LinkType> void TPixy<LinkType>::init(int x, int y)
 {
-  link.init();
+  link.init(x, y);
 }
 
 template <class LinkType> TPixy<LinkType>::~TPixy()

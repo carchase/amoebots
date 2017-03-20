@@ -8,7 +8,7 @@ const int numObjs = 7;
 const int bufSize = 32;
 const int bigBufSize = 512;
 
-PixyUART pixy;
+PixyUART pixy[numCameras];
 
 struct object {
 	int x;
@@ -29,8 +29,9 @@ camera cameras[numCameras];
 void setup() {
 	Serial.begin(9600);
 	Serial.print("Starting\n");
-
-	pixy.init();
+  for (int i = 0; i < numCameras; i++) {
+    pixy[i].init(i * 2, i * 2 + 1);
+  }
 	initialize();
 }
 
@@ -40,28 +41,17 @@ void loop() {
 	uint16_t blocks;
 	char buf[bufSize];
 
-	blocks = pixy.getBlocks();
+//	blocks = pixy.getBlocks();
 	i++;
 
-	if(i % waitFrames == 0) {
-		if (blocks) {
-			// sprintf(buf, "Detected %d blocks\n", blocks);
-			// Serial.print(buf);
-			if (updateData(0, blocks)) {
-				// sprintf(buf, "Update completed, detected %d blocks\n", blocks);
-				// Serial.print(buf);
-			} else {
-				// Serial.print("Error updating data\n");
-			}
-			// for (int j = 0; j < numCameras; j++) {
-			// 	if (!updateData(j, blocks)) {
-			// 		Serial.print("Error updating camera " + j + "\n");
-			// 	}
-			// }
-		} else {
-			// Serial.print("No blocks detected\n");
-		}
-	}
+  for (int j = 0; j < numCameras; j++) {
+    blocks = pixy[j].getBlocks();
+    if(i % waitFrames == 0) {
+      if (!updateData(j, blocks)) {
+        Serial.println("Error updating camera");
+      }
+    }
+  }
 
 	if (i % reportFrames == 0) {
 		delay(1000);
@@ -100,20 +90,20 @@ int updateData(int cam, uint16_t blocks) {
 
 	for (int j = 0; j < blocks; j++) {
 		// if the returned signature is more than the number of objects a camera can track, then there is a (probably config) problem
-		if(pixy.blocks[j].signature >= numObjs) {
+		if(pixy[cam].blocks[j].signature >= numObjs) {
 			return 0;
 		}
-		if (!cameras[cam].objects[pixy.blocks[j].signature - 1].updated) {
+		if (!cameras[cam].objects[pixy[cam].blocks[j].signature - 1].updated) {
 			object o;
-			o.x = pixy.blocks[j].x;
-			o.y = pixy.blocks[j].y;
-			o.width = pixy.blocks[j].width;
-			o.height = pixy.blocks[j].height;
-			o.angle = pixy.blocks[j].angle;
+			o.x = pixy[cam].blocks[j].x;
+			o.y = pixy[cam].blocks[j].y;
+			o.width = pixy[cam].blocks[j].width;
+			o.height = pixy[cam].blocks[j].height;
+			o.angle = pixy[cam].blocks[j].angle;
 			o.updated = 1;
-			cameras[cam].objects[pixy.blocks[j].signature - 1] = o;
+			cameras[cam].objects[pixy[cam].blocks[j].signature - 1] = o;
 		} else {
-			cameras[cam].objects[pixy.blocks[j].signature - 1].multiple = 1;
+			cameras[cam].objects[pixy[cam].blocks[j].signature - 1].multiple = 1;
 		}
 	}
 

@@ -30,6 +30,9 @@ class TCPIPControl(Robot):
     # the TCPIPControl class
     def handle_input(self, cmd, magnitude):
 
+        # robot id
+        self.robot_id = 'robot-1'
+
         # variables for the motors
         self.top_motor = None
         self.top_wheel_motor = None
@@ -66,6 +69,8 @@ class TCPIPControl(Robot):
 
         whichStop = 0
 
+        # delay to give sensors time to get initial values
+        self.step(64)
 
         if cmd == 1:
             self.move(self.left_motor, velocity, 1)
@@ -94,21 +99,23 @@ class TCPIPControl(Robot):
         elif cmd == 7:
             self.move(self.top_wheel_motor, velocity, 1)
             message = self.jsonResponse("text", "Spin the arm clockwise " + str(magnitude) + ' degrees');
-            whichStop = 1;
+            whichStop = 1
         elif cmd == 8:
             self.move(self.top_wheel_motor, velocity, -1)
             message = self.jsonResponse("text", "Spin the arm in counterclockwise " + str(magnitude) + ' degrees');
-            whichStop = 1;
+            whichStop = 1
         elif cmd == 9:
             message = self.jsonResponse('text', 'Move key out')
             whichStop = 2
         elif cmd == 10:
             message = self.jsonResponse('text', 'Move key in')
             whichStop = 2
-        elif cmd == 98:
-            message = self.jsonResponse('json', '{\"position\":' + getPosition(gps) + ',\"heading\":' + getBearing(compass) + '}')
+        elif cmd == 92:
+            message = self.jsonResponse('sensor-simulator', '{\"id\":\"' + self.robot_id + '\",\"data\":{\"x\":' + str(self.getPosition(self.gps)[0]) + ',\"y\":' + str(self.getPosition(self.gps)[2]) + ',\"heading\":'+ str(self.getBearing(self.compass)) + '} }')
         elif cmd == 99:
             message = self.jsonResponse('json', '{\"type\":\"smore\"}')
+        else:
+            message = self.jsonResponse('unsupported', '{\"data\":\"command not supported\"}')
 
 
         # delay is used to allow the motor to move for a predetermined
@@ -125,19 +132,34 @@ class TCPIPControl(Robot):
         return message
 
     def move(self, motor, speed, direction):
-        # move motor specific speed and direction
-        # speed: 0 is off, 255 is full speed
-        # direction: 1 clockwise, -1 counter-clockwise
+        ''' Moves motor specific speed and direction
+
+        Args:
+            speed (int): 0 is off, 255 is full speed
+            direction(int): 1 clockwise, -1 counter-clockwise
+        '''
         motor.setPosition(float('inf'))
         motor.setVelocity(direction * speed)
 
-    # returns the position of the given gps in a 3d vector <x, y, z>
     def getPosition(self, gps):
+        '''
+        Returns the position of the given gps in a 3d vector <x, y, z>
+
+        Args:
+            gps (GPS): the gps module on the robot
+        '''
         return gps.getValues()
 
-    # returns the bearing of the given compass in degrees
-    def getBearings(self, compass):
+    def getBearing(self, compass):
+        '''
+        Returns the bearing of the given compass in degrees
+
+        Args:
+            compass (Compass): the compass module on the robot
+        '''
+        # get compass value as matrix
         north = compass.getValues()
+        # convert to degrees
         rad = math.atan2(north[0], north[1])
         bearing = (rad - 1.5708) / math.pi * 180.0
         if bearing < 0.0:
@@ -145,6 +167,13 @@ class TCPIPControl(Robot):
         return bearing
 
     def jsonResponse(self, content, data):
+        '''
+        Generates a json message to return to the communication level
+
+        Args:
+            content (string): the content type to tag the json object
+            data (string): the data to place inside the json object
+        '''
         if content == 'json':
             message = "{\"content\":\"" + content + "\",\"data\":" + data + "}"
         else:
@@ -152,6 +181,14 @@ class TCPIPControl(Robot):
         return message
 
     def getDelay(self, cmd, magnitude):
+        '''
+        Finds the duration of a movement command, given the base speed, to move
+        the specified magnitude
+
+        Args:
+            cmd (int): the given command
+            magnitude (int): the distance to move
+        '''
         if cmd == 1 or cmd == 2:
             return int(((1.0 * magnitude) / cmPerSecond) * 1000)
         elif cmd == 3 or cmd == 4:

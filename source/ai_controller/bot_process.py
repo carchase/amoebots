@@ -237,3 +237,4 @@ class BotProcess:
                     'magnitude': 0,
                     'message': 'Pinging Robot'
                 }))
+                interval = 0

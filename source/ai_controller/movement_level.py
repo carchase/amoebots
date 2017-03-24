@@ -110,11 +110,9 @@ class MovementLevel:
         """
 
         if message.data.get('directive') == 'add':
-            if self.first_connect:
-                self.first_connect = False
-                sleep(12)
+            self.connections[message.origin] = ['running', self.connections['COM_LEVEL'], None]
 
-            self.cycle_commands(message.origin)
+            # TODO: Handle robot addition.
 
         elif message.category == 'command' and message.data.get('directive') == 'failure':
             # if the item is a 'failure', remove the process from the CON_DICT
@@ -131,98 +129,7 @@ class MovementLevel:
 
             # End the com_level
             self.keep_running = False
-
-    def cycle_commands(self, destination):
-        """
-        A dummy function that cycles all the commands available to the robot.
-
-        Args:
-            destination (str): The destination com/tcp port for the commands.
-        """
-
-        if self.one:
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 1,
-                'magnitude': 2,
-                'message': 'Forward movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 4,
-                'magnitude': 2,
-                'message': 'Right movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 1,
-                'magnitude': 1,
-                'message': 'Forward movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 4,
-                'magnitude': 5,
-                'message': 'Right movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 1,
-                'magnitude': 1,
-                'message': 'Forward movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 3,
-                'magnitude': 5,
-                'message': 'Left movement command'
-            }))
-            self.one = False
-        else:
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 1,
-                'magnitude': 2,
-                'message': 'Forward movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 3,
-                'magnitude': 2,
-                'message': 'Left movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 1,
-                'magnitude': 1,
-                'message': 'Forward movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 3,
-                'magnitude': 5,
-                'message': 'Left movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 1,
-                'magnitude': 1,
-                'message': 'Forward movement command'
-            }))
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': 4,
-                'magnitude': 5,
-                'message': 'Right movement command'
-            }))
-            self.one = True
-
-        # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-        #     'command': 5,
-        #     'velocity': 150,
-        #     'duration': .5,
-        #     'message': 'Arm direction 1 movement command'
-        # }))
-        # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-        #     'command': 6,
-        #     'velocity': 150,
-        #     'duration': .5,
-        #     'message': 'Arm direction 2 movement command'
-        # }))
-        # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-        #     'command': 7,
-        #     'velocity': 150,
-        #     'duration': 2,
-        #     'message': 'Arm direction 1 spin command'
-        # }))
+        # Example command
         # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
         #     'command': 8,
         #     'velocity': 150,

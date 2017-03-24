@@ -21,7 +21,7 @@ OPTIONS = {
     'TCP_LISTENER_PORT': 5000, # Port the TCP listener uses
     'TCP_LISTENER_START_PORT': 10000, # Starting port for TCP bots to use
     'BOT_LOOP_SLEEP_INTERVAL': .001, # Number of seconds between bot event loop iterations
-    'BOT_SLEEP_INTERVALS_PER_PING': 5000, # Number of bot sleep intervals before a ping is sent
+    'BOT_SLEEP_INTERVALS_PER_PING': 500, # Number of bot sleep intervals before a ping is sent
     'COM_PORT_TIMEOUT': 10, # Number of seconds that a COM port will wait for a response
     'TCP_PORT_TIMEOUT': 10, # Number of seconds that a TCP port will wait for a response
     'MAIN_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between main event loop iterations

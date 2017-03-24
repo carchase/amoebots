@@ -87,7 +87,7 @@ class TCPIPControl(Robot):
         elif cmd == 4:
             self.move(self.left_motor, velocity, -1)
             self.move(self.right_motor, velocity, 1)
-            message = self.jsonResponse('text', 'Turning right for ' + str(magnitude) + ' degrees')
+            message = self.jsonResponse('text', 'Turning right ' + str(magnitude) + ' degrees')
         elif cmd == 5:
             self.move(self.top_motor, velocity, 1)
             message = self.jsonResponse('text', 'Moving the arm down ' + str(magnitude) + ' degrees')
@@ -110,6 +110,8 @@ class TCPIPControl(Robot):
         elif cmd == 10:
             message = self.jsonResponse('text', 'Move key in')
             whichStop = 2
+        elif cmd == 90:
+            message = self.jsonResponse('robot-info', '{\"type\":\"sim-smores\",\"id\":\"' + self.robot_id + '\"}')
         elif cmd == 92:
             message = self.jsonResponse('sensor-simulator', '{\"id\":\"' + self.robot_id + '\",\"data\":{\"x\":' + str(self.getPosition(self.gps)[0]) + ',\"y\":' + str(self.getPosition(self.gps)[2]) + ',\"heading\":'+ str(self.getBearing(self.compass)) + '} }')
         elif cmd == 99:

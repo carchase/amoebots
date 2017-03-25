@@ -76,12 +76,7 @@ class CommunicationLevel:
                             self.process_command(message)
 
                         elif message.category == 'response':
-                            # TODO: Get the revelant data and forward it to MOV_LEVEL
-
-                            # if isinstance(response.data, dict):
-                            #     print(response.data)
-
-                            message.destination = "MAIN_LEVEL"
+                            message.destination = "MOV_LEVEL"
 
                         # relay message to destination
                         if message.destination != "COM_LEVEL":

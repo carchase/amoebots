@@ -69,8 +69,7 @@ class MovementLevel:
                             self.process_command(message)
 
                         elif message.category == 'response':
-                            # TODO: Process response
-                            message.destination = "MAIN_LEVEL"
+                            process_response(message)
 
                         #relay message to destination
                         if message.destination != "MOV_LEVEL":
@@ -136,3 +135,15 @@ class MovementLevel:
         #     'duration': 2,
         #     'message': 'Arm direction 2 spin command'
         # }))
+
+    def process_response(self, message):
+        if message.category == 'sensor-simulator':
+            # read position and heading
+            x = message.data.x
+            y = message.data.y
+            heading = message.data.heading
+
+            # convert position and heading to world model representation (grid)
+            
+
+            # align to grid if necessary

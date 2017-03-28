@@ -141,6 +141,8 @@ def read_data(path):
             maze.append(ele)
     return maze
 
+def write_data(path):
+
 def main():
     maze = read_data("Arena.txt")
     # for i in maze:

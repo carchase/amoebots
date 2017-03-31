@@ -30,6 +30,8 @@ class MovementLevel:
         self.connections = {}
         self.first_connect = True
         self.one = True
+        self.world_model = Grid()
+        self.robots = []
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -139,11 +141,16 @@ class MovementLevel:
     def process_response(self, message):
         if message.category == 'sensor-simulator':
             # read position and heading
+            robot_id = message.id
             x = message.data.x
             y = message.data.y
             heading = message.data.heading
 
             # convert position and heading to world model representation (grid)
-            
+            robots[robot_id].position = (x, y)
+            robots[robot_id].heading = heading
+            robots[robot_id].tile = grid.get_tile((x, y))
 
             # align to grid if necessary
+            if abs(robots[robot_id].position.x - robots[robot_id].tile.center.x) > 0.5 or abs(robots[robot_id].position.y - robots[robot_id].tile.center.y) > 0.5:
+                robots[robot_id].move(robots[robot_id].center)

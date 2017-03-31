@@ -54,19 +54,20 @@ class Robot:
     Representation of a robot in the world model. Each robot has a real position and heading,
     and a tile it is occupying on the world space grid.
     """
-    def __init__(self, grid, x, y):
+    def __init__(self, grid, robot_id, x, y):
+        self.robot_id = robot_id
         self.position = None
         self.heading = None
         self.grid = grid
         self.tile = grid.get_tile(x, y)
 
     def move(self, new_position):
-        self.tile.occupied = False
+        self.tile.occupied = None
         self.position = new_position
         self.tile = self.grid[int(self.position.x * 100),
                               int(self.position.y * 100)]
                               # convert meters to centimeters then align to grid
-        self.tile.occupied = True
+        self.tile.occupied = self
 
     def get_distance(self, old_position, new_position):
         return math.sqrt((new_position[0] - old_position[0]) ** 2 +
@@ -82,7 +83,7 @@ class Robot:
 
 class Tile:
     def __init__(self, x, y):
-        self.occupied = False
+        self.occupied = None   # is a Robot if tile is occupied by that robot
         self.goal = False
         self.position = (x, y)
         self.center = (self.position[0] / TILES_PER_CM, self.position[1] / TILES_PER_CM)

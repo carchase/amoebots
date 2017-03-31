@@ -10,6 +10,8 @@ from time import sleep
 from message import Message
 from world_model import Grid
 
+MAX_MISALIGNMENT = 0.5
+
 class MovementLevel:
     """
     The movement level of the AI controller.  This level consolidates all the sensor data into a
@@ -146,12 +148,15 @@ class MovementLevel:
             x = message.data.x
             y = message.data.y
             heading = message.data.heading
+            robot = self.robots[robot_id]
 
             # convert position and heading to world model representation (grid)
-            self.robots[robot_id].position = (x, y)
-            self.robots[robot_id].heading = heading
-            self.robots[robot_id].tile = self.world_model.get_tile((x, y))
+            robot.position = (x, y)
+            robot.heading = heading
+            robot.tile = self.world_model.get_tile((x, y))
 
             # align to grid if necessary
-            if abs(self.robots[robot_id].position.x - self.robots[robot_id].tile.center.x) > 0.5 or abs(self.robots[robot_id].position.y - self.robots[robot_id].tile.center.y) > 0.5:
-                self.robots[robot_id].move(self.robots[robot_id].center)
+            if abs(robot.position.x - robot.tile.center.x) > MAX_MISALIGNMENT or abs(robot.position.y - robot.tile.center.y) > MAX_MISALIGNMENT:
+                # get angle to center
+                angle_to_center = robot.get_angle(robot.position, robot.tile.center)
+

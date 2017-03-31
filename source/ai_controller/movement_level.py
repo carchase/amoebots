@@ -8,6 +8,7 @@ View the full repository here https://github.com/car-chase/amoebots
 
 from time import sleep
 from message import Message
+from world_model import Grid
 
 class MovementLevel:
     """
@@ -71,7 +72,7 @@ class MovementLevel:
                             self.process_command(message)
 
                         elif message.category == 'response':
-                            process_response(message)
+                            self.process_response(message)
 
                         #relay message to destination
                         if message.destination != "MOV_LEVEL":
@@ -147,10 +148,10 @@ class MovementLevel:
             heading = message.data.heading
 
             # convert position and heading to world model representation (grid)
-            robots[robot_id].position = (x, y)
-            robots[robot_id].heading = heading
-            robots[robot_id].tile = grid.get_tile((x, y))
+            self.robots[robot_id].position = (x, y)
+            self.robots[robot_id].heading = heading
+            self.robots[robot_id].tile = self.world_model.get_tile((x, y))
 
             # align to grid if necessary
-            if abs(robots[robot_id].position.x - robots[robot_id].tile.center.x) > 0.5 or abs(robots[robot_id].position.y - robots[robot_id].tile.center.y) > 0.5:
-                robots[robot_id].move(robots[robot_id].center)
+            if abs(self.robots[robot_id].position.x - self.robots[robot_id].tile.center.x) > 0.5 or abs(self.robots[robot_id].position.y - self.robots[robot_id].tile.center.y) > 0.5:
+                self.robots[robot_id].move(self.robots[robot_id].center)

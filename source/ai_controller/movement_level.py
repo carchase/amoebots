@@ -6,10 +6,10 @@ Created on Oct 11, 2016
 View the full repository here https://github.com/car-chase/amoebots
 '''
 
+import random
 from time import sleep
 from message import Message
 from world_model import Grid
-import random
 
 MAX_MISALIGNMENT = 0.5
 

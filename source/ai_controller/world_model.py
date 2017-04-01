@@ -17,34 +17,49 @@ class Grid:
     def __init__(self, arena_size, arena_size_cm):
         self.width = arena_size
         self.height = arena_size
-        self.tiles_per_cm = arena_size / arena_size_cm
+        self.width_cm = arena_size_cm
+        self.height_cm = arena_size_cm
+        self.cm_per_tile = float(arena_size_cm) / float(arena_size)
         self.grid = [[]]
         self.robots = []
 
         for i in range(self.width):
             self.grid.append([])
             for j in range(self.height):
-                self.grid[i].append(Tile(i, j, self.tiles_per_cm))
+                self.grid[i].append(Tile(i, j, self.cm_per_tile))
 
     def in_bounds(self, position):
+        """
+        Determine if a position is in or out of bounds
+        """
         return 0 <= position[0] < self.width and 0 <= position[1] < self.height
 
-    def occupied(self, tile):
-        return tile.occupied
+    def in_bounds_real_coords(self, coordinates):
+        """
+        Determine if the cm coordinates are in in_bounds
+        """
+        return 0 <= coordinates[0] < self.width_cm and 0 <= coordinates[1] < self.height_cm
 
     def neighbors(self, tile):
-        (x, y) = tile.position
-        coords = [(x+1, y), (x, y-1), (x-1, y), (x, y+1)]
+        """
+        Get all neighbors of a given tile
+        """
+        (x_cor, y_cor) = tile.position
+        coords = [(x_cor+1, y_cor), (x_cor, y_cor-1), (x_cor-1, y_cor), (x_cor, y_cor+1)]
         coords = filter(self.in_bounds, coords)
-        coords = filter(self.occupied, coords)
         results = []
         for coord in coords:
             results.append(self.grid[coord[0]][coord[1]])
         return results
 
-    def get_tile(self, position):
-        if self.in_bounds(position):
-            return self.grid[int(position[0] * self.tiles_per_cm)][int(position[1] * self.tiles_per_cm)]
+    def get_tile_real_coords(self, coordinates):
+        """
+        Get the tile that contians the real world position cm coordinates.
+        """
+        if self.in_bounds_real_coords(coordinates):
+            return self.grid[
+                int(coordinates[0] / self.cm_per_tile)][
+                    int(coordinates[1] / self.cm_per_tile)]
         else:
             return None
 
@@ -57,16 +72,6 @@ class Robot:
         self.robot_id = robot_id
         self.position = None
         self.heading = None
-    #     self.grid = grid
-    #     self.tile = grid.get_tile(x, y)
-
-    # def move(self, new_position):
-    #     self.tile.occupied = None
-    #     self.position = new_position
-    #     self.tile = self.grid[int(self.position.x * 100),
-    #                           int(self.position.y * 100)]
-    #                           # convert meters to centimeters then align to grid
-    #     self.tile.occupied = self
 
     def get_distance(self, old_position, new_position):
         return math.sqrt((new_position[0] - old_position[0]) ** 2 +

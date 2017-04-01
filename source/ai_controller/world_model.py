@@ -78,10 +78,16 @@ class Robot:
         self.heading = None
 
     def get_distance(self, old_position, new_position):
+        """
+        Returns the Euclidean distance between the old position and the new position
+        """
         return math.sqrt((new_position[0] - old_position[0]) ** 2 +
                          (new_position[1] - old_position[1]) ** 2)
 
     def get_angle(self, old_position, new_position):
+        """
+        Returns the angle to the new position from the old position
+        """
         # calculate slope of line between old and new positions
         rise = (new_position[0] - old_position[0])
         run = (new_position[1] - old_position[1])
@@ -89,7 +95,22 @@ class Robot:
         # calculate angle between line and robot heading
         return math.atan2(rise, run)
 
+    def radius_clear(self, robots):
+        """
+        Returns whether the robot's turning radius is clear of other robots.
+        Robots whose positions are in inside of the robot's radius (center-to-corner distance)
+        will interfere with the robot's turning ability
+        """
+        for robot in robots:
+            if self.get_distance(self.position, robot.position) <= self.RADIUS:
+                return False
+        return True
+
 class Tile:
+    """
+    Tiles are the the individual spaces in the world model grid. Tiles can contain robots
+    and/or goals.
+    """
     def __init__(self, x, y, cm_per_tile):
         self.occupied = None   # is a Robot if tile is occupied by that robot
         self.goal = False

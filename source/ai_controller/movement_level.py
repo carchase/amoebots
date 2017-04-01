@@ -9,7 +9,7 @@ View the full repository here https://github.com/car-chase/amoebots
 import random
 from time import sleep
 from message import Message
-from world_model import Grid
+from world_model import Grid, Robot
 
 MAX_MISALIGNMENT = 0.5
 
@@ -32,10 +32,9 @@ class MovementLevel:
         self.options = options
         self.keep_running = True
         self.connections = {}
-        self.first_connect = True
-        self.one = True
         self.world_model = Grid(options.get("ARENA_SIZE"), options.get("ARENA_SIZE_CM"))
         self.robots = []
+        self.sensors = []
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -117,9 +116,12 @@ class MovementLevel:
         if message.data.get('directive') == 'add':
             self.connections[message.origin] = ['running', self.connections['COM_LEVEL'], None]
 
-            self.freakout(message.origin)
-
-            # TODO: Handle robot addition.
+            # Determine what kind of connection this is
+            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', message.origin, 'movement', {
+                'command': 90,
+                'magnitude': 0,
+                'message': "Determine robot info"
+            }))
 
         elif message.category == 'command' and message.data.get('directive') == 'failure':
             # if the item is a 'failure', remove the process from the CON_DICT
@@ -138,6 +140,11 @@ class MovementLevel:
             self.keep_running = False
 
     def process_response(self, message):
+        if message.category == 'robot-info':
+            # Configure the movement level to control this device
+            if message.data.get('id') == 'sim-smores':
+                self.robots.append(Robot(message.data.get('id'), message.origin))
+
         if message.category == 'sensor-simulator':
             # read position and heading
             robot_id = message.id
@@ -161,7 +168,7 @@ class MovementLevel:
         for i in range(5):
             a = random.randint(1, 4)
             t = random.randint(2, 5)
-            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEl', destination, 'movement', {
+            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
                 'command': a,
                 'magnitude': t
             }))
@@ -169,8 +176,7 @@ class MovementLevel:
                     # Example command
         # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
         #     'command': 8,
-        #     'velocity': 150,
-        #     'duration': 2,
+        #     'magnitude': 2,
         #     'message': 'Arm direction 2 spin command'
         # }))
 

@@ -58,8 +58,7 @@ class Grid:
         """
         if self.in_bounds_real_coords(coordinates):
             return self.grid[
-                int(coordinates[0] / self.cm_per_tile)][
-                    int(coordinates[1] / self.cm_per_tile)]
+                int(coordinates[0] / self.cm_per_tile)][int(coordinates[1] / self.cm_per_tile)]
         else:
             return None
 
@@ -68,8 +67,12 @@ class Robot:
     Representation of a robot in the world model. Each robot has a real position and heading,
     and a tile it is occupying on the world space grid.
     """
-    def __init__(self, robot_id):
+
+    RADIUS = 17.5115
+
+    def __init__(self, robot_id, port_id):
         self.robot_id = robot_id
+        self.port_id = port_id
         self.position = None
         self.heading = None
 
@@ -86,8 +89,14 @@ class Robot:
         return math.atan2(rise, run)
 
 class Tile:
-    def __init__(self, x, y, tiles_per_cm):
+    def __init__(self, x, y, cm_per_tile):
         self.occupied = None   # is a Robot if tile is occupied by that robot
         self.goal = False
         self.position = (x, y)
-        self.center = (self.position[0] / tiles_per_cm, self.position[1] / tiles_per_cm)
+        self.center = (self.position[0] * cm_per_tile, self.position[1] * cm_per_tile)
+
+class Sensor:
+    def __init__(self, port_id, sensor_id, sensor_type):
+        self.port_id = port_id
+        self.sensor_id = sensor_id
+        self.sensor_type = sensor_type

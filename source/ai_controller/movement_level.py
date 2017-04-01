@@ -9,9 +9,7 @@ View the full repository here https://github.com/car-chase/amoebots
 import random
 from time import sleep
 from message import Message
-from world_model import Grid, Robot
-
-MAX_MISALIGNMENT = 0.5
+from world_model import Grid, Robot, Sensor
 
 class MovementLevel:
     """
@@ -90,7 +88,12 @@ class MovementLevel:
                         # for raw output to the screen
                         self.connections["MAIN_LEVEL"][1].put(message)
 
-                # Do rest of stuff
+                # Check the sensors
+                self.check_sensors()
+
+                # Check if align is necessary
+                if self.ready_for_align():
+                    self.align_robots()
 
                 sleep(self.options["MOV_LOOP_SLEEP_INTERVAL"])
 
@@ -114,8 +117,6 @@ class MovementLevel:
         """
 
         if message.data.get('directive') == 'add':
-            self.connections[message.origin] = ['running', self.connections['COM_LEVEL'], None]
-
             # Determine what kind of connection this is
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', message.origin, 'movement', {
                 'command': 90,
@@ -127,6 +128,8 @@ class MovementLevel:
             # if the item is a 'failure', remove the process from the CON_DICT
             if self.connections.get(message.origin) != None:
                 del self.connections[message.origin]
+
+            # TODO: Cleanup sensor/robot failure
 
         elif message.data.get('directive') == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # The level has been told to shutdown.  Kill all the children!!!
@@ -142,26 +145,47 @@ class MovementLevel:
     def process_response(self, message):
         if message.category == 'robot-info':
             # Configure the movement level to control this device
-            if message.data.get('id') == 'sim-smores':
-                self.robots.append(Robot(message.data.get('id'), message.origin))
+            if message.data.get('type') == 'sim-smores':
+                self.robots.append(Robot(message.data.get('id'), message.origin,
+                                         message.data.get('type')))
+                self.sensors.append(Sensor(message.data.get('id'), message.origin,
+                                           message.data.get('type')))
 
         if message.category == 'sensor-simulator':
             # read position and heading
-            robot_id = message.id
-            x = message.data.x
-            y = message.data.y
-            heading = message.data.heading
-            robot = self.robots[robot_id]
+            for robot in self.robots:
+                if robot.robot_id == message.id:
+                    robot.position = (message.data.get('x'), message.data.get('y'))
+                    robot.heading = message.data.get('heading')
 
-            # convert position and heading to world model representation (grid)
-            robot.position = (x, y)
-            robot.heading = heading
-            robot.tile = self.world_model.get_tile((x, y))
+            for sensor in self.sensors:
+                if sensor.sensor_id == message.id:
+                    sensor.received = True
+
+
+    def check_sensors(self):
+        for sensor in self.sensors:
+            if not sensor.asked and sensor.sensor_type == 'sim-smores':
+                self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', sensor.port_id, 'movement', {
+                    'command': 92,
+                    'magnitude': 0,
+                    'message': 'Get simulator sensor data'
+                }))
+                sensor.asked = True
+
+    def ready_for_align(self):
+        for sensor in self.sensors:
+            if not sensor.received:
+                return False
+
+        return True
+
 
     def align_robots(self):
         for robot in self.robots:
             # align to grid if necessary
-            if abs(robot.position.x - robot.tile.center.x) > MAX_MISALIGNMENT or abs(robot.position.y - robot.tile.center.y) > MAX_MISALIGNMENT:
+            if (abs(robot.position.x - robot.tile.center.x) > self.options.get('MAX_MISALIGNMENT')
+                    or abs(robot.position.y - robot.tile.center.y) > self.options.get('MAX_MISALIGNMENT')):
                 self.align(robot)
 
     def freakout(self, destination):
@@ -188,21 +212,21 @@ class MovementLevel:
         distance = robot.get_distance(robot.position, robot.tile.center)
 
         # turn to center
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
             'command': 4,
             'magnitude': angle_to_center + robot.heading,
             'message': 'Turn to center'
         }))
 
         # move to center
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
             'command': 1,
             'magnitude': distance,
             'message': 'Move to center'
         }))
 
         # face north
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
             'command': 4,
             'magnitude': -robot.heading,
             'message': 'Turn to center'

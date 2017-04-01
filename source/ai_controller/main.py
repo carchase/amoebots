@@ -29,7 +29,8 @@ OPTIONS = {
     'MOV_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between mov event loop iterations
     'AI_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between AI event loop iterations
     'ARENA_SIZE': 7, # The number of tiles on one side of the arena
-    'ARENA_SIZE_CM': 35 # The square wall size of the arena
+    'ARENA_SIZE_CM': 35, # The square wall size of the arena
+    'MAX_MISALIGNMENT': 0.5 # The distance from a centerpoint considered acceptable error for robot
 }
 # ******************************************************************************
 

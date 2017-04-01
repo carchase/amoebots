@@ -70,9 +70,10 @@ class Robot:
 
     RADIUS = 17.5115
 
-    def __init__(self, robot_id, port_id):
+    def __init__(self, robot_id, port_id, robot_type):
         self.robot_id = robot_id
         self.port_id = port_id
+        self.robot_type = robot_type
         self.position = None
         self.heading = None
 
@@ -96,7 +97,9 @@ class Tile:
         self.center = (self.position[0] * cm_per_tile, self.position[1] * cm_per_tile)
 
 class Sensor:
-    def __init__(self, port_id, sensor_id, sensor_type):
+    def __init__(self, sensor_id, port_id, sensor_type):
         self.port_id = port_id
         self.sensor_id = sensor_id
         self.sensor_type = sensor_type
+        self.asked = False
+        self.received = False

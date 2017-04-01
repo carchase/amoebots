@@ -198,10 +198,13 @@ class BotProcess:
                         connection.send(bytes(mov_str, "utf-8"))
 
                         response = connection.recv(1024).strip().decode()
+                        repr(response)
+                        print(response)
+                        parsed_res = json.loads(response)
 
-                        self.com_input.put(Message(self.address, 'COM_LEVEL', 'response', {
-                            'message': 'Received the following response: '
-                                       + response.replace('\r\n', ' ')}))
+                        self.com_input.put(
+                            Message(self.address, 'COM_LEVEL', 'response', parsed_res)
+                        )
 
                     elif (message.data.get('directive') == 'shutdown'
                           and message.origin == 'COM_LEVEL'):

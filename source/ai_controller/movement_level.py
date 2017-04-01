@@ -143,23 +143,26 @@ class MovementLevel:
             self.keep_running = False
 
     def process_response(self, message):
-        if message.category == 'robot-info':
+        print("got response")
+        if message.data.get("content") == 'robot-info':
             # Configure the movement level to control this device
-            if message.data.get('type') == 'sim-smores':
-                self.robots.append(Robot(message.data.get('id'), message.origin,
-                                         message.data.get('type')))
-                self.sensors.append(Sensor(message.data.get('id'), message.origin,
-                                           message.data.get('type')))
+            if message.data.get('data').get('type') == 'sim-smores':
+                print("in here")
+                self.robots.append(Robot(message.data.get('data').get('id'), message.origin,
+                                         message.data.get('data').get('type')))
+                self.sensors.append(Sensor(message.data.get('data').get('id'), message.origin,
+                                           message.data.get('data').get('type')))
 
-        if message.category == 'sensor-simulator':
+        elif message.data.get("content") == 'sensor-simulator':
+            print("sensor simulator")
             # read position and heading
             for robot in self.robots:
-                if robot.robot_id == message.id:
-                    robot.position = (message.data.get('x'), message.data.get('y'))
-                    robot.heading = message.data.get('heading')
+                if robot.robot_id == message.data.get('data').get("id"):
+                    robot.position = (message.data.get('data').get('x'), message.data.get('data').get('y'))
+                    robot.heading = message.data.get('data').get('heading')
 
             for sensor in self.sensors:
-                if sensor.sensor_id == message.id:
+                if sensor.sensor_id == message.data.get('data').get("id"):
                     sensor.received = True
 
 

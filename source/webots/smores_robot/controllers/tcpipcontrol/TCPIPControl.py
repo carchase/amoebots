@@ -176,7 +176,7 @@ class TCPIPControl(Robot):
             content (string): the content type to tag the json object
             data (string): the data to place inside the json object
         '''
-        if content == 'json':
+        if content != 'text':
             message = "{\"content\":\"" + content + "\",\"data\":" + data + "}"
         else:
             message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}"

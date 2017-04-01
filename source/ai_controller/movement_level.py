@@ -151,10 +151,11 @@ class MovementLevel:
             robot.heading = heading
             robot.tile = self.world_model.get_tile((x, y))
 
+    def align_robots(self):
+        for robot in self.robots:
             # align to grid if necessary
             if abs(robot.position.x - robot.tile.center.x) > MAX_MISALIGNMENT or abs(robot.position.y - robot.tile.center.y) > MAX_MISALIGNMENT:
-                # get angle to center
-                angle_to_center = robot.get_angle(robot.position, robot.tile.center)
+                self.align(robot)
 
     def freakout(self, destination):
         for i in range(5):
@@ -172,3 +173,31 @@ class MovementLevel:
         #     'duration': 2,
         #     'message': 'Arm direction 2 spin command'
         # }))
+
+    def align(self, robot):
+        # get angle to center
+        angle_to_center = robot.get_angle(robot.position, robot.tile.center)
+
+        # get distance to center
+        distance = robot.get_distance(robot.position, robot.tile.center)
+
+        # turn to center
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 4,
+            'magnitude': angle_to_center + robot.heading,
+            'message': 'Turn to center'
+        }))
+
+        # move to center
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 1,
+            'magnitude': distance,
+            'message': 'Move to center'
+        }))
+
+        # face north
+        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+            'command': 4,
+            'magnitude': -robot.heading,
+            'message': 'Turn to center'
+        }))

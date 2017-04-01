@@ -98,11 +98,11 @@ class TCPIPControl(Robot):
             whichStop = 1
         elif cmd == 7:
             self.move(self.top_wheel_motor, velocity, 1)
-            message = self.jsonResponse("text", "Spin the arm clockwise " + str(magnitude) + ' degrees');
+            message = self.jsonResponse("text", "Spin the arm clockwise " + str(magnitude) + ' degrees')
             whichStop = 1
         elif cmd == 8:
             self.move(self.top_wheel_motor, velocity, -1)
-            message = self.jsonResponse("text", "Spin the arm in counterclockwise " + str(magnitude) + ' degrees');
+            message = self.jsonResponse("text", "Spin the arm in counterclockwise " + str(magnitude) + ' degrees')
             whichStop = 1
         elif cmd == 9:
             message = self.jsonResponse('text', 'Move key out')

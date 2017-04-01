@@ -8,27 +8,26 @@ View the full repository here https://github.com/car-chase/amoebots
 
 import math
 
-ARENA_SIZE = 7
-TILES_PER_CM = 0.12337143
-
 class Grid:
     """
     The world model representation of the webots arena. The purpose of the world model
     is to represent the world in a way the AI level can understand and process.
     """
 
-    def __init__(self):
-        self.width = ARENA_SIZE
-        self.height = ARENA_SIZE
+    def __init__(self, arena_size, arena_size_cm):
+        self.width = arena_size
+        self.height = arena_size
+        self.tiles_per_cm = arena_size / arena_size_cm
         self.grid = [[]]
         self.robots = []
 
         for i in range(self.width):
+            self.grid.append([])
             for j in range(self.height):
-                self.grid[i][j] = Tile(i, j)
+                self.grid[i].append(Tile(i, j, self.tiles_per_cm))
 
     def in_bounds(self, position):
-        return 0 <= position.x < self.width and 0 <= position.y < self.height
+        return 0 <= position[0] < self.width and 0 <= position[1] < self.height
 
     def occupied(self, tile):
         return tile.occupied
@@ -45,7 +44,7 @@ class Grid:
 
     def get_tile(self, position):
         if self.in_bounds(position):
-            return self.grid[int(position.x * TILES_PER_CM)][int(position.y * TILES_PER_CM)]
+            return self.grid[int(position[0] * self.tiles_per_cm)][int(position[1] * self.tiles_per_cm)]
         else:
             return None
 
@@ -54,20 +53,20 @@ class Robot:
     Representation of a robot in the world model. Each robot has a real position and heading,
     and a tile it is occupying on the world space grid.
     """
-    def __init__(self, grid, robot_id, x, y):
+    def __init__(self, robot_id):
         self.robot_id = robot_id
         self.position = None
         self.heading = None
-        self.grid = grid
-        self.tile = grid.get_tile(x, y)
+    #     self.grid = grid
+    #     self.tile = grid.get_tile(x, y)
 
-    def move(self, new_position):
-        self.tile.occupied = None
-        self.position = new_position
-        self.tile = self.grid[int(self.position.x * 100),
-                              int(self.position.y * 100)]
-                              # convert meters to centimeters then align to grid
-        self.tile.occupied = self
+    # def move(self, new_position):
+    #     self.tile.occupied = None
+    #     self.position = new_position
+    #     self.tile = self.grid[int(self.position.x * 100),
+    #                           int(self.position.y * 100)]
+    #                           # convert meters to centimeters then align to grid
+    #     self.tile.occupied = self
 
     def get_distance(self, old_position, new_position):
         return math.sqrt((new_position[0] - old_position[0]) ** 2 +
@@ -82,8 +81,8 @@ class Robot:
         return math.atan2(rise, run)
 
 class Tile:
-    def __init__(self, x, y):
+    def __init__(self, x, y, tiles_per_cm):
         self.occupied = None   # is a Robot if tile is occupied by that robot
         self.goal = False
         self.position = (x, y)
-        self.center = (self.position[0] / TILES_PER_CM, self.position[1] / TILES_PER_CM)
+        self.center = (self.position[0] / tiles_per_cm, self.position[1] / tiles_per_cm)

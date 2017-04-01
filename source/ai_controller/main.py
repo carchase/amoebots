@@ -27,7 +27,9 @@ OPTIONS = {
     'MAIN_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between main event loop iterations
     'COM_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between com event loop iterations
     'MOV_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between mov event loop iterations
-    'AI_LOOP_SLEEP_INTERVAL': .001 # Number of seconds that between AI event loop iterations
+    'AI_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between AI event loop iterations
+    'ARENA_SIZE': 7, # The number of tiles on one side of the arena
+    'ARENA_SIZE_CM': 35 # The square wall size of the arena
 }
 # ******************************************************************************
 

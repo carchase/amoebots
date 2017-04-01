@@ -9,6 +9,7 @@ View the full repository here https://github.com/car-chase/amoebots
 from time import sleep
 from message import Message
 from world_model import Grid
+import random
 
 MAX_MISALIGNMENT = 0.5
 
@@ -33,7 +34,7 @@ class MovementLevel:
         self.connections = {}
         self.first_connect = True
         self.one = True
-        self.world_model = Grid()
+        self.world_model = Grid(options.get("ARENA_SIZE"), options.get("ARENA_SIZE_CM"))
         self.robots = []
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
@@ -116,6 +117,8 @@ class MovementLevel:
         if message.data.get('directive') == 'add':
             self.connections[message.origin] = ['running', self.connections['COM_LEVEL'], None]
 
+            self.freakout(message.origin)
+
             # TODO: Handle robot addition.
 
         elif message.category == 'command' and message.data.get('directive') == 'failure':
@@ -133,13 +136,6 @@ class MovementLevel:
 
             # End the com_level
             self.keep_running = False
-        # Example command
-        # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-        #     'command': 8,
-        #     'velocity': 150,
-        #     'duration': 2,
-        #     'message': 'Arm direction 2 spin command'
-        # }))
 
     def process_response(self, message):
         if message.category == 'sensor-simulator':
@@ -160,3 +156,19 @@ class MovementLevel:
                 # get angle to center
                 angle_to_center = robot.get_angle(robot.position, robot.tile.center)
 
+    def freakout(self, destination):
+        for i in range(5):
+            a = random.randint(1, 4)
+            t = random.randint(2, 5)
+            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEl', destination, 'movement', {
+                'command': a,
+                'magnitude': t
+            }))
+
+                    # Example command
+        # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+        #     'command': 8,
+        #     'velocity': 150,
+        #     'duration': 2,
+        #     'message': 'Arm direction 2 spin command'
+        # }))

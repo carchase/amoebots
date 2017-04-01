@@ -58,7 +58,8 @@ class Grid:
         """
         if self.in_bounds_real_coords(coordinates):
             return self.grid[
-                int(coordinates[0] / self.cm_per_tile)][int(coordinates[1] / self.cm_per_tile)]
+                int(coordinates[0] / self.cm_per_tile)][
+                    int(coordinates[1] / self.cm_per_tile)]
         else:
             return None
 
@@ -67,27 +68,16 @@ class Robot:
     Representation of a robot in the world model. Each robot has a real position and heading,
     and a tile it is occupying on the world space grid.
     """
-
-    RADIUS = 17.5115
-
-    def __init__(self, robot_id, port_id, robot_type):
+    def __init__(self, robot_id):
         self.robot_id = robot_id
-        self.port_id = port_id
-        self.robot_type = robot_type
         self.position = None
         self.heading = None
 
     def get_distance(self, old_position, new_position):
-        """
-        Returns the Euclidean distance between the old position and the new position
-        """
         return math.sqrt((new_position[0] - old_position[0]) ** 2 +
                          (new_position[1] - old_position[1]) ** 2)
 
     def get_angle(self, old_position, new_position):
-        """
-        Returns the angle to the new position from the old position
-        """
         # calculate slope of line between old and new positions
         rise = (new_position[0] - old_position[0])
         run = (new_position[1] - old_position[1])
@@ -95,32 +85,10 @@ class Robot:
         # calculate angle between line and robot heading
         return math.atan2(rise, run)
 
-    def radius_clear(self, robots):
-        """
-        Returns whether the robot's turning radius is clear of other robots.
-        Robots whose positions are in inside of the robot's radius (center-to-corner distance)
-        will interfere with the robot's turning ability
-        """
-        for robot in robots:
-            if self.get_distance(self.position, robot.position) <= self.RADIUS:
-                return False
-        return True
-
 class Tile:
-    """
-    Tiles are the the individual spaces in the world model grid. Tiles can contain robots
-    and/or goals.
-    """
-    def __init__(self, x, y, cm_per_tile):
+    def __init__(self, x, y, tiles_per_cm):
         self.occupied = None   # is a Robot if tile is occupied by that robot
         self.goal = False
+        self.robot_goal = None
         self.position = (x, y)
-        self.center = (self.position[0] * cm_per_tile, self.position[1] * cm_per_tile)
-
-class Sensor:
-    def __init__(self, sensor_id, port_id, sensor_type):
-        self.port_id = port_id
-        self.sensor_id = sensor_id
-        self.sensor_type = sensor_type
-        self.asked = False
-        self.received = False
+        self.center = (self.position[0] / tiles_per_cm, self.position[1] / tiles_per_cm)

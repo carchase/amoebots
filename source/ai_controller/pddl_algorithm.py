@@ -8,12 +8,14 @@ init_row = []
 init_col = []
 init_goal = []
 init_robots = []
+init_robot_count = []
 
 def generate_init_state(world_size_grid, world_size_centimeter, how_many_robots):
     WORLD = world_model.Grid(world_size_grid, world_size_centimeter)
 
     for robot in range(how_many_robots):
         init_robots.append(world_model.Robot(robot))
+        init_robot_count.append(robot)
 
     WORLD.grid[0][0].occupied = init_robots[0]
     WORLD.grid[0][6].occupied = init_robots[1]
@@ -34,8 +36,8 @@ def generate_init_state(world_size_grid, world_size_centimeter, how_many_robots)
         init_array.append(('isAbove', inc, inc + 1))
 
 
-def generate_goal_state(goals):
-    init_goal.append(goals)
+def generate_goal_state(goal):
+    init_goal.append(goal)
 
 
 def problem(verbose):
@@ -126,7 +128,7 @@ def problem(verbose):
         {
             'row': tuple(init_row),
             'col': tuple(init_col),
-            'robot': (0,1,2,3),
+            'robot': tuple(init_robot_count),
         },
         init=(
             tuple(init_array)

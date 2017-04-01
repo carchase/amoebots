@@ -1,6 +1,42 @@
 from __future__ import print_function
 from pyddl import Domain, Problem, Action, neg, planner
 import time
+import world_model
+
+init_array = []
+init_row = []
+init_col = []
+init_goal = []
+init_robots = []
+
+def generate_init_state(world_size_grid, world_size_centimeter, how_many_robots):
+    WORLD = world_model.Grid(world_size_grid, world_size_centimeter)
+
+    for robot in range(how_many_robots):
+        init_robots.append(world_model.Robot(robot))
+
+    WORLD.grid[0][0].occupied = init_robots[0]
+    WORLD.grid[0][6].occupied = init_robots[1]
+    WORLD.grid[6][0].occupied = init_robots[2]
+    WORLD.grid[6][6].occupied = init_robots[3]
+
+    for row in range(world_size_grid):
+        for col in range(world_size_grid):
+            if WORLD.grid[row][col].occupied is None:
+                init_array.append(('notOccupied', row, col))
+            else:
+                init_array.append(('at', WORLD.grid[row][col].occupied.robot_id, row, col))
+        init_row.append(row)
+        init_col.append(row)
+
+    for inc in range(world_size_grid):
+        init_array.append(('isLeftOf', inc, inc + 1))
+        init_array.append(('isAbove', inc, inc + 1))
+
+
+def generate_goal_state(goals):
+    init_goal.append(goals)
+
 
 def problem(verbose):
     domain = Domain((
@@ -88,91 +124,15 @@ def problem(verbose):
     problem = Problem(
         domain,
         {
-            'row': (0, 1, 2, 3, 4, 5, 6),
-            'col': (0, 1, 2, 3, 4, 5, 6),
-            'robot': (0,1),
+            'row': tuple(init_row),
+            'col': tuple(init_col),
+            'robot': (0,1,2,3),
         },
         init=(
-#        MODIFY THE FOLLOWING. Make sure that you do TWO things for the starting position
-#        of each robot. If the robot r starts at position x,y, then:
-#        1) Comment out the line ('notOccupied',r,x,y)
-#        2) Add the line ('at',r,x,y)
-#        In the below example, there are three robots, and the goal is to move robot 0 to
-#        position (4,0).
-            ('notOccupied', 6, 0),
-            ('notOccupied', 5, 0),
-        	('notOccupied', 4, 0),
-        	# ('notOccupied', 3, 0),
-        	('notOccupied', 2, 0),
-        	('notOccupied', 1, 0),
-        	('notOccupied', 0, 0),
-            ('notOccupied', 6, 1),
-            ('notOccupied', 5, 1),
-        	('notOccupied', 4, 1),
-        	('notOccupied', 3, 1),
-        	('notOccupied', 2, 1),
-        	('notOccupied', 1, 1),
-        	('notOccupied', 0, 1),
-            ('notOccupied', 6, 2),
-            ('notOccupied', 5, 2),
-        	('notOccupied', 4, 2),
-        	('notOccupied', 3, 2),
-        	('notOccupied', 2, 2),
-        	('notOccupied', 1, 2),
-        	('notOccupied', 0, 2),
-            ('notOccupied', 6, 3),
-            ('notOccupied', 5, 3),
-        	('notOccupied', 4, 3),
-        	('notOccupied', 3, 3),
-        	('notOccupied', 2, 3),
-        	('notOccupied', 1, 3),
-        	('notOccupied', 0, 3),
-            ('notOccupied', 6, 4),
-            ('notOccupied', 5, 4),
-        	('notOccupied', 4, 4),
-        	('notOccupied', 3, 4),
-        	('notOccupied', 2, 4),
-        	('notOccupied', 1, 4),
-        	('notOccupied', 0, 4),
-            ('notOccupied', 6, 5),
-            ('notOccupied', 5, 5),
-            ('notOccupied', 4, 5),
-            ('notOccupied', 3, 5),
-            ('notOccupied', 2, 5),
-            ('notOccupied', 1, 5),
-            ('notOccupied', 0, 5),
-            ('notOccupied', 6, 6),
-            ('notOccupied', 5, 6),
-            ('notOccupied', 4, 6),
-            ('notOccupied', 3, 6),
-            ('notOccupied', 2, 6),
-            ('notOccupied', 1, 6),
-            ('notOccupied', 0, 6),
-        	('isLeftOf', 0, 1),
-        	('isLeftOf', 1, 2),
-        	('isLeftOf', 2, 3),
-        	('isLeftOf', 3, 4),
-            ('isLeftOf', 4, 5),
-            ('isLeftOf', 5, 6),
-        	('isAbove', 0, 1),
-        	('isAbove', 1, 2),
-        	('isAbove', 2, 3),
-        	('isAbove', 3, 4),
-            ('isAbove', 4, 5),
-            ('isAbove', 5, 6),
-        	('at',0,3,0),
-        	# ('at',1,2,0),
-            # ('at',2,1,0),
-            # ('at',3,0,0),
-            # ('at',4,3,2),
+            tuple(init_array)
         ),
         goal=(
-        #Set the goal as follows. This one lines them all up vertically.
-            ('at',0,2,4),
-            # ('at',1,1,4),
-            # ('at',2,3,4),
-            # ('at',3,2,5),
-            # ('at',4,3,5),
+            tuple(init_goal)
         )
     )
 
@@ -208,6 +168,8 @@ if __name__ == '__main__':
                       action='store_false', dest='verbose', default=True,
                       help="don't print statistics to stdout")
 
+    generate_init_state(7, 35, 4)
+    generate_goal_state(('at', 0, 5, 4))
     # Parse arguments
     opts, args = parser.parse_args()
 st = time.time()

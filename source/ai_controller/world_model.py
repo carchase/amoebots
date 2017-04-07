@@ -54,7 +54,7 @@ class Grid:
 
     def get_tile_real_coords(self, coordinates):
         """
-        Get the tile that contians the real world position cm coordinates.
+        Get the tile that contains the real world position cm coordinates.
         """
         if self.in_bounds_real_coords(coordinates):
             return self.grid[

@@ -6,8 +6,6 @@ Created on Oct 11, 2016
 View the full repository here https://github.com/car-chase/amoebots
 '''
 
-import math
-
 class Grid:
     """
     The world model representation of the webots arena. The purpose of the world model
@@ -32,6 +30,7 @@ class Grid:
         """
         Determine if a position is in or out of bounds
         """
+        print( position)
         return 0 <= position[0] < self.width and 0 <= position[1] < self.height
 
     def in_bounds_real_coords(self, coordinates):
@@ -58,8 +57,8 @@ class Grid:
         """
         if self.in_bounds_real_coords(coordinates):
             return self.grid[
-                int(coordinates[0] / self.cm_per_tile)][
-                    int(coordinates[1] / self.cm_per_tile)]
+                round(coordinates[0] / self.cm_per_tile)][
+                    round(coordinates[1] / self.cm_per_tile)]
         else:
             return None
 
@@ -82,18 +81,6 @@ class Robot:
         self.position = (0, 0)
         self.heading = 0
 
-    def get_distance(self, old_position, new_position):
-        return math.sqrt((new_position[0] - old_position[0]) ** 2 +
-                         (new_position[1] - old_position[1]) ** 2)
-
-    def get_angle(self, old_position, new_position):
-        # calculate slope of line between old and new positions
-        rise = (new_position[0] - old_position[0])
-        run = (new_position[1] - old_position[1])
-
-        # calculate angle between line and robot heading
-        return math.atan2(rise, run)
-
 class Sensor:
     def __init__(self, sensor_id, port_id, sensor_type):
         self.sensor_id = sensor_id
@@ -103,9 +90,13 @@ class Sensor:
         self.received = False
 
 class Tile:
-    def __init__(self, x, y, tiles_per_cm):
+    """
+    The world model representation of an individual tile in the world model grid.
+    Each tile can contain up to one robot and one goal.
+    """
+    def __init__(self, x, y, cm_per_tile):
         self.occupied = None   # is a Robot if tile is occupied by that robot
         self.goal = False
         self.robot_goal = None
         self.position = (x, y)
-        self.center = (x / tiles_per_cm, y / tiles_per_cm)
+        self.center = ((x + 0.5) * cm_per_tile, (y + 0.5) * cm_per_tile)

@@ -15,7 +15,7 @@ from main_level import MainLevel
 OPTIONS = {
     'DUMP_MSGS_TO_MAIN': True, # Show all messages in main log output
     'RAISE_ERRORS_AFTER_CATCH': True, # Raises errors after catching
-    'NUMBER_OF_DEVICES': 5, # Number of devices that the controller expects to use
+    'NUMBER_OF_DEVICES': 2, # Number of devices that the controller expects to use
     'BAUD': 115200, # Baud rate used by the COM ports
     'TCP_LISTENER_IP': socket.gethostbyname(socket.gethostname()), # Hostname the TCP listener uses
     'TCP_LISTENER_PORT': 5000, # Port the TCP listener uses
@@ -29,8 +29,8 @@ OPTIONS = {
     'MOV_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between mov event loop iterations
     'AI_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between AI event loop iterations
     'ARENA_SIZE': 7, # The number of tiles on one side of the arena
-    'ARENA_SIZE_CM': 35, # The square wall size of the arena
-    'MAX_MISALIGNMENT': 0.5 # The distance from a centerpoint considered acceptable error for robot
+    'ARENA_SIZE_CM': 87, # The square wall size of the arena
+    'MAX_MISALIGNMENT': 0.1 # The distance from a centerpoint considered acceptable error for robot
 }
 # ******************************************************************************
 

@@ -7,6 +7,7 @@ View the full repository here https://github.com/car-chase/amoebots
 '''
 
 import random
+import math
 from time import sleep
 from message import Message
 from world_model import Grid, Robot, Sensor
@@ -33,6 +34,7 @@ class MovementLevel:
         self.world_model = Grid(options.get("ARENA_SIZE"), options.get("ARENA_SIZE_CM"))
         self.robots = []
         self.sensors = []
+        self.aligned = False
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -143,30 +145,35 @@ class MovementLevel:
             self.keep_running = False
 
     def process_response(self, message):
-        print("got response")
+        """
+        The response processor of the movement level.  It processes messages categorized as
+        "response".
+
+        Args:
+            message (Message): The message object to be processed.
+        """
         if message.data.get("content") == 'robot-info':
             # Configure the movement level to control this device
             if message.data.get('data').get('type') == 'sim-smores':
-                robot = Robot(message.data.get('data').get('id'),
-                              message.origin, message.data.get('data').get('type'))
-                self.robots.append(robot)
+                self.robots.append(Robot(message.data.get('data').get('id'),
+                                         message.origin, message.data.get('data').get('type')))
                 self.sensors.append(Sensor(message.data.get('data').get('id'), message.origin,
                                            message.data.get('data').get('type')))
         elif message.data.get("content") == 'sensor-simulator':
-            print("sensor simulator")
             # read position and heading
             for robot in self.robots:
                 if robot.robot_id == message.data.get('data').get('id'):
-                    robot.position = (int(message.data.get('data').get('data').get('x') * 10),
-                                      int(message.data.get('data').get('data').get('y') * 10)) # why only 10?
-                    robot.heading = int(message.data.get('data').get('data').get('heading'))
-                    print(robot.position)
+                    robot.position = ((message.data.get('data').get('data').get('x') * 100),
+                                      (message.data.get('data').get('data').get('y') * 100))
+                    robot.heading = message.data.get('data').get('data').get('heading')
                     old_tile = self.world_model.find_tile(robot)
-                    if old_tile:
+                    if old_tile != None:
                         old_tile.occupied = None
                     new_tile = self.world_model.get_tile_real_coords(robot.position)
-                    print(new_tile)
                     new_tile.occupied = robot
+
+                    # Realign the robot after sensor data
+                    self.aligned = False
 
             for sensor in self.sensors:
                 if sensor.sensor_id == message.data.get('data').get('id'):
@@ -174,6 +181,9 @@ class MovementLevel:
 
 
     def check_sensors(self):
+        """
+        Send position and heading update commands to all sensors.
+        """
         for sensor in self.sensors:
             if not sensor.asked and sensor.sensor_type == 'sim-smores':
                 self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', sensor.port_id, 'movement', {
@@ -184,6 +194,16 @@ class MovementLevel:
                 sensor.asked = True
 
     def ready_for_align(self):
+        """
+        Determine if all the sensors have been read and the robots are
+        ready for the alignment process.
+        """
+        if len(self.robots) < self.options["NUMBER_OF_DEVICES"]:
+            return False
+
+        if self.aligned:
+            return False
+
         for sensor in self.sensors:
             if not sensor.received:
                 return False
@@ -192,6 +212,13 @@ class MovementLevel:
 
 
     def align_robots(self):
+        """
+        Iterate through all the robots and check if they are misaligned to their
+        tiles. If so the misaligned robots are realigned.
+        """
+
+        self.aligned = True
+
         for robot in self.robots:
             # align to grid if necessary
             if (abs(robot.position[0] - self.world_model.find_tile(robot).center[0])
@@ -201,6 +228,9 @@ class MovementLevel:
                 self.align(robot)
 
     def freakout(self, destination):
+        """
+        Instructs robots to take a number of random moves to "shake" them apart from each other.
+        """
         for i in range(5):
             a = random.randint(1, 4)
             t = random.randint(2, 5)
@@ -209,7 +239,7 @@ class MovementLevel:
                 'magnitude': t
             }))
 
-                    # Example command
+        # Example command
         # self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
         #     'command': 8,
         #     'magnitude': 2,
@@ -217,29 +247,69 @@ class MovementLevel:
         # }))
 
     def align(self, robot):
-        # get angle to center
-        angle_to_center = robot.get_angle(robot.position, self.world_model.find_tile(robot).center)
+        """
+        Aligns the robot to the center of the tile it's on.
+        """
+        tile_center = self.world_model.find_tile(robot).center
+
+        # When in doubt, the robot turns left because all angles are from true north (0 to 359)
+        turn_center_command = 3
+        turn_north_command = 3
+
+        # get angle of center relative to north
+        center_heading = get_angle(robot.position, tile_center)
 
         # get distance to center
-        distance = robot.get_distance(robot.position, self.world_model.find_tile(robot).center)
+        distance_to_center = get_distance(robot.position, tile_center)
+
+        # get the angle to turn to center
+        angle_to_center = robot.heading - center_heading
+
+        # make right turn center if left turn > 180
+        if angle_to_center > 180:
+            angle_to_center = 360 - angle_to_center
+            turn_center_command = 4
+
+        # make rught turn to north if left turn > 180
+        if center_heading > 180:
+            center_heading = 360 - center_heading
+            turn_north_command = 4
 
         # turn to center
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
-            'command': 4,
-            'magnitude': int(angle_to_center + robot.heading),
+            'command': turn_center_command,
+            'magnitude': abs(round(angle_to_center)),
             'message': 'Turn to center'
         }))
 
         # move to center
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
             'command': 1,
-            'magnitude': int(distance),
+            'magnitude': abs(round(distance_to_center)),
             'message': 'Move to center'
         }))
 
         # face north
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
-            'command': 4,
-            'magnitude': int(-robot.heading),
+            'command': turn_north_command,
+            'magnitude': abs(round(center_heading)),
             'message': 'Turn to center'
         }))
+
+def get_distance(old_position, new_position):
+    return math.sqrt((new_position[0] - old_position[0]) ** 2 +
+                     (new_position[1] - old_position[1]) ** 2)
+
+def get_angle(old_position, new_position):
+    # calculate slope of line between old and new positions
+    rise = (new_position[1] - old_position[1])
+    run = (new_position[0] - old_position[0])
+
+    # calculate angle between line and x-axis
+    inner_angle = math.degrees(math.atan(float(rise) / run))
+
+    # get angle to the north based on quadrant
+    if run < 0:
+        return inner_angle + 270
+    else:
+        return inner_angle + 90

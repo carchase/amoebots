@@ -10,6 +10,7 @@ init_goal = []
 init_robots = []
 init_robot_count = []
 
+
 def generate_init_state(world_size_grid, world_size_centimeter, how_many_robots):
     WORLD = world_model.Grid(world_size_grid, world_size_centimeter)
 
@@ -28,6 +29,7 @@ def generate_init_state(world_size_grid, world_size_centimeter, how_many_robots)
                 init_array.append(('notOccupied', row, col))
             else:
                 init_array.append(('at', WORLD.grid[row][col].occupied.robot_id, row, col))
+
         init_row.append(row)
         init_col.append(row)
 

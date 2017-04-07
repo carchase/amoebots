@@ -20,12 +20,12 @@ class Grid:
         self.width_cm = arena_size_cm
         self.height_cm = arena_size_cm
         self.cm_per_tile = float(arena_size_cm) / float(arena_size)
-        self.grid = [[]]
+        self.grid = []
         self.robots = []
 
-        for i in range(self.width):
+        for i in range(self.height):
             self.grid.append([])
-            for j in range(self.height):
+            for j in range(self.width):
                 self.grid[i].append(Tile(i, j, self.cm_per_tile))
 
     def in_bounds(self, position):
@@ -63,15 +63,24 @@ class Grid:
         else:
             return None
 
+    def find_tile(self, robot):
+        for row in self.grid:
+            for tile in row:
+                if tile.occupied is robot:
+                    return tile
+        return None
+
 class Robot:
     """
     Representation of a robot in the world model. Each robot has a real position and heading,
     and a tile it is occupying on the world space grid.
     """
-    def __init__(self, robot_id):
+    def __init__(self, robot_id, port_id, robot_type):
         self.robot_id = robot_id
-        self.position = None
-        self.heading = None
+        self.port_id = port_id
+        self.robot_type = robot_type
+        self.position = (0, 0)
+        self.heading = 0
 
     def get_distance(self, old_position, new_position):
         return math.sqrt((new_position[0] - old_position[0]) ** 2 +
@@ -85,10 +94,18 @@ class Robot:
         # calculate angle between line and robot heading
         return math.atan2(rise, run)
 
+class Sensor:
+    def __init__(self, sensor_id, port_id, sensor_type):
+        self.sensor_id = sensor_id
+        self.port_id = port_id
+        self.sensor_type = sensor_type
+        self.asked = False
+        self.received = False
+
 class Tile:
     def __init__(self, x, y, tiles_per_cm):
         self.occupied = None   # is a Robot if tile is occupied by that robot
         self.goal = False
         self.robot_goal = None
         self.position = (x, y)
-        self.center = (self.position[0] / tiles_per_cm, self.position[1] / tiles_per_cm)
+        self.center = (x / tiles_per_cm, y / tiles_per_cm)

@@ -147,22 +147,29 @@ class MovementLevel:
         if message.data.get("content") == 'robot-info':
             # Configure the movement level to control this device
             if message.data.get('data').get('type') == 'sim-smores':
-                print("in here")
-                self.robots.append(Robot(message.data.get('data').get('id'), message.origin,
-                                         message.data.get('data').get('type')))
+                robot = Robot(message.data.get('data').get('id'),
+                              message.origin, message.data.get('data').get('type'))
+                self.robots.append(robot)
                 self.sensors.append(Sensor(message.data.get('data').get('id'), message.origin,
                                            message.data.get('data').get('type')))
-
         elif message.data.get("content") == 'sensor-simulator':
             print("sensor simulator")
             # read position and heading
             for robot in self.robots:
-                if robot.robot_id == message.data.get('data').get("id"):
-                    robot.position = (message.data.get('data').get('x'), message.data.get('data').get('y'))
-                    robot.heading = message.data.get('data').get('heading')
+                if robot.robot_id == message.data.get('data').get('id'):
+                    robot.position = (int(message.data.get('data').get('data').get('x') * 10),
+                                      int(message.data.get('data').get('data').get('y') * 10)) # why only 10?
+                    robot.heading = int(message.data.get('data').get('data').get('heading'))
+                    print(robot.position)
+                    old_tile = self.world_model.find_tile(robot)
+                    if old_tile:
+                        old_tile.occupied = None
+                    new_tile = self.world_model.get_tile_real_coords(robot.position)
+                    print(new_tile)
+                    new_tile.occupied = robot
 
             for sensor in self.sensors:
-                if sensor.sensor_id == message.data.get('data').get("id"):
+                if sensor.sensor_id == message.data.get('data').get('id'):
                     sensor.received = True
 
 
@@ -187,8 +194,10 @@ class MovementLevel:
     def align_robots(self):
         for robot in self.robots:
             # align to grid if necessary
-            if (abs(robot.position.x - robot.tile.center.x) > self.options.get('MAX_MISALIGNMENT')
-                    or abs(robot.position.y - robot.tile.center.y) > self.options.get('MAX_MISALIGNMENT')):
+            if (abs(robot.position[0] - self.world_model.find_tile(robot).center[0])
+                    > self.options.get('MAX_MISALIGNMENT')
+                    or abs(robot.position[1] - self.world_model.find_tile(robot).center[1])
+                    > self.options.get('MAX_MISALIGNMENT')):
                 self.align(robot)
 
     def freakout(self, destination):
@@ -209,28 +218,28 @@ class MovementLevel:
 
     def align(self, robot):
         # get angle to center
-        angle_to_center = robot.get_angle(robot.position, robot.tile.center)
+        angle_to_center = robot.get_angle(robot.position, self.world_model.find_tile(robot).center)
 
         # get distance to center
-        distance = robot.get_distance(robot.position, robot.tile.center)
+        distance = robot.get_distance(robot.position, self.world_model.find_tile(robot).center)
 
         # turn to center
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
             'command': 4,
-            'magnitude': angle_to_center + robot.heading,
+            'magnitude': int(angle_to_center + robot.heading),
             'message': 'Turn to center'
         }))
 
         # move to center
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
             'command': 1,
-            'magnitude': distance,
+            'magnitude': int(distance),
             'message': 'Move to center'
         }))
 
         # face north
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
             'command': 4,
-            'magnitude': -robot.heading,
+            'magnitude': int(-robot.heading),
             'message': 'Turn to center'
         }))

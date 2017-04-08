@@ -30,7 +30,6 @@ class Grid:
         """
         Determine if a position is in or out of bounds
         """
-        print( position)
         return 0 <= position[0] < self.width and 0 <= position[1] < self.height
 
     def in_bounds_real_coords(self, coordinates):
@@ -63,14 +62,10 @@ class Grid:
             return None
 
     def find_tile(self, robot):
-        self.display()
-        print("LOOKING FOR: ", robot.port_id)
         for row in self.grid:
             for tile in row:
                 if tile.occupied is robot:
-                    print("FOUND: ", robot.port_id)
                     return tile
-        print("NOT FOUND: ", robot.port_id)
         return None
 
     def display(self):

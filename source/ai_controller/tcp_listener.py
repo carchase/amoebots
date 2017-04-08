@@ -97,7 +97,7 @@ class TCPListener:
             message (Message): The message object to be processed.
         """
 
-        if message.data.get('directive') == 'shutdown' and message.origin == 'COM_LEVEL':
+        if message.data['directive'] == 'shutdown' and message.origin == 'COM_LEVEL':
 
             # the listener has been told to shutdown.
             self.com_input.put(Message('TCP_LISTENER', 'MAIN_LEVEL', 'info', {
@@ -123,7 +123,7 @@ class TCPListener:
                 # check if it is a supported model
                 if self.data.get("type") == "SMORES":
                     # assign the robot a port and inform the com level
-                    self.request.send(bytes(self.data.get('ip') + ' ' +
+                    self.request.send(bytes(self.data['ip'] + ' ' +
                                             str(TCPListener.static_next_port),
                                             "utf-8"))
 

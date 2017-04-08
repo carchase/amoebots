@@ -43,7 +43,7 @@ class Message:
         source = "{:<19}".format(('From: ' + self.origin)[:19])
         if isinstance(self.data, dict):
             if self.data.get("message") != None:
-                data = self.data.get("message")
+                data = self.data["message"]
             else:
                 data = json.dumps(self.data)
         elif isinstance(self.data, str):

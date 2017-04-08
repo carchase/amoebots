@@ -118,7 +118,7 @@ class CommunicationLevel:
             message (Message): The message object to be processed.
         """
 
-        if message.data.get('directive') == 'add':
+        if message.data['directive'] == 'add':
             # if the command is an 'add' directive start a new BotProcess
             bot_input = Queue()
             bot = BotProcess(message.origin, self.options)
@@ -127,7 +127,7 @@ class CommunicationLevel:
 
             # push the data to the new bot process
             if message.data.get("args") != None:
-                bot_input.put(message.data.get("args"))
+                bot_input.put(message.data["args"])
 
             bot_process.start()
 
@@ -136,7 +136,7 @@ class CommunicationLevel:
             # forward to the mov level
             message.destination = "MOV_LEVEL"
 
-        elif message.data.get('directive') == 'failure':
+        elif message.data['directive'] == 'failure':
             # if there was an error then close the connection
 
             self.connections[message.origin][2].join()
@@ -145,7 +145,7 @@ class CommunicationLevel:
             # forward to the mov level
             message.destination = "MOV_LEVEL"
 
-        elif message.data.get('directive') == 'shutdown' and message.origin == 'MAIN_LEVEL':
+        elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # the level has been told to shutdown.  Kill all the children!!!
             # Loop over the child processes and shut them shutdown
 

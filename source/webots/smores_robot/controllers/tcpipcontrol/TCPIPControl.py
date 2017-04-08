@@ -72,49 +72,49 @@ class TCPIPControl(Robot):
         if cmd == 1:
             self.move(self.left_motor, velocity, 1)
             self.move(self.right_motor, velocity, 1)
-            message = self.jsonResponse('text', 'Moving forward ' + str(magnitude) + ' cm')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Moving forward ' + str(magnitude) + ' cm\"}')
         elif cmd == 2:
             self.move(self.left_motor, velocity, -1)
             self.move(self.right_motor, velocity, -1)
-            message = self.jsonResponse('text', 'Moving backward ' + str(magnitude) + ' cm')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Moving backward ' + str(magnitude) + ' cm\"}')
         elif cmd == 3:
             self.move(self.left_motor, velocity, 1)
             self.move(self.right_motor, velocity, -1)
-            message = self.jsonResponse('text', 'Turning left ' + str(magnitude) + ' degrees')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Turning left ' + str(magnitude) + ' degrees\"}')
         elif cmd == 4:
             self.move(self.left_motor, velocity, -1)
             self.move(self.right_motor, velocity, 1)
-            message = self.jsonResponse('text', 'Turning right ' + str(magnitude) + ' degrees')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Turning right ' + str(magnitude) + ' degrees\"}')
         elif cmd == 5:
             self.move(self.top_motor, velocity, 1)
-            message = self.jsonResponse('text', 'Moving the arm down ' + str(magnitude) + ' degrees')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Moving the arm down ' + str(magnitude) + ' degrees\"}')
             whichStop = 1
         elif cmd == 6:
             self.move(self.top_motor, velocity, -1)
-            message = self.jsonResponse('text', 'Moving the arm up ' + str(magnitude) + ' degrees')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Moving the arm up ' + str(magnitude) + ' degrees\"}')
             whichStop = 1
         elif cmd == 7:
             self.move(self.top_wheel_motor, velocity, 1)
-            message = self.jsonResponse("text", "Spin the arm clockwise " + str(magnitude) + ' degrees')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Spin the arm clockwise ' + str(magnitude) + ' degrees\"}')
             whichStop = 1
         elif cmd == 8:
             self.move(self.top_wheel_motor, velocity, -1)
-            message = self.jsonResponse("text", "Spin the arm in counterclockwise " + str(magnitude) + ' degrees')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Spin the arm in counterclockwise ' + str(magnitude) + ' degrees\"}')
             whichStop = 1
         elif cmd == 9:
-            message = self.jsonResponse('text', 'Move key out')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Move key out\"}')
             whichStop = 2
         elif cmd == 10:
-            message = self.jsonResponse('text', 'Move key in')
+            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Move key in\"}')
             whichStop = 2
         elif cmd == 90:
             message = self.jsonResponse('robot-info', '{\"type\":\"sim-smores\"}')
         elif cmd == 92:
-            message = self.jsonResponse('sensor-simulator', '{\"data\":{\"x\":' + str(self.getPosition(self.gps)[0]) + ',\"y\":' + str(self.getPosition(self.gps)[2]) + ',\"heading\":'+ str(self.getBearing(self.compass)) + '} }')
+            message = self.jsonResponse('sensor-simulator', '{\"x\":' + str(self.getPosition(self.gps)[0]) + ',\"y\":' + str(self.getPosition(self.gps)[2]) + ',\"heading\":'+ str(self.getBearing(self.compass)) + '}')
         elif cmd == 99:
             message = self.jsonResponse('json', '{\"type\":\"smore\"}')
         else:
-            message = self.jsonResponse('unsupported', '{\"data\":\"command not supported\"}')
+            message = self.jsonResponse('unsupported', '\"command not supported\"')
 
 
         # delay is used to allow the motor to move for a predetermined

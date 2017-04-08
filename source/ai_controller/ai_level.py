@@ -94,7 +94,7 @@ class AiLevel:
             message (Message): The message object to be processed.
         """
 
-        if message.data.get('directive') == 'shutdown' and message.origin == 'MAIN_LEVEL':
+        if message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # the level has been told to shutdown.  Kill all the children!!!
             # Loop over the child processes and shut them shutdown
 

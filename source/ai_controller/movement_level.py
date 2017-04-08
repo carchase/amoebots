@@ -31,10 +31,9 @@ class MovementLevel:
         self.options = options
         self.keep_running = True
         self.connections = {}
-        self.world_model = Grid(options.get("ARENA_SIZE"), options.get("ARENA_SIZE_CM"))
-        self.robots = []
-        self.sensors = []
-        self.aligned = False
+        self.world_model = Grid(options["ARENA_SIZE"], options["ARENA_SIZE_CM"])
+        self.robots = dict()
+        self.sensors = dict()
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -118,7 +117,7 @@ class MovementLevel:
             message (Message): The message object to be processed.
         """
 
-        if message.data.get('directive') == 'add':
+        if message.data['directive'] == 'add':
             # Determine what kind of connection this is
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', message.origin, 'movement', {
                 'command': 90,
@@ -126,14 +125,14 @@ class MovementLevel:
                 'message': "Determine robot info"
             }))
 
-        elif message.category == 'command' and message.data.get('directive') == 'failure':
+        elif message.category == 'command' and message.data['directive'] == 'failure':
             # if the item is a 'failure', remove the process from the CON_DICT
-            if self.connections.get(message.origin) != None:
+            if self.connections[message.origin] != None:
                 del self.connections[message.origin]
 
             # TODO: Cleanup sensor/robot failure
 
-        elif message.data.get('directive') == 'shutdown' and message.origin == 'MAIN_LEVEL':
+        elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # The level has been told to shutdown.  Kill all the children!!!
             # Loop over the child processes and shut them shutdown
 
@@ -152,38 +151,46 @@ class MovementLevel:
         Args:
             message (Message): The message object to be processed.
         """
-        if message.data.get("content") == 'robot-info':
+        if message.data["content"] == 'robot-info':
             # Configure the movement level to control this device
-            if message.data.get('data').get('type') == 'sim-smores':
-                self.robots.append(Robot(message.origin, message.data.get('data').get('type')))
-                self.sensors.append(Sensor(message.origin, message.data.get('data').get('type')))
-        elif message.data.get("content") == 'sensor-simulator':
+            if message.data['data']['type'] == 'sim-smores':
+                self.robots[message.origin] = Robot(message.origin,
+                                                    message.data['data']['type'])
+                self.sensors[message.origin] = Sensor(message.origin,
+                                                      message.data['data']['type'])
+        elif message.data["content"] == 'sensor-simulator':
+            print("OLD WORLD")
+            self.world_model.display()
             # read position and heading
-            for robot in self.robots:
-                if robot.port_id == message.origin:
-                    robot.position = ((message.data.get('data').get('data').get('x') * 100),
-                                      (message.data.get('data').get('data').get('y') * 100))
-                    robot.heading = message.data.get('data').get('data').get('heading')
-                    old_tile = self.world_model.find_tile(robot)
-                    if old_tile != None:
-                        old_tile.occupied = None
-                    new_tile = self.world_model.get_tile_real_coords(robot.position)
-                    new_tile.occupied = robot
+            robot = self.robots[message.origin]
+            robot.position = ((message.data['data']['x'] * 100), (message.data['data']['y'] * 100))
+            robot.heading = message.data['data']['heading']
+            old_tile = self.world_model.find_tile(robot)
+            if old_tile != None:
+                old_tile.occupied = None
+            new_tile = self.world_model.get_tile_real_coords(robot.position)
+            new_tile.occupied = robot
 
-                    # Realign the robot after sensor data
-                    self.aligned = False
+            sensor = self.sensors[message.origin]
+            sensor.received = True
 
-            for sensor in self.sensors:
-                if sensor.port_id == message.origin:
-                    sensor.received = True
-        
+            print("NEW WORLD")
+            self.world_model.display()
+        elif message.data["content"] == 'move-result':
+            robot = self.robots[message.origin]
+            robot.moving = False
 
+            # It's done moving so ask for it's position again.
+            if robot.robot_type == "sim-smores":
+                sensor = self.sensors[message.origin]
+                sensor.asked = False
+                sensor.received = False
 
     def check_sensors(self):
         """
         Send position and heading update commands to all sensors.
         """
-        for sensor in self.sensors:
+        for port_id, sensor in self.sensors.items():
             if not sensor.asked and sensor.sensor_type == 'sim-smores':
                 self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', sensor.port_id, 'movement', {
                     'command': 92,
@@ -200,11 +207,11 @@ class MovementLevel:
         if len(self.robots) < self.options["NUMBER_OF_DEVICES"]:
             return False
 
-        for robot in self.robots:
+        for port_id, robot in self.robots.items():
             if robot.moving:
                 return False
 
-        for sensor in self.sensors:
+        for sensor_id, sensor in self.sensors.items():
             if not sensor.received:
                 return False
 
@@ -217,13 +224,13 @@ class MovementLevel:
         tiles. If so the misaligned robots are realigned.
         """
 
-        for robot in self.robots:
+        for port_id, robot in self.robots.items():
             # align to grid if necessary
             if (not robot.moving and (
                     abs(robot.position[0] - self.world_model.find_tile(robot).center[0])
-                    > self.options.get('MAX_MISALIGNMENT')
+                    > self.options['MAX_MISALIGNMENT']
                     or abs(robot.position[1] - self.world_model.find_tile(robot).center[1])
-                    > self.options.get('MAX_MISALIGNMENT'))):
+                    > self.options['MAX_MISALIGNMENT'])):
                 robot.moving = True
                 self.align(robot)
 

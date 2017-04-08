@@ -114,8 +114,8 @@ class BotProcess:
                         # check if the message is a movement command
                         if message.category == 'movement':
 
-                            command = message.data.get("command")
-                            magnitude = message.data.get("magnitude")
+                            command = message.data["command"]
+                            magnitude = message.data["magnitude"]
 
                             mov_str = str(command) + " " + str(magnitude)
 
@@ -146,7 +146,7 @@ class BotProcess:
                                     Message(self.address, 'COM_LEVEL', 'response', parsed_res)
                                 )
 
-                        elif (message.data.get('directive') == 'shutdown'
+                        elif (message.data['directive'] == 'shutdown'
                               and message.origin == 'COM_LEVEL'):
 
                             connection.close()
@@ -172,7 +172,7 @@ class BotProcess:
 
             # Sleep for a few seconds to let the TCP client get setup
             sleep(2)
-            connection.connect((connection_data.get('ip'), int(self.address[4:])))
+            connection.connect((connection_data['ip'], int(self.address[4:])))
 
             while self.keep_running:
                 self.wait_for_commands(self.options["BOT_LOOP_SLEEP_INTERVAL"],
@@ -185,8 +185,8 @@ class BotProcess:
                     # check if the message is a movement command
                     if message.category == 'movement':
 
-                        command = message.data.get("command")
-                        magnitude = message.data.get("magnitude")
+                        command = message.data["command"]
+                        magnitude = message.data["magnitude"]
 
                         mov_str = str(command) + " " + str(magnitude)
 
@@ -206,7 +206,7 @@ class BotProcess:
                             Message(self.address, 'COM_LEVEL', 'response', parsed_res)
                         )
 
-                    elif (message.data.get('directive') == 'shutdown'
+                    elif (message.data['directive'] == 'shutdown'
                           and message.origin == 'COM_LEVEL'):
 
                         connection.close()

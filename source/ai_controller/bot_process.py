@@ -198,8 +198,6 @@ class BotProcess:
                         connection.send(bytes(mov_str, "utf-8"))
 
                         response = connection.recv(1024).strip().decode()
-                        repr(response)
-                        print(response)
                         parsed_res = json.loads(response)
 
                         self.com_input.put(

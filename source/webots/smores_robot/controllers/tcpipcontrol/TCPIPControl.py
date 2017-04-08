@@ -286,7 +286,9 @@ class TCPIPControl(Robot):
             # If the queue is free, lock the queue, get the command from the queue
             # lock the queue, and then handle the command.
 
-            fromTCPLock.acquire()
+            if not fromTCPLock.acquire(False):
+                continue
+
             command = fromTCPQueue.get()
 
             print "Commands from queue: ", command[0], '...', command[1] #, '...', command[2]

@@ -178,10 +178,10 @@ class MovementLevel:
             self.world_model.display()
         elif message.data["content"] == 'move-result':
             robot = self.robots[message.origin]
-            robot.moving = False
+            robot.queued_commands = robot.queued_commands - 1
 
-            # It's done moving so ask for it's position again.
-            if robot.robot_type == "sim-smores":
+            # If it's done moving, ask for it's position again.
+            if robot.queued_commands == 0 and robot.robot_type == "sim-smores":
                 sensor = self.sensors[message.origin]
                 sensor.asked = False
                 sensor.received = False
@@ -208,7 +208,7 @@ class MovementLevel:
             return False
 
         for port_id, robot in self.robots.items():
-            if robot.moving:
+            if robot.queued_commands > 0:
                 return False
 
         for sensor_id, sensor in self.sensors.items():
@@ -226,12 +226,12 @@ class MovementLevel:
 
         for port_id, robot in self.robots.items():
             # align to grid if necessary
-            if (not robot.moving and (
+            if ((robot.heading > self.options['MAX_NORTH_MISALIGNMENT'] and
+                 robot.heading < (360 - self.options['MAX_NORTH_MISALIGNMENT'])) or
                     abs(robot.position[0] - self.world_model.find_tile(robot).center[0])
-                    > self.options['MAX_MISALIGNMENT']
+                    > self.options['MAX_CNTR_MISALIGNMENT']
                     or abs(robot.position[1] - self.world_model.find_tile(robot).center[1])
-                    > self.options['MAX_MISALIGNMENT'])):
-                robot.moving = True
+                    > self.options['MAX_CNTR_MISALIGNMENT']):
                 self.align(robot)
 
     def freakout(self, destination):
@@ -267,20 +267,32 @@ class MovementLevel:
         center_heading = get_angle(robot.position, tile_center)
 
         # get distance to center
+        print("robot", robot.position, robot.heading)
+        print("center", tile_center)
         distance_to_center = get_distance(robot.position, tile_center)
-
+        print("center heading", center_heading)
         # get the angle to turn to center
         angle_to_center = robot.heading - center_heading
+        print("orig turn to center", angle_to_center)
 
         # make right turn center if left turn > 180
+        if angle_to_center < 0:
+            angle_to_center = abs(angle_to_center)
+            turn_center_command = switch_turn(turn_center_command)
+
         if angle_to_center > 180:
             angle_to_center = 360 - angle_to_center
-            turn_center_command = 4
+            turn_center_command = switch_turn(turn_center_command)
+        print("orig turn to north", center_heading)
 
-        # make rught turn to north if left turn > 180
+        # make right turn to north if left turn > 180
+        if center_heading < 0:
+            center_heading = abs(center_heading)
+            turn_north_command = switch_turn(turn_north_command)
+
         if center_heading > 180:
             center_heading = 360 - center_heading
-            turn_north_command = 4
+            turn_north_command = switch_turn(turn_north_command)
 
         # turn to center
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
@@ -288,6 +300,7 @@ class MovementLevel:
             'magnitude': abs(round(angle_to_center)),
             'message': 'Turn to center'
         }))
+        robot.queued_commands = robot.queued_commands + 1
 
         # move to center
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
@@ -295,6 +308,7 @@ class MovementLevel:
             'magnitude': abs(round(distance_to_center)),
             'message': 'Move to center'
         }))
+        robot.queued_commands = robot.queued_commands + 1
 
         # face north
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
@@ -302,6 +316,7 @@ class MovementLevel:
             'magnitude': abs(round(center_heading)),
             'message': 'Turn to center'
         }))
+        robot.queued_commands = robot.queued_commands + 1
 
 def get_distance(old_position, new_position):
     return math.sqrt((new_position[0] - old_position[0]) ** 2 +
@@ -320,3 +335,9 @@ def get_angle(old_position, new_position):
         return inner_angle + 270
     else:
         return inner_angle + 90
+
+def switch_turn(old_turn):
+    if old_turn == 3:
+        return 4
+    else:
+        return 3

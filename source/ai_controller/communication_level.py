@@ -43,7 +43,6 @@ class CommunicationLevel:
             mov_input (Queue): The queue for sending messages to the movement level.
             main_input (Queue): The queue for sending messages to the main level.
         """
-
         self.connections['COM_LEVEL'] = ['running', com_input, None]
         self.connections['MOV_LEVEL'] = ['running', mov_input, None]
         self.connections['MAIN_LEVEL'] = ['running', main_input, None]

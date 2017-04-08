@@ -20,10 +20,10 @@ class Arena:
         self.cm_per_tile = float(arena_size_cm) / float(arena_size)
         self.grid = []
 
-        for i in range(self.height):
+        for row in range(self.height):
             self.grid.append([])
-            for j in range(self.width):
-                self.grid[i].append(Tile(i, j, self.cm_per_tile))
+            for col in range(self.width):
+                self.grid[row].append(Tile(col, row, self.cm_per_tile))
 
     def in_bounds(self, position):
         """
@@ -46,7 +46,7 @@ class Arena:
         coords = filter(self.in_bounds, coords)
         results = []
         for coord in coords:
-            results.append(self.grid[coord[0]][coord[1]])
+            results.append(self.grid[coord[1]][coord[0]])
         return results
 
     def get_tile_real_coords(self, coordinates):
@@ -55,8 +55,8 @@ class Arena:
         """
         if self.in_bounds_real_coords(coordinates):
             return self.grid[
-                round(coordinates[0] / self.cm_per_tile)][
-                    round(coordinates[1] / self.cm_per_tile)]
+                int(coordinates[1] / self.cm_per_tile)][
+                    int(coordinates[0] / self.cm_per_tile)]
         else:
             return None
 
@@ -88,7 +88,7 @@ class Robot:
         self.robot_type = robot_type
         self.position = (0, 0)
         self.heading = 0
-        self.moving = False
+        self.queued_commands = 0
 
 class Sensor:
     def __init__(self, port_id, sensor_type):

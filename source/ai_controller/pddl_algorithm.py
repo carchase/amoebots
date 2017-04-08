@@ -9,13 +9,14 @@ init_col = []
 init_goal = []
 init_robots = []
 init_robot_count = []
-
+goal_position = []
+robot_position = []
 
 def generate_init_state(world_size_grid, world_size_centimeter, how_many_robots):
-    WORLD = world_model.Grid(world_size_grid, world_size_centimeter)
-
+    # for_testing_init_world_model(world_size_grid, world_size_centimeter)
+    WORLD = world_model.Arena(world_size_grid, world_size_centimeter)
     for robot in range(how_many_robots):
-        init_robots.append(world_model.Robot(robot))
+        init_robots.append(world_model.Robot(robot, 0))
         init_robot_count.append(robot)
 
     WORLD.grid[0][0].occupied = init_robots[0]
@@ -28,7 +29,7 @@ def generate_init_state(world_size_grid, world_size_centimeter, how_many_robots)
             if WORLD.grid[row][col].occupied is None:
                 init_array.append(('notOccupied', row, col))
             else:
-                init_array.append(('at', WORLD.grid[row][col].occupied.robot_id, row, col))
+                init_array.append(('at', WORLD.grid[row][col].occupied.port_id, row, col))
 
         init_row.append(row)
         init_col.append(row)
@@ -163,7 +164,8 @@ def problem(verbose):
         print('No Plan!')
     else:
         for action in plan:
-            print(action)
+            action_and_robot = (action.name, action.sig[1])  # This is returning the action name and the robot
+            print(action.name, action.sig[1])
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -173,7 +175,7 @@ if __name__ == '__main__':
                       help="don't print statistics to stdout")
 
     generate_init_state(7, 35, 4)
-    generate_goal_state(('at', 0, 5, 4))
+    generate_goal_state(('at', 1, 5, 4))
     # Parse arguments
     opts, args = parser.parse_args()
 st = time.time()

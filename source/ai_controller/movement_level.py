@@ -31,7 +31,7 @@ class MovementLevel:
         self.options = options
         self.keep_running = True
         self.connections = {}
-        self.world_model = Grid(options["ARENA_SIZE"], options["ARENA_SIZE_CM"])
+        self.world_model = Arena(options["ARENA_SIZE"], options["ARENA_SIZE_CM"])
         self.robots = dict()
         self.sensors = dict()
 

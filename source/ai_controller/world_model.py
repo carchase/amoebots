@@ -63,27 +63,40 @@ class Grid:
             return None
 
     def find_tile(self, robot):
+        self.display()
+        print("LOOKING FOR: ", robot.port_id)
         for row in self.grid:
             for tile in row:
                 if tile.occupied is robot:
+                    print("FOUND: ", robot.port_id)
                     return tile
+        print("NOT FOUND: ", robot.port_id)
         return None
+
+    def display(self):
+        line = ""
+        for row in self.grid:
+            for tile in row:
+                if tile.occupied != None:
+                    line = line + "x "
+                else:
+                    line = line + "o "
+            print(line)
+            line = ""
 
 class Robot:
     """
     Representation of a robot in the world model. Each robot has a real position and heading,
     and a tile it is occupying on the world space grid.
     """
-    def __init__(self, robot_id, port_id, robot_type):
-        self.robot_id = robot_id
+    def __init__(self, port_id, robot_type):
         self.port_id = port_id
         self.robot_type = robot_type
         self.position = (0, 0)
         self.heading = 0
 
 class Sensor:
-    def __init__(self, sensor_id, port_id, sensor_type):
-        self.sensor_id = sensor_id
+    def __init__(self, port_id, sensor_type):
         self.port_id = port_id
         self.sensor_type = sensor_type
         self.asked = False

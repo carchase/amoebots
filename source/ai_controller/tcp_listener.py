@@ -19,7 +19,7 @@ class TCPListener:
 
     NOTE:
     The data sent to the listener should be an encided dictionary like the following
-    b'{\"type\": \"SMORES\",\"id\": \"robot-1\", \"ip\": \"192.168.1.1\"}'
+    b'{\"type\": \"SMORES\",\"ip\": \"192.168.1.1\"}'
 
     Args:
         options (dict): The dictionary containing the program settings.

@@ -30,9 +30,6 @@ class TCPIPControl(Robot):
     # the TCPIPControl class
     def handle_input(self, cmd, magnitude):
 
-        # robot id
-        self.robot_id = 'robot-1'
-
         # variables for the motors
         self.top_motor = None
         self.top_wheel_motor = None
@@ -111,9 +108,9 @@ class TCPIPControl(Robot):
             message = self.jsonResponse('text', 'Move key in')
             whichStop = 2
         elif cmd == 90:
-            message = self.jsonResponse('robot-info', '{\"type\":\"sim-smores\",\"id\":\"' + self.robot_id + '\"}')
+            message = self.jsonResponse('robot-info', '{\"type\":\"sim-smores\"}')
         elif cmd == 92:
-            message = self.jsonResponse('sensor-simulator', '{\"id\":\"' + self.robot_id + '\",\"data\":{\"x\":' + str(self.getPosition(self.gps)[0]) + ',\"y\":' + str(self.getPosition(self.gps)[2]) + ',\"heading\":'+ str(self.getBearing(self.compass)) + '} }')
+            message = self.jsonResponse('sensor-simulator', '{\"data\":{\"x\":' + str(self.getPosition(self.gps)[0]) + ',\"y\":' + str(self.getPosition(self.gps)[2]) + ',\"heading\":'+ str(self.getBearing(self.compass)) + '} }')
         elif cmd == 99:
             message = self.jsonResponse('json', '{\"type\":\"smore\"}')
         else:
@@ -213,9 +210,7 @@ class TCPIPControl(Robot):
         # is external.
         host, port = socket.gethostbyname(socket.gethostname()), 5000
         # host, port = '10.100.239.200', 5000
-        # data = 'My ID is: 1'.join(sys.argv[1:])
-        data = (b'{\"type\": \"SMORES\",\"id\": \"1\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) + b'\"}')
-        # data = 'My ID is: 1'
+        data = (b'{\"type\": \"SMORES\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) + b'\"}')
 
         # create a socket (SOCK_STREAM means a TCP socket)
         print 'before socket connection'

@@ -155,14 +155,12 @@ class MovementLevel:
         if message.data.get("content") == 'robot-info':
             # Configure the movement level to control this device
             if message.data.get('data').get('type') == 'sim-smores':
-                self.robots.append(Robot(message.data.get('data').get('id'),
-                                         message.origin, message.data.get('data').get('type')))
-                self.sensors.append(Sensor(message.data.get('data').get('id'), message.origin,
-                                           message.data.get('data').get('type')))
+                self.robots.append(Robot(message.origin, message.data.get('data').get('type')))
+                self.sensors.append(Sensor(message.origin, message.data.get('data').get('type')))
         elif message.data.get("content") == 'sensor-simulator':
             # read position and heading
             for robot in self.robots:
-                if robot.robot_id == message.data.get('data').get('id'):
+                if robot.port_id == message.origin:
                     robot.position = ((message.data.get('data').get('data').get('x') * 100),
                                       (message.data.get('data').get('data').get('y') * 100))
                     robot.heading = message.data.get('data').get('data').get('heading')
@@ -176,7 +174,7 @@ class MovementLevel:
                     self.aligned = False
 
             for sensor in self.sensors:
-                if sensor.sensor_id == message.data.get('data').get('id'):
+                if sensor.port_id == message.origin:
                     sensor.received = True
 
 

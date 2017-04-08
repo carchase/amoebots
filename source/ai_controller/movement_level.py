@@ -10,7 +10,7 @@ import random
 import math
 from time import sleep
 from message import Message
-from world_model import Grid, Robot, Sensor
+from world_model import Arena, Robot, Sensor
 
 class MovementLevel:
     """
@@ -31,7 +31,7 @@ class MovementLevel:
         self.options = options
         self.keep_running = True
         self.connections = {}
-        self.world_model = Grid(options.get("ARENA_SIZE"), options.get("ARENA_SIZE_CM"))
+        self.world_model = Arena(options.get("ARENA_SIZE"), options.get("ARENA_SIZE_CM"))
         self.robots = []
         self.sensors = []
         self.aligned = False
@@ -176,7 +176,6 @@ class MovementLevel:
             for sensor in self.sensors:
                 if sensor.port_id == message.origin:
                     sensor.received = True
-        
 
 
     def check_sensors(self):

@@ -6,7 +6,7 @@ Created on Oct 11, 2016
 View the full repository here https://github.com/car-chase/amoebots
 '''
 
-class Grid:
+class Arena:
     """
     The world model representation of the webots arena. The purpose of the world model
     is to represent the world in a way the AI level can understand and process.
@@ -19,7 +19,6 @@ class Grid:
         self.height_cm = arena_size_cm
         self.cm_per_tile = float(arena_size_cm) / float(arena_size)
         self.grid = []
-        self.robots = []
 
         for i in range(self.height):
             self.grid.append([])

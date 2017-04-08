@@ -176,6 +176,7 @@ class MovementLevel:
             for sensor in self.sensors:
                 if sensor.port_id == message.origin:
                     sensor.received = True
+        
 
 
     def check_sensors(self):
@@ -199,8 +200,9 @@ class MovementLevel:
         if len(self.robots) < self.options["NUMBER_OF_DEVICES"]:
             return False
 
-        if self.aligned:
-            return False
+        for robot in self.robots:
+            if robot.moving:
+                return False
 
         for sensor in self.sensors:
             if not sensor.received:
@@ -215,14 +217,14 @@ class MovementLevel:
         tiles. If so the misaligned robots are realigned.
         """
 
-        self.aligned = True
-
         for robot in self.robots:
             # align to grid if necessary
-            if (abs(robot.position[0] - self.world_model.find_tile(robot).center[0])
+            if (not robot.moving and (
+                    abs(robot.position[0] - self.world_model.find_tile(robot).center[0])
                     > self.options.get('MAX_MISALIGNMENT')
                     or abs(robot.position[1] - self.world_model.find_tile(robot).center[1])
-                    > self.options.get('MAX_MISALIGNMENT')):
+                    > self.options.get('MAX_MISALIGNMENT'))):
+                robot.moving = True
                 self.align(robot)
 
     def freakout(self, destination):

@@ -94,6 +94,7 @@ class Robot:
         self.robot_type = robot_type
         self.position = (0, 0)
         self.heading = 0
+        self.moving = False
 
 class Sensor:
     def __init__(self, port_id, sensor_type):

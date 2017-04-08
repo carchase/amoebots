@@ -38,19 +38,25 @@ def robot_goal_assignment(world_size_grid, world_size_centimeter, how_many_robot
             dist = math.hypot(robot_position_and_object[j][0][0] - goal_position[i][0],   # x2 - x1
                               robot_position_and_object[j][0][1] - goal_position[i][1])   # y2 - y1
 
+            print('i: ', i,
+                  'j: ', j,
+                  'x2 - x1: ', robot_position_and_object[j][0][0] - goal_position[i][0],
+                  'y2 - y1: ', robot_position_and_object[j][0][1] - goal_position[i][1],
+                  'distance between the two locations: ', dist)
+
             if dist < shortest_dist:
                 shortest_dist = dist
                 robot_with_shortest_distance = robot_position_and_object[j][1]
+                print("I've made it to the if statement!")
                 if WORLD.grid[goal_position[i][0]][goal_position[i][1]].robot_goal is None and j == len(goal_position):
-                    WORLD.grid[goal_position[i][0]][goal_position[i][1]].robot_goal = init_robots[robot_with_shortest_distance]
-                    goal_position.append(goal_position.goal = True)
+                    print("I've made it to add a robot to the robot_goal!")
+                    WORLD.grid[goal_position[i][0]][goal_position[i][1]].robot_goal = robot_with_shortest_distance
+                    del(robot_position_and_object[j])
+                    del(goal_position[i])
+            else:
+                shortest_dist = dist
 
-
-
-            print('x2 - x1: ', robot_position[j][0] - goal_position[i][0],
-                  'y2 - y1: ', robot_position[j][1] - goal_position[i][1],
-                  'distance between the two locations: ', dist)
-        print('Next Comparison')
+        print('\n\nNext Comparison')
 
 def main():
     robot_goal_assignment(7, 7, 4)

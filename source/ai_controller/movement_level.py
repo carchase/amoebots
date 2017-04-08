@@ -10,7 +10,7 @@ import random
 import math
 from time import sleep
 from message import Message
-from world_model import Grid, Robot, Sensor
+from world_model import Arena, Robot, Sensor
 
 class MovementLevel:
     """

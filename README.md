@@ -1,6 +1,7 @@
 # AmoeBots
 Senior Capstone Project August 2016 to May 2017
 
+## Progress
 See video of our project working [here!!!](https://www.youtube.com/playlist?list=PLYU0dKA2AWq_PUPOFTnlwQ91dv_QmZIN5)
 
 ## Team

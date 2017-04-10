@@ -9,13 +9,27 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 i = 0
-cap = cv2.VideoCapture(1)  # @UndefinedVariable
+cap = cv2.VideoCapture(1)  # @UndefinedVariable 0 if no built in camera, 1 if there is
+
+def black_white_conversion(img):
+    for row in img:
+        for column in row:
+            if column > 0 and column < 255:
+                print(column)
+                
+            if column >= 128:
+                column = 255
+            else:
+                column = 0
+                
+    return img
+
 
 while True:
     ret, frame = cap.read()
     cv2.imshow('frame', frame)  # @UndefinedVariable
     
-    if cv2.waitKey(1) & 0xFF == ord('q'):  # @UndefinedVariableq
+    if cv2.waitKey(1) & 0xFF == ord('q'):  # @UndefinedVariable
         break
     
     if cv2.waitKey(1) & 0xFF == ord('c'):  # @UndefinedVariable
@@ -33,42 +47,44 @@ while True:
             mask = cv2.inRange(hsv, tuple(colorMin[index]), tuple(colorMax[index]))  # @UndefinedVariable
             res = cv2.bitwise_and(img, img, mask= mask)  # @UndefinedVariable
             bw_imgs.append(mask)
-                
+            
             index += 1
         
         for num in range(6):
-            img_name = str(colors[num]) + str(i) + '.jpeg'
+            img_name = str(colors[num]) + str(i) + '.png'
             cv2.imwrite(img_name, bw_imgs[num])  # @UndefinedVariable
             
         i += 1
         
         
-#         blobParams = cv2.SimpleBlobDetector_Params()  # @UndefinedVariable
-#         
-#         blobParams.minThreshold(10)
-#         blobParams.maxThreshold(200)
-#         blobParams.filterByCircularity = True
-#         blobParams.minCircularity = 0.780
-#         blobParams.maxCircularity = 0.790
-#         blobParams.filterByConvexity = True
-#         blobParams.minConvexity = 0.34
-#         blobParams.maxConvexity = 0.90
-#         
-#         detector = cv2.SimpleBlobDetector_create(blobParams)  # @UndefinedVariable
-#          
-#         keypoints = detector.detect(img)
-#         for point in keypoints:
-#             print(point, '\n')
-#             for loc in point:
-#                 print(loc)
-#                 print(' ')
-#              
-#         img_with_keypoints = cv2.drawKeypoints(img, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)  # @UndefinedVariable
-#         # Show keypoints
-#         cv2.imshow("Keypoints", img_with_keypoints)  # @UndefinedVariable
-#         cv2.waitKey(0)  # @UndefinedVariable
+        blobParams = cv2.SimpleBlobDetector_Params()  # @UndefinedVariable
         
+        blobParams.filterByColor = True
+        blobParams.blobColor = 255
+        blobParams.filterByArea = True
+        blobParams.minArea = 10
+        #blobParams.maxArea = 50
+        blobParams.filterByCircularity = False
+        blobParams.filterByConvexity = False
+        blobParams.filterByInertia = False
+         
+        detector = cv2.SimpleBlobDetector_create(blobParams)  # @UndefinedVariable
+        
+        keypoints = [[],[],[],[],[],[]]
+        img_with_keypoints = img
+        j = 0
+        for im in bw_imgs:
+            keypoints[j] = detector.detect(im)
+            for points in keypoints[j]:
+                print(points.pt)
+            img_with_keypoints = cv2.drawKeypoints(img_with_keypoints, keypoints[j], np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)  # @UndefinedVariable
+            # Show keypoints
+            cv2.imshow("Keypoints", img_with_keypoints)  # @UndefinedVariable
+            j += 1
             
+        print('\n')
+        
+        
 
     
 cap.release()

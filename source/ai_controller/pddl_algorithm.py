@@ -12,17 +12,17 @@ init_robot_count = []
 goal_position = []
 robot_position = []
 
-def generate_init_state(world_size_grid, world_size_centimeter, how_many_robots):
+def generate_init_state(world_size_grid, WORLD):
     # for_testing_init_world_model(world_size_grid, world_size_centimeter)
-    WORLD = world_model.Arena(world_size_grid, world_size_centimeter)
-    for robot in range(how_many_robots):
-        init_robots.append(world_model.Robot(robot, 0))
-        init_robot_count.append(robot)
+    # WORLD = world_model.Arena(world_size_grid, world_size_centimeter)
+    # for robot in range(how_many_robots):
+    #     init_robots.append(world_model.Robot(robot, 0))
+    #     init_robot_count.append(robot)
 
-    WORLD.grid[0][0].occupied = init_robots[0]
-    WORLD.grid[0][6].occupied = init_robots[1]
-    WORLD.grid[6][0].occupied = init_robots[2]
-    WORLD.grid[6][6].occupied = init_robots[3]
+    # WORLD.grid[0][0].occupied = init_robots[0]
+    # WORLD.grid[0][4].occupied = init_robots[1]
+    # WORLD.grid[4][0].occupied = init_robots[2]
+    # WORLD.grid[4][4].occupied = init_robots[3]
 
     for row in range(world_size_grid):
         for col in range(world_size_grid):
@@ -174,8 +174,8 @@ if __name__ == '__main__':
                       action='store_false', dest='verbose', default=True,
                       help="don't print statistics to stdout")
 
-    generate_init_state(7, 35, 4)
-    generate_goal_state(('at', 1, 5, 4))
+    # generate_init_state(5, 35, 4)
+    # generate_goal_state(('at', 1, 3, 2))
     # Parse arguments
     opts, args = parser.parse_args()
 st = time.time()

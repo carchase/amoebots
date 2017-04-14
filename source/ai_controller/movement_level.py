@@ -34,6 +34,7 @@ class MovementLevel:
         self.world_model = Arena(options["ARENA_SIZE"], options["ARENA_SIZE_CM"])
         self.robots = dict()
         self.sensors = dict()
+        self.aligned = False
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -95,6 +96,11 @@ class MovementLevel:
                 # Check if align is necessary
                 if self.ready_for_align():
                     self.align_robots()
+
+                if self.aligned:
+                    self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'world_update', {
+                        'world': self.world_model
+                    }))
 
                 sleep(self.options["MOV_LOOP_SLEEP_INTERVAL"])
 
@@ -187,13 +193,6 @@ class MovementLevel:
                 sensor = self.sensors[message.origin]
                 sensor.asked = False
                 sensor.received = False
-        # elif message.data["content"] == 'json' and message.data["data"]["type"] == 'smore':
-        #     print("yeah boy")
-        #     robot = self.robots[message.origin]
-        #     if robot.queued_commands == 0 and robot.robot_type == "sim-smores":
-        #         sensor = self.sensors[message.origin]
-        #         sensor.asked = False
-        #         sensor.received = False
 
     def check_sensors(self):
         """
@@ -249,7 +248,9 @@ class MovementLevel:
                     > self.options['MAX_CNTR_MISALIGNMENT']
                     or abs(robot.position[1] - self.world_model.find_tile(robot).center[1])
                     > self.options['MAX_CNTR_MISALIGNMENT']):
+                self.aligned = False
                 self.align(robot)
+        self.aligned = True
 
     def freakout(self, destination):
         """

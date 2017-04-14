@@ -187,6 +187,13 @@ class MovementLevel:
                 sensor = self.sensors[message.origin]
                 sensor.asked = False
                 sensor.received = False
+        # elif message.data["content"] == 'json' and message.data["data"]["type"] == 'smore':
+        #     print("yeah boy")
+        #     robot = self.robots[message.origin]
+        #     if robot.queued_commands == 0 and robot.robot_type == "sim-smores":
+        #         sensor = self.sensors[message.origin]
+        #         sensor.asked = False
+        #         sensor.received = False
 
     def check_sensors(self):
         """
@@ -195,7 +202,7 @@ class MovementLevel:
         for port_id, sensor in self.sensors.items():
             if not sensor.asked and sensor.sensor_type == 'sim-smores':
                 self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', sensor.port_id, 'movement', {
-                    'command': 92,
+                    'command': 99,
                     'magnitude': 0,
                     'message': 'Get simulator sensor data'
                 }))
@@ -247,6 +254,9 @@ class MovementLevel:
     def freakout(self, destination):
         """
         Instructs robots to take a number of random moves to "shake" them apart from each other.
+
+        Args:
+            Destination (int): the port id of the robot to shake out
         """
         self.robots[destination].queued_commands = 5
         for count in range(5):

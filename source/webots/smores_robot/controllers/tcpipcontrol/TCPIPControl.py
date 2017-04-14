@@ -109,10 +109,8 @@ class TCPIPControl(Robot):
             whichStop = 2
         elif cmd == 90:
             message = self.jsonResponse('robot-info', '{\"type\":\"sim-smores\"}')
-        elif cmd == 92:
-            message = self.jsonResponse('sensor-simulator', '{\"x\":' + str(self.getPosition(self.gps)[0]) + ',\"y\":' + str(self.getPosition(self.gps)[2]) + ',\"heading\":'+ str(self.getBearing(self.compass)) + '}')
         elif cmd == 99:
-            message = self.jsonResponse('json', '{\"type\":\"smore\"}')
+            message = self.jsonResponse('sensor-simulator', '{\"x\":' + str(self.getPosition(self.gps)[0]) + ',\"y\":' + str(self.getPosition(self.gps)[2]) + ',\"heading\":'+ str(self.getBearing(self.compass)) + '}')
         else:
             message = self.jsonResponse('unsupported', '\"command not supported\"')
 

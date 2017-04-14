@@ -166,7 +166,7 @@ class MovementLevel:
                                                     message.data['data']['type'])
                 self.sensors[message.origin] = Sensor(message.origin,
                                                       message.data['data']['type'])
-        elif message.data["content"] == 'sensor-simulator':
+        elif message.data["content"] == 'ping':
             print("OLD WORLD")
             self.world_model.display()
             # read position and heading

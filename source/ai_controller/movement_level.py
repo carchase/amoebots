@@ -142,6 +142,8 @@ class MovementLevel:
 
             # End the com_level
             self.keep_running = False
+        elif message.data["directive"] == 'pddl-plan':
+            self.process_plan(message.data['plan'])
 
     def process_response(self, message):
         """
@@ -210,6 +212,14 @@ class MovementLevel:
         for port_id, robot in self.robots.items():
             if robot.queued_commands > 0:
                 return False
+            if self.world_model.find_tile(robot) is None:
+                # shake the robot loose and try to get it a new center
+                self.freakout(port_id)
+                if robot.robot_type == "sim-smores":
+                    sensor = self.sensors[port_id]
+                    sensor.asked = False
+                    sensor.received = False
+                return False
 
         for sensor_id, sensor in self.sensors.items():
             if not sensor.received:
@@ -238,12 +248,14 @@ class MovementLevel:
         """
         Instructs robots to take a number of random moves to "shake" them apart from each other.
         """
-        for i in range(5):
-            a = random.randint(1, 4)
-            t = random.randint(2, 5)
+        self.robots[destination].queued_commands = 5
+        for count in range(5):
+            action = random.randint(1, 4)
+            magnitude = random.randint(8, 16)
+
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': a,
-                'magnitude': t
+                'command': action,
+                'magnitude': magnitude
             }))
 
         # Example command
@@ -356,6 +368,7 @@ class MovementLevel:
                     'magnitude': turn_magnitude,
                     'message': 'Turn to destination'
                 }))
+                self.robots[port_id].queued_commands += 1
 
             # get destination distance
             distance = self.world_model.cm_per_tile
@@ -366,6 +379,7 @@ class MovementLevel:
                 'magnitude': distance,
                 'message': 'Move to destination'
             }))
+            self.robots[port_id].queued_commands += 1
 
             # reface north (undue preceeding turns)
             if command is "moveRight":
@@ -384,6 +398,7 @@ class MovementLevel:
                     'magnitude': turn_magnitude,
                     'message': 'Turn to north'
                 }))
+                self.robots[port_id].queued_commands += 1
 
 def get_distance(old_position, new_position):
     """

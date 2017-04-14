@@ -1,28 +1,21 @@
 from __future__ import print_function
 from pyddl import Domain, Problem, Action, neg, planner
 import time
-import world_model
+import copy
 
 init_array = []
 init_row = []
 init_col = []
 init_goal = []
-init_robots = []
 init_robot_count = []
-goal_position = []
-robot_position = []
 
-def generate_init_state(world_size_grid, WORLD):
-    # for_testing_init_world_model(world_size_grid, world_size_centimeter)
-    # WORLD = world_model.Arena(world_size_grid, world_size_centimeter)
-    # for robot in range(how_many_robots):
-    #     init_robots.append(world_model.Robot(robot, 0))
-    #     init_robot_count.append(robot)
 
-    # WORLD.grid[0][0].occupied = init_robots[0]
-    # WORLD.grid[0][4].occupied = init_robots[1]
-    # WORLD.grid[4][0].occupied = init_robots[2]
-    # WORLD.grid[4][4].occupied = init_robots[3]
+def generate_init_state(world_size_grid, WORLD, robots):
+    global init_robot_count
+    global init_array
+    global init_row
+    global init_col
+    init_robot_count = copy.deepcopy(robots)
 
     for row in range(world_size_grid):
         for col in range(world_size_grid):
@@ -39,8 +32,9 @@ def generate_init_state(world_size_grid, WORLD):
         init_array.append(('isAbove', inc, inc + 1))
 
 
-def generate_goal_state(goal):
-    init_goal.append(goal)
+def generate_goal_state(robot, x, y):
+    global init_goal
+    init_goal.append(('at', robot, x, y))
 
 
 def problem(verbose):
@@ -134,10 +128,10 @@ def problem(verbose):
             'robot': tuple(init_robot_count),
         },
         init=(
-            tuple(init_array)
+            tuple(init_array),
         ),
         goal=(
-            tuple(init_goal)
+            tuple(init_goal),
         )
     )
 
@@ -164,20 +158,21 @@ def problem(verbose):
         print('No Plan!')
     else:
         for action in plan:
-            action_and_robot = (action.name, action.sig[1])  # This is returning the action name and the robot
-            print(action.name, action.sig[1])
+            # action_and_robot = (action.name, action.sig[1])  # This is returning the action name and the robot
+            # print(action.name, action.sig[1])
+            print(action)
 
-if __name__ == '__main__':
+
+def start_algorithm():
     from optparse import OptionParser
+
     parser = OptionParser(usage="Usage: %prog [options]")
     parser.add_option('-q', '--quiet',
                       action='store_false', dest='verbose', default=True,
                       help="don't print statistics to stdout")
-
-    # generate_init_state(5, 35, 4)
-    # generate_goal_state(('at', 1, 3, 2))
-    # Parse arguments
     opts, args = parser.parse_args()
-st = time.time()
-problem(opts.verbose)
-print("TOOK " + str((time.time()-st)/60) + " MINUTES")
+    # Parse arguments
+    st = time.time()
+    problem(opts.verbose)
+    print("TOOK " + str((time.time() - st) / 60) + " MINUTES")
+

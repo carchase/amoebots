@@ -49,9 +49,12 @@ here at IPFW.
 2. Install pyserial in order to communicate with the robots:
  
  >$ py -m pip install pyserial
-3. Clone the project repository to your local drive by running the following command:
+3. Install opencv which is used for robot detection
+
+ >$ pip install opencv-python
+4. Clone the project repository to your local drive by running the following command:
 
  >$ git clone https://github.com/car-chase/amoebots.git
-4. Start the AI by running the following command from the project root:
+5. Start the AI by running the following command from the project root:
 
  >$ py ./source/ai_controller/main.py

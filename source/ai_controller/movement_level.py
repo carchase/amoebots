@@ -98,7 +98,7 @@ class MovementLevel:
                     self.align_robots()
 
                 if self.aligned:
-                    self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'world_update', {
+                    self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'world-update', {
                         'world': self.world_model
                     }))
 
@@ -181,6 +181,7 @@ class MovementLevel:
 
             sensor = self.sensors[message.origin]
             sensor.received = True
+            self.aligned = False
 
             print("NEW WORLD")
             self.world_model.display()
@@ -239,7 +240,7 @@ class MovementLevel:
         Iterate through all the robots and check if they are misaligned to their
         tiles. If so the misaligned robots are realigned.
         """
-
+        misaligned = 0
         for port_id, robot in self.robots.items():
             # align to grid if necessary
             if ((robot.heading > self.options['MAX_NORTH_MISALIGNMENT'] and
@@ -248,9 +249,11 @@ class MovementLevel:
                     > self.options['MAX_CNTR_MISALIGNMENT']
                     or abs(robot.position[1] - self.world_model.find_tile(robot).center[1])
                     > self.options['MAX_CNTR_MISALIGNMENT']):
+                misaligned += 1
                 self.aligned = False
                 self.align(robot)
-        self.aligned = True
+        if misaligned == 0:
+            self.aligned = True
 
     def freakout(self, destination):
         """
@@ -263,6 +266,8 @@ class MovementLevel:
         for count in range(5):
             action = random.randint(1, 4)
             magnitude = random.randint(8, 16)
+            if action > 2:
+                magnitude = random.randint(45, 135)
 
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
                 'command': action,

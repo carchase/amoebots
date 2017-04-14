@@ -34,6 +34,7 @@ class MovementLevel:
         self.world_model = Arena(options["ARENA_SIZE"], options["ARENA_SIZE_CM"])
         self.robots = dict()
         self.sensors = dict()
+        self.aligned = False
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -96,6 +97,11 @@ class MovementLevel:
                 if self.ready_for_align():
                     self.align_robots()
 
+                if self.aligned:
+                    self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'world_update', {
+                        'world': self.world_model
+                    }))
+
                 sleep(self.options["MOV_LOOP_SLEEP_INTERVAL"])
 
             except Exception as err:
@@ -142,6 +148,8 @@ class MovementLevel:
 
             # End the com_level
             self.keep_running = False
+        elif message.data["directive"] == 'pddl-plan':
+            self.process_plan(message.data['plan'])
 
     def process_response(self, message):
         """
@@ -158,7 +166,7 @@ class MovementLevel:
                                                     message.data['data']['type'])
                 self.sensors[message.origin] = Sensor(message.origin,
                                                       message.data['data']['type'])
-        elif message.data["content"] == 'sensor-simulator':
+        elif message.data["content"] == 'ping':
             print("OLD WORLD")
             self.world_model.display()
             # read position and heading
@@ -193,7 +201,7 @@ class MovementLevel:
         for port_id, sensor in self.sensors.items():
             if not sensor.asked and sensor.sensor_type == 'sim-smores':
                 self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', sensor.port_id, 'movement', {
-                    'command': 92,
+                    'command': 99,
                     'magnitude': 0,
                     'message': 'Get simulator sensor data'
                 }))
@@ -209,6 +217,14 @@ class MovementLevel:
 
         for port_id, robot in self.robots.items():
             if robot.queued_commands > 0:
+                return False
+            if self.world_model.find_tile(robot) is None:
+                # shake the robot loose and try to get it a new center
+                self.freakout(port_id)
+                if robot.robot_type == "sim-smores":
+                    sensor = self.sensors[port_id]
+                    sensor.asked = False
+                    sensor.received = False
                 return False
 
         for sensor_id, sensor in self.sensors.items():
@@ -232,18 +248,25 @@ class MovementLevel:
                     > self.options['MAX_CNTR_MISALIGNMENT']
                     or abs(robot.position[1] - self.world_model.find_tile(robot).center[1])
                     > self.options['MAX_CNTR_MISALIGNMENT']):
+                self.aligned = False
                 self.align(robot)
+        self.aligned = True
 
     def freakout(self, destination):
         """
         Instructs robots to take a number of random moves to "shake" them apart from each other.
+
+        Args:
+            Destination (int): the port id of the robot to shake out
         """
-        for i in range(5):
-            a = random.randint(1, 4)
-            t = random.randint(2, 5)
+        self.robots[destination].queued_commands = 5
+        for count in range(5):
+            action = random.randint(1, 4)
+            magnitude = random.randint(8, 16)
+
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
-                'command': a,
-                'magnitude': t
+                'command': action,
+                'magnitude': magnitude
             }))
 
         # Example command
@@ -356,6 +379,7 @@ class MovementLevel:
                     'magnitude': turn_magnitude,
                     'message': 'Turn to destination'
                 }))
+                self.robots[port_id].queued_commands += 1
 
             # get destination distance
             distance = self.world_model.cm_per_tile
@@ -366,6 +390,7 @@ class MovementLevel:
                 'magnitude': distance,
                 'message': 'Move to destination'
             }))
+            self.robots[port_id].queued_commands += 1
 
             # reface north (undue preceeding turns)
             if command is "moveRight":
@@ -384,6 +409,7 @@ class MovementLevel:
                     'magnitude': turn_magnitude,
                     'message': 'Turn to north'
                 }))
+                self.robots[port_id].queued_commands += 1
 
 def get_distance(old_position, new_position):
     """

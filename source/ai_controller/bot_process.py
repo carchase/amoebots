@@ -7,6 +7,7 @@ View the full repository here https://github.com/car-chase/amoebots
 '''
 
 from time import sleep
+import sys
 import socket
 import json
 from serial import Serial
@@ -157,6 +158,7 @@ class BotProcess:
                             }))
 
                             self.keep_running = False
+                            sys.exit()
 
     def tcp_process(self):
         """
@@ -215,6 +217,7 @@ class BotProcess:
                         }))
 
                         self.keep_running = False
+                        sys.exit()
 
     def wait_for_commands(self, timeout, intervals_per_ping):
         """

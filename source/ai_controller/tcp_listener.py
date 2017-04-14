@@ -6,6 +6,7 @@ Created on Nov 1, 2016
 View the full repository here https://github.com/car-chase/amoebots
 '''
 
+import sys
 import socketserver
 import json
 from message import Message
@@ -105,6 +106,7 @@ class TCPListener:
             }))
 
             self.keep_running = False
+            sys.exit()
 
     class TCPHandler(socketserver.BaseRequestHandler):
         """

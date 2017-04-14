@@ -9,6 +9,7 @@ View the full repository here https://github.com/car-chase/amoebots
 from multiprocessing import Process, Queue
 from time import sleep
 from bot_process import BotProcess
+from cam_process import CameraProcess
 from com_listener import COMListener
 from tcp_listener import TCPListener
 from serial.tools import list_ports
@@ -58,6 +59,14 @@ class CommunicationLevel:
                                        args=(tcp_listener_input, self.connections["COM_LEVEL"][1]))
         tcp_listener_process.start()
         self.connections['TCP_LISTENER'] = ['running', tcp_listener_input, tcp_listener_process]
+
+        # start the camera process
+        camera_input = Queue()
+        camera = CameraProcess(self.options)
+        camera_process = Process(target=camera.cam_process_main,
+                                 args=(camera_input, self.connections["COM_LEVEL"][1]))
+        camera_process.start()
+        self.connections['CAM_PROCESS'] = ['running', camera_input, camera_process]
 
         # infinite loop to keep checking the queue for information
         while self.keep_running:

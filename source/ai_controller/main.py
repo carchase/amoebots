@@ -15,7 +15,8 @@ from main_level import MainLevel
 OPTIONS = {
     'DUMP_MSGS_TO_MAIN': True, # Show all messages in main log output
     'RAISE_ERRORS_AFTER_CATCH': True, # Raises errors after catching
-    'NUMBER_OF_DEVICES': 1, # Number of devices that the controller expects to use
+    'NUMBER_OF_DEVICES': 5, # Number of devices that the controller expects to use
+    'CAMERA_ID': 1, # The location of the camera as viewed by openCV. Built-in webcam is always 0.
     'BAUD': 115200, # Baud rate used by the COM ports
     'TCP_LISTENER_IP': socket.gethostbyname(socket.gethostname()), # Hostname the TCP listener uses
     'TCP_LISTENER_PORT': 5000, # Port the TCP listener uses

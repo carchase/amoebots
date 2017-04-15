@@ -13,7 +13,7 @@ def robot_goal_assignment(world_size_grid, world):
     for row in range(world_size_grid):
         for col in range(world_size_grid):
             if world.grid[row][col].goal is True:
-                goal_position.append(WORLD.grid[row][col].position)
+                goal_position.append(world.grid[row][col].position)
             if world.grid[row][col].occupied is not None:
                 robot_position_and_object.append((world.grid[row][col].position,
                                                   world.grid[row][col].occupied.port_id))
@@ -31,9 +31,9 @@ def robot_goal_assignment(world_size_grid, world):
                 robot_with_shortest_distance = robot_position_and_object[j][1]
                 ele_with_robot = j
 
-            if WORLD.grid[goal_position[0][1]][goal_position[0][0]].robot_goal is None and j is len(goal_position)-1:
+            if world.grid[goal_position[0][1]][goal_position[0][0]].robot_goal is None and j is len(goal_position)-1:
                 print(robot_with_shortest_distance)
-                WORLD.grid[goal_position[0][1]][goal_position[0][0]].robot_goal = robot_with_shortest_distance
+                world.grid[goal_position[0][1]][goal_position[0][0]].robot_goal = robot_with_shortest_distance
                 robot_goal_and_position.append((robot_with_shortest_distance, goal_position[0][0], goal_position[0][1]))
                 del(robot_position_and_object[ele_with_robot])
             dist_temp = dist

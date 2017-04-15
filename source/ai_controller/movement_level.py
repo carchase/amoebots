@@ -37,6 +37,7 @@ class MovementLevel:
         self.sensors = dict()
         self.aligned = False
         self.processing_plan = False
+        self.scramble_robots = False
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -92,6 +93,12 @@ class MovementLevel:
                         # for raw output to the screen
                         self.connections["MAIN_LEVEL"][1].put(message)
 
+                # Scramble robot positions if necessary
+                if self.scramble_robots:
+                    for port_id, robot in self.robots.items():
+                        self.freakout(port_id)
+                    self.scramble_robots = False
+
                 # Check the sensors
                 self.check_sensors()
 
@@ -108,7 +115,6 @@ class MovementLevel:
 
                     }))
                     self.processing_plan = True
-                    self.aligned = False
 
                 sleep(self.options["MOV_LOOP_SLEEP_INTERVAL"])
 
@@ -175,8 +181,8 @@ class MovementLevel:
                 self.sensors[message.origin] = Sensor(message.origin,
                                                       message.data['data']['type'])
         elif message.data["content"] == 'ping':
-            print("OLD WORLD")
-            self.world_model.display()
+            # print("OLD WORLD")
+            # self.world_model.display()
             # read position and heading
             robot = self.robots[message.origin]
             robot.position = ((message.data['data']['x'] * 100), (message.data['data']['y'] * 100))
@@ -191,8 +197,8 @@ class MovementLevel:
             sensor.received = True
             self.aligned = False
 
-            print("NEW WORLD")
-            self.world_model.display()
+            # print("NEW WORLD")
+            # self.world_model.display()
         elif message.data["content"] == 'move-result':
             robot = self.robots[message.origin]
             robot.queued_commands = robot.queued_commands - 1
@@ -224,20 +230,16 @@ class MovementLevel:
         if len(self.robots) < self.options["NUMBER_OF_DEVICES"]:
             return False
 
+        for sensor_id, sensor in self.sensors.items():
+            if not sensor.received:
+                return False
+
         for port_id, robot in self.robots.items():
             if robot.queued_commands > 0:
                 return False
             if self.world_model.find_tile(robot) is None:
-                # shake the robot loose and try to get it a new center
-                self.freakout(port_id)
-                if robot.robot_type == "sim-smores":
-                    sensor = self.sensors[port_id]
-                    sensor.asked = False
-                    sensor.received = False
-                return False
-
-        for sensor_id, sensor in self.sensors.items():
-            if not sensor.received:
+                # Robots need to be shaken apart
+                self.scramble_robots = True
                 return False
 
         return True
@@ -270,12 +272,20 @@ class MovementLevel:
         Args:
             Destination (int): the port id of the robot to shake out
         """
-        self.robots[destination].queued_commands = self.options['FREAKOUT_ITERATIONS']
+        self.robots[destination].queued_commands = self.options['FREAKOUT_ITERATIONS'] * 2
         for count in range(self.options['FREAKOUT_ITERATIONS']):
-            action = random.randint(1, 4)
+            # Generate turn command
+            action = random.randint(3, 4)
+            magnitude = random.randint(0, 180)
+
+            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
+                'command': action,
+                'magnitude': magnitude
+            }))
+
+            # Generate move command
+            action = 1
             magnitude = random.randint(8, 16)
-            if action > 2:
-                magnitude = random.randint(45, 135)
 
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', destination, 'movement', {
                 'command': action,
@@ -306,13 +316,9 @@ class MovementLevel:
         center_heading = get_angle(robot.position, tile_center)
 
         # get distance to center
-        print("robot", robot.position, robot.heading)
-        print("center", tile_center)
         distance_to_center = get_distance(robot.position, tile_center)
-        print("center heading", center_heading)
         # get the angle to turn to center
         angle_to_center = robot.heading - center_heading
-        print("orig turn to center", angle_to_center)
 
         # make right turn center if left turn > 180
         if angle_to_center < 0:
@@ -322,7 +328,6 @@ class MovementLevel:
         if angle_to_center > 180:
             angle_to_center = 360 - angle_to_center
             turn_center_command = switch_turn(turn_center_command)
-        print("orig turn to north", center_heading)
 
         # make right turn to north if left turn > 180
         if center_heading < 0:

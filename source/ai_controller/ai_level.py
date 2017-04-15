@@ -100,7 +100,7 @@ class AiLevel:
             # Parse out the world model
             world = jsonpickle.decode(message.data['args'])
             print("world parsed")
-            print("world")
+            print(world)
         
         elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # the level has been told to shutdown.  Kill all the children!!!

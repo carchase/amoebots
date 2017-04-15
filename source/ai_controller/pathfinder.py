@@ -7,7 +7,6 @@ init_robots = []
 robot_position_and_object = []
 robot_goal_and_position = []
 
-
 def robot_goal_assignment(world_size_grid, world):
 
     for row in range(world_size_grid):
@@ -16,7 +15,7 @@ def robot_goal_assignment(world_size_grid, world):
                 goal_position.append(world.grid[row][col].position)
             if world.grid[row][col].occupied is not None:
                 robot_position_and_object.append((world.grid[row][col].position,
-                                                  world.grid[row][col].occupied.port_number))
+                                                  world.grid[row][col].occupied.robot_number))
 
     # Check if anyone is at an existing goal
     goals_deleted = 0
@@ -54,7 +53,8 @@ def robot_goal_assignment(world_size_grid, world):
 
 
 def generate_moves(world_grid_size, world):
-    robot_goal_assignment(world_grid_size, world)
+    if(len(robot_goal_and_position) == 0):
+        robot_goal_assignment(world_grid_size, world)
 
     for item in range(len(robot_goal_and_position)):
         print("robotID", robot_goal_and_position[item][0])
@@ -63,8 +63,10 @@ def generate_moves(world_grid_size, world):
         algorithm.generate_goal_state(robot_goal_and_position[item][0], robot_goal_and_position[item][1],
                                       robot_goal_and_position[item][2])
         robot_moves = algorithm.start_algorithm()
-        return robot_moves
+        if len(robot_moves) > 0:
+            return robot_moves
 
+    return None
 
 # orig_world = world_model.Arena(5, 5)
 # world_size_grid = 5

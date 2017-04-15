@@ -106,7 +106,7 @@ class Robot:
         self.position = (0, 0)
         self.heading = 0
         self.queued_commands = 0
-        self.port_number = Robot.number
+        self.robot_number = Robot.number
         Robot.number += 1
 
 class Sensor:

@@ -110,7 +110,7 @@ class MovementLevel:
                 if self.aligned and not self.processing_plan:
                     self.connections['AI_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'command', {
                         'message': "Submitting world model for pathfinding plan",
-                        'directive': "generate-moves",
+                        'directive': "generate-plan",
                         'args': jsonpickle.encode(self.world_model)
                     }))
                     self.processing_plan = True
@@ -144,6 +144,9 @@ class MovementLevel:
                 'message': "Determine robot info"
             }))
 
+        elif message.data["directive"] == 'execute-plan':
+            self.process_plan(message.data['args'])
+
         elif message.category == 'command' and message.data['directive'] == 'failure':
             # if the item is a 'failure', remove the process from the CON_DICT
             if self.connections[message.origin] != None:
@@ -161,8 +164,6 @@ class MovementLevel:
 
             # End the com_level
             self.keep_running = False
-        elif message.data["directive"] == 'pddl-plan':
-            self.process_plan(message.data['plan'])
 
     def process_response(self, message):
         """
@@ -376,22 +377,26 @@ class MovementLevel:
         for action in actions:
             # read command and robot's port id from the action schema
             command = action[0]
-            port_id = action[1]
+
+            # convert robot number to port_id
+            for robot_port_id, robot in self.robots.items():
+                if robot.robot_number == action[1]:
+                    port_id = robot_port_id
 
             # turn to destination
             # assume robot is facing north
             # (north-facing robots don't need to turn)
-            if command is "moveRight":
+            if command == "moveRight":
                 turn_command = 4
                 turn_magnitude = 90
-            elif command is "moveDown":
+            elif command == "moveDown":
                 turn_command = 4
                 turn_magnitude = 180
-            elif command is "moveLeft":
+            elif command == "moveLeft":
                 turn_command = 3
                 turn_magnitude = 90
 
-            if command is not "moveUp":
+            if not command == "moveUp":
                 self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', port_id, 'movement', {
                     'command': turn_command,
                     'magnitude': turn_magnitude,
@@ -400,7 +405,7 @@ class MovementLevel:
                 self.robots[port_id].queued_commands += 1
 
             # get destination distance
-            distance = self.world_model.cm_per_tile
+            distance = round(self.world_model.cm_per_tile)
 
             # move to destination
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', port_id, 'movement', {
@@ -411,23 +416,27 @@ class MovementLevel:
             self.robots[port_id].queued_commands += 1
 
             # reface north (undue preceeding turns)
-            if command is "moveRight":
+            if command == "moveRight":
                 turn_command = 3
                 turn_magnitude = 90
-            elif command is "moveDown":
+            elif command == "moveDown":
                 turn_command = 3
                 turn_magnitude = 180
-            elif command is "moveLeft":
+            elif command == "moveLeft":
                 turn_command = 4
                 turn_magnitude = 90
 
-            if command is not "moveUp":
+            if not command == "moveUp":
                 self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', port_id, 'movement', {
                     'command': turn_command,
                     'magnitude': turn_magnitude,
                     'message': 'Turn to north'
                 }))
                 self.robots[port_id].queued_commands += 1
+
+        # Force everything to realign and then recalculate path
+        self.aligned = False
+        self.processing_plan = False
 
 def get_distance(old_position, new_position):
     """

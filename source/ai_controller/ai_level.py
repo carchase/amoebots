@@ -27,6 +27,7 @@ class AiLevel:
         self.options = options
         self.keep_running = True
         self.connections = {}
+        self.world_model = None
 
     def ai_level_main(self, ai_input, mov_input, main_input):
         """

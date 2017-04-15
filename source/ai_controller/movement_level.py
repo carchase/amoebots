@@ -8,6 +8,7 @@ View the full repository here https://github.com/car-chase/amoebots
 
 import random
 import math
+import jsonpickle
 from time import sleep
 from message import Message
 from world_model import Arena, Robot, Sensor
@@ -98,9 +99,10 @@ class MovementLevel:
                     self.align_robots()
 
                 if self.aligned:
-                    self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'world-update', {
-                        'world': self.world_model
+                    self.connections['AI_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'command', {
+                        'world': jsonpickle.encode(self.world_model.grid)
                     }))
+                    self.aligned = False
 
                 sleep(self.options["MOV_LOOP_SLEEP_INTERVAL"])
 
@@ -262,8 +264,8 @@ class MovementLevel:
         Args:
             Destination (int): the port id of the robot to shake out
         """
-        self.robots[destination].queued_commands = 5
-        for count in range(5):
+        self.robots[destination].queued_commands = self.options['FREAKOUT_ITERATIONS']
+        for count in range(self.options['FREAKOUT_ITERATIONS']):
             action = random.randint(1, 4)
             magnitude = random.randint(8, 16)
             if action > 2:

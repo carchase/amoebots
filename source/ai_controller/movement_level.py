@@ -100,12 +100,21 @@ class MovementLevel:
                     self.align_robots()
 
                 # Send message to move into formation
-                if self.aligned and not self.processing_plan:
+                # if self.aligned and not self.processing_plan:
+                if not self.processing_plan:
+                    bots = []
+                    for robot in range(self.options['ARENA_SIZE']):
+                        bots.append(Robot(robot, 0))
+
+                    self.world_model.grid[0][0].occupied = bots[0]
+                    self.world_model.grid[0][4].occupied = bots[1]
+                    self.world_model.grid[4][0].occupied = bots[2]
+                    self.world_model.grid[4][4].occupied = bots[3]
+                    self.world_model.grid[2][2].occupied = bots[4]
                     self.connections['AI_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'command', {
                         'message': "Submitting world model for pathfinding plan",
                         'directive': "generate-moves",
                         'args': jsonpickle.encode(self.world_model)
-
                     }))
                     self.processing_plan = True
                     self.aligned = False

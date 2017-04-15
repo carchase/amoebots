@@ -8,6 +8,7 @@ View the full repository here https://github.com/car-chase/amoebots
 
 from time import sleep
 import jsonpickle
+from pathfinder import generate_moves
 from message import Message
 
 class AiLevel:
@@ -99,9 +100,14 @@ class AiLevel:
         if message.data['directive'] == 'generate-moves':
             # Parse out the world model
             world = jsonpickle.decode(message.data['args'])
-            print("world parsed")
-            print("world")
-        
+            goals = self.options['GOAL_LOCATIONS']
+
+            # Set the goals
+            for goal in goals:
+                world.grid[goal[1]][goal[0]].goal = True
+
+            generate_moves(self.options["ARENA_SIZE"], world)
+
         elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # the level has been told to shutdown.  Kill all the children!!!
             # Loop over the child processes and shut them shutdown

@@ -13,6 +13,7 @@ from main_level import MainLevel
 
 # ***************** Constants used to configure the controller *****************
 OPTIONS = {
+    'GOAL_LOCATIONS': [(1, 2), (2, 1), (2, 2), (2, 3), (3, 2)], # The locations of the goal states.
     'DUMP_MSGS_TO_MAIN': False, # Show all messages in main log output
     'RAISE_ERRORS_AFTER_CATCH': True, # Raises errors after catching
     'NUMBER_OF_DEVICES': 5, # Number of devices that the controller expects to use
@@ -30,7 +31,7 @@ OPTIONS = {
     'MOV_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between mov event loop iterations
     'AI_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between AI event loop iterations
     'ARENA_SIZE': 5, # The number of tiles on one side of the arena
-    'ARENA_SIZE_CM': 87, # The square wall size of the arena
+    'ARENA_SIZE_CM': 86, # The square wall size of the arena
     'MAX_CNTR_MISALIGNMENT': 1, # The distance from a centerpoint that is acceptable error for robot
     'MAX_NORTH_MISALIGNMENT': 1, # The degrees off of north that is acceptable error for robot
     'FREAKOUT_ITERATIONS': 2 # The number of actions a robot should take when freaking out

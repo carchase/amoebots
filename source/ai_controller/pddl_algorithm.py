@@ -10,7 +10,7 @@ init_goal = []
 init_robots = []
 
 
-def generate_init_state(world_size_grid, world):
+def generate_init_state(world_size_grid, world, robot_id):
     global init_array
     global init_row
     global init_col
@@ -24,7 +24,7 @@ def generate_init_state(world_size_grid, world):
         for col in range(world_size_grid):
             if world.grid[row][col].occupied is None:
                 init_array.append(('notOccupied', row, col))
-            else:
+            elif world.grid[row][col].occupied.port_id is robot_id:
                 init_array.append(('at', world.grid[row][col].occupied.port_id, row, col))
         init_row.append(row)
         init_col.append(row)
@@ -33,12 +33,10 @@ def generate_init_state(world_size_grid, world):
         init_array.append(('isLeftOf', inc, inc + 1))
         init_array.append(('isAbove', inc, inc + 1))
 
-
 def generate_goal_state(robot, x, y):
     global init_goal
     init_goal = []
     init_goal.append(('at', robot, x, y))
-
 
 def problem(verbose):
     domain = Domain((

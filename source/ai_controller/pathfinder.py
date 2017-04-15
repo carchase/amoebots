@@ -62,7 +62,9 @@ def generate_moves(world_grid_size, world):
         algorithm.generate_init_state(world_grid_size, world, robot_goal_and_position[item][0])
         algorithm.generate_goal_state(robot_goal_and_position[item][0], robot_goal_and_position[item][1],
                                       robot_goal_and_position[item][2])
-        algorithm.start_algorithm()
+        robot_moves = algorithm.start_algorithm()
+        return robot_moves
+
 
 # orig_world = world_model.Arena(5, 5)
 # world_size_grid = 5

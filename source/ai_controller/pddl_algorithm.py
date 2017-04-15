@@ -8,6 +8,7 @@ init_row = []
 init_col = []
 init_goal = []
 init_robots = []
+robot_and_move = []
 
 
 def generate_init_state(world_size_grid, world, robot):
@@ -164,7 +165,9 @@ def problem(verbose):
         print('No Plan!')
     else:
         for action in plan:
-            print(action)
+            action_and_robot = (action.name, action.sig[1])  # This is returning the action name and the robot
+            robot_and_move.append(action_and_robot)
+
 
 
 def start_algorithm():
@@ -179,3 +182,4 @@ def start_algorithm():
     st = time.time()
     problem(opts.verbose)
     print("TOOK " + str((time.time()-st)/60) + " MINUTES")
+    return robot_and_move

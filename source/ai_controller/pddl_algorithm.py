@@ -10,7 +10,7 @@ init_goal = []
 init_robots = []
 
 
-def generate_init_state(world_size_grid, world, robot_id):
+def generate_init_state(world_size_grid, world, robot):
     global init_array
     global init_row
     global init_col
@@ -23,15 +23,20 @@ def generate_init_state(world_size_grid, world, robot_id):
     for row in range(world_size_grid):
         for col in range(world_size_grid):
             if world.grid[row][col].occupied is None:
-                init_array.append(('notOccupied', row, col))
-            elif world.grid[row][col].occupied.port_id is robot_id:
-                init_array.append(('at', world.grid[row][col].occupied.port_id, row, col))
+                init_array.append(('notOccupied', col, row))
+            elif world.grid[row][col].occupied.port_number is robot:
+                init_array.append(('at', world.grid[row][col].occupied.port_number, col, row))
+                init_robots.append(world.grid[row][col].occupied.port_number)
+            else:
+                init_robots.append(world.grid[row][col].occupied.port_number)
         init_row.append(row)
         init_col.append(row)
 
     for inc in range(world_size_grid):
         init_array.append(('isLeftOf', inc, inc + 1))
         init_array.append(('isAbove', inc, inc + 1))
+
+    print(init_robots)
 
 def generate_goal_state(robot, x, y):
     global init_goal
@@ -126,7 +131,7 @@ def problem(verbose):
         {
             'row': tuple(init_row),
             'col': tuple(init_col),
-            'robot': (0,1,2,3),
+            'robot': tuple(init_robots),
         },
         init=(
             tuple(init_array)

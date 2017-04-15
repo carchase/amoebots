@@ -102,11 +102,14 @@ class AiLevel:
             world = jsonpickle.decode(message.data['args'])
             goals = self.options['GOAL_LOCATIONS']
 
+            world.display()
+
             # Set the goals
             for goal in goals:
                 world.grid[goal[1]][goal[0]].goal = True
 
             generate_moves(self.options["ARENA_SIZE"], world)
+            print("DONE!!!")
 
         elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # the level has been told to shutdown.  Kill all the children!!!

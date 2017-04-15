@@ -16,7 +16,7 @@ def robot_goal_assignment(world_size_grid, world):
                 goal_position.append(world.grid[row][col].position)
             if world.grid[row][col].occupied is not None:
                 robot_position_and_object.append((world.grid[row][col].position,
-                                                  world.grid[row][col].occupied.port_id))
+                                                  world.grid[row][col].occupied.port_number))
 
     # Check if anyone is at an existing goal
     goals_deleted = 0
@@ -64,4 +64,19 @@ def generate_moves(world_grid_size, world):
                                       robot_goal_and_position[item][2])
         algorithm.start_algorithm()
 
-    
+# orig_world = world_model.Arena(5, 5)
+# world_size_grid = 5
+# for robot in range(world_size_grid):
+#     init_robots.append(world_model.Robot(robot, 0))
+
+# orig_world.grid[0][0].occupied = init_robots[0]
+# orig_world.grid[0][4].occupied = init_robots[1]
+# orig_world.grid[4][0].occupied = init_robots[2]
+# orig_world.grid[4][4].occupied = init_robots[3]
+# orig_world.grid[2][2].occupied = init_robots[4]
+# orig_world.grid[2][1].goal = True
+# orig_world.grid[2][2].goal = True
+# orig_world.grid[2][3].goal = True
+# orig_world.grid[1][2].goal = True
+# orig_world.grid[3][2].goal = True
+# generate_moves(world_size_grid, orig_world)

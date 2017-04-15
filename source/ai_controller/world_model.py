@@ -87,12 +87,15 @@ class Robot:
     Representation of a robot in the world model. Each robot has a real position and heading,
     and a tile it is occupying on the world space grid.
     """
+    number = 0
     def __init__(self, port_id, robot_type):
         self.port_id = port_id
         self.robot_type = robot_type
         self.position = (0, 0)
         self.heading = 0
         self.queued_commands = 0
+        self.port_number = Robot.number
+        Robot.number += 1
 
 class Sensor:
     def __init__(self, port_id, sensor_type):

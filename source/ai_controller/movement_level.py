@@ -214,11 +214,12 @@ class MovementLevel:
         """
         for port_id, sensor in self.sensors.items():
             if not sensor.asked and sensor.sensor_type == 'sim-smores':
-                self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', sensor.port_id, 'movement', {
-                    'command': 99,
-                    'magnitude': 0,
-                    'message': 'Get simulator sensor data'
-                }))
+                self.connections['COM_LEVEL'][1].put(
+                    Message('MOV_LEVEL', sensor.port_id, 'movement', {
+                        'command': 99,
+                        'magnitude': 0,
+                        'message': 'Get simulator sensor data'
+                    }))
                 sensor.asked = True
 
     def ready_for_align(self):
@@ -465,6 +466,12 @@ def get_angle(old_position, new_position):
         return inner_angle + 90
 
 def switch_turn(old_turn):
+    """
+    Switchs from a left turn to a right turn and vis versa
+
+    Args:
+        old_turn (int): the turn to switch (3 = left, 4 = right)
+    """
     if old_turn == 3:
         return 4
     else:

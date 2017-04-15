@@ -71,8 +71,12 @@ class Arena:
         line = ""
         for row in self.grid:
             for tile in row:
-                if tile.occupied != None:
-                    line = line + "x "
+                if tile.occupied != None and tile.goal:
+                    line = line + "R "
+                elif tile.occupied != None:
+                    line = line + "r "
+                elif tile.goal:
+                    line = line + "g "
                 else:
                     line = line + "o "
             print(line)

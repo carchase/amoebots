@@ -100,11 +100,6 @@ class AiLevel:
         if message.data['directive'] == 'generate-moves':
             # Parse out the world model
             world = jsonpickle.decode(message.data['args'])
-<<<<<<< HEAD
-            print("world parsed")
-            print(world)
-        
-=======
             goals = self.options['GOAL_LOCATIONS']
 
             # Set the goals
@@ -113,7 +108,6 @@ class AiLevel:
 
             generate_moves(self.options["ARENA_SIZE"], world)
 
->>>>>>> c1765152ef408d9bcaa79bd9b66d2b1fc7852416
         elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # the level has been told to shutdown.  Kill all the children!!!
             # Loop over the child processes and shut them shutdown

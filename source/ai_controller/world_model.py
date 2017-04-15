@@ -61,6 +61,14 @@ class Arena:
             return None
 
     def find_tile(self, robot):
+        """
+        Finds the tile containing the given robot. Returns None if the robot
+        does not have a tile (can happen if multiple robots are trying to
+        occupy the same tile).
+
+        Args:
+            robot (Robot): The robot to search the grid for.
+        """
         for row in self.grid:
             for tile in row:
                 if tile.occupied is robot:
@@ -68,6 +76,10 @@ class Arena:
         return None
 
     def display(self):
+        """
+        Displays the grid. "o" tiles are open, "g" tiles are goals, "r" tiles are robots,
+        and "R" tiles are robots that are on goals.
+        """
         line = ""
         for row in self.grid:
             for tile in row:
@@ -85,7 +97,7 @@ class Arena:
 class Robot:
     """
     Representation of a robot in the world model. Each robot has a real position and heading,
-    and a tile it is occupying on the world space grid.
+    and can be either simulator or real robots.
     """
     def __init__(self, port_id, robot_type):
         self.port_id = port_id
@@ -95,6 +107,10 @@ class Robot:
         self.queued_commands = 0
 
 class Sensor:
+    """
+    Representation of a sensor in the world model. Sensors record the position and heading
+    of the robots. In the case of the simulator, sensors are the robots themselves.
+    """
     def __init__(self, port_id, sensor_type):
         self.port_id = port_id
         self.sensor_type = sensor_type

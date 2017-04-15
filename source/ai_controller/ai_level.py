@@ -7,6 +7,7 @@ View the full repository here https://github.com/car-chase/amoebots
 '''
 
 from time import sleep
+import jsonpickle
 from message import Message
 
 class AiLevel:
@@ -95,7 +96,13 @@ class AiLevel:
             message (Message): The message object to be processed.
         """
 
-        if message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
+        if message.data['directive'] == 'generate-moves':
+            # Parse out the world model
+            world = jsonpickle.decode(message.data['args'])
+            print("world parsed")
+            print("world")
+        
+        elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # the level has been told to shutdown.  Kill all the children!!!
             # Loop over the child processes and shut them shutdown
 

@@ -8,8 +8,8 @@ View the full repository here https://github.com/car-chase/amoebots
 
 import random
 import math
-import jsonpickle
 from time import sleep
+import jsonpickle
 from message import Message
 from world_model import Arena, Robot, Sensor
 
@@ -36,6 +36,7 @@ class MovementLevel:
         self.robots = dict()
         self.sensors = dict()
         self.aligned = False
+        self.processing_plan = False
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -98,10 +99,15 @@ class MovementLevel:
                 if self.ready_for_align():
                     self.align_robots()
 
-                if self.aligned:
+                # Send message to move into formation
+                if self.aligned and not self.processing_plan:
                     self.connections['AI_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'command', {
-                        'world': jsonpickle.encode(self.world_model.grid)
+                        'message': "Submitting world model for pathfinding plan",
+                        'directive': "generate-moves",
+                        'args': jsonpickle.encode(self.world_model)
+
                     }))
+                    self.processing_plan = True
                     self.aligned = False
 
                 sleep(self.options["MOV_LOOP_SLEEP_INTERVAL"])

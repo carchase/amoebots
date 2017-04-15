@@ -46,15 +46,12 @@ here at IPFW.
 1. Download and install [python 3](https://www.python.org/downloads/). You can verify it is installed by running the following command:
  
  >$ py --version // Should be 3.6.0 or greater
-2. Install pyserial in order to communicate with the robots:
+2. Install the required packages:
  
- >$ py -m pip install pyserial
-3. Install opencv which is used for robot detection
-
- >$ pip install opencv-python
-4. Clone the project repository to your local drive by running the following command:
+ >$ py -m pip install pyserial jsonpickle opencv-python -e git+https://github.com/garydoranjr/pyddl.git#egg=pyddl
+3. Clone the project repository to your local drive by running the following command:
 
  >$ git clone https://github.com/car-chase/amoebots.git
-5. Start the AI by running the following command from the project root:
+4. Start the AI by running the following command from the project root:
 
  >$ py ./source/ai_controller/main.py

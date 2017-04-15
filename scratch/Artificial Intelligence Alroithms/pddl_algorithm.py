@@ -1,35 +1,37 @@
 from __future__ import print_function
 from pyddl import Domain, Problem, Action, neg, planner
 import time
-import world_model
+import copy
 
 init_array = []
 init_row = []
 init_col = []
 init_goal = []
-init_robots = []
+init_robot_count = []
 
 
-def generate_init_state(world_size_grid, world):
+def generate_init_state(world_size_grid, WORLD, robots):
+    global init_robot_count
     global init_array
     global init_row
     global init_col
-    global init_robots
+    init_robot_count = []
     init_array = []
     init_row = []
     init_col = []
-    init_robots = []
+    init_robot_count = copy.deepcopy(robots)
 
     for row in range(world_size_grid):
         for col in range(world_size_grid):
-            if world.grid[row][col].occupied is None:
+            if WORLD.grid[row][col].occupied is None:
                 init_array.append(('notOccupied', row, col))
             else:
-                init_array.append(('at', world.grid[row][col].occupied.port_id, row, col))
+                init_array.append(('at', WORLD.grid[row][col].occupied.port_id, row, col))
+
         init_row.append(row)
         init_col.append(row)
 
-    for inc in range(world_size_grid):
+    for inc in range(world_size_grid - 1):
         init_array.append(('isLeftOf', inc, inc + 1))
         init_array.append(('isAbove', inc, inc + 1))
 
@@ -37,6 +39,7 @@ def generate_init_state(world_size_grid, world):
 def generate_goal_state(robot, x, y):
     global init_goal
     init_goal = []
+    print(robot, x, y)
     init_goal.append(('at', robot, x, y))
 
 
@@ -128,13 +131,13 @@ def problem(verbose):
         {
             'row': tuple(init_row),
             'col': tuple(init_col),
-            'robot': (0,1,2,3),
+            'robot': tuple(init_robot_count),
         },
         init=(
-            tuple(init_array)
+            tuple(init_array),
         ),
         goal=(
-            tuple(init_goal)
+            tuple(init_goal),
         )
     )
 
@@ -161,18 +164,25 @@ def problem(verbose):
         print('No Plan!')
     else:
         for action in plan:
+            # action_and_robot = (action.name, action.sig[1])  # This is returning the action name and the robot
+            # print(action.name, action.sig[1])
             print(action)
 
 
 def start_algorithm():
     from optparse import OptionParser
+
     parser = OptionParser(usage="Usage: %prog [options]")
     parser.add_option('-q', '--quiet',
                       action='store_false', dest='verbose', default=True,
                       help="don't print statistics to stdout")
-
-    # Parse arguments
     opts, args = parser.parse_args()
+    for item in init_array:
+        print('starting', item)
+    for item in init_goal:
+        print('goal', item)
+    # Parse arguments
     st = time.time()
     problem(opts.verbose)
-    print("TOOK " + str((time.time()-st)/60) + " MINUTES")
+    print("TOOK " + str((time.time() - st) / 60) + " MINUTES")
+

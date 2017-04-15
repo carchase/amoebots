@@ -8,15 +8,15 @@ robot_position_and_object = []
 robot_goal_and_position = []
 
 
-def robot_goal_assignment(world_size_grid, WORLD):
+def robot_goal_assignment(world_size_grid, world):
 
     for row in range(world_size_grid):
         for col in range(world_size_grid):
-            if WORLD.grid[row][col].goal is True:
+            if world.grid[row][col].goal is True:
                 goal_position.append(WORLD.grid[row][col].position)
-            if WORLD.grid[row][col].occupied is not None:
-                robot_position_and_object.append((WORLD.grid[row][col].position,
-                                                  WORLD.grid[row][col].occupied.port_id))
+            if world.grid[row][col].occupied is not None:
+                robot_position_and_object.append((world.grid[row][col].position,
+                                                  world.grid[row][col].occupied.port_id))
 
     dist_temp = 0
     for i in range(len(goal_position)):

@@ -97,19 +97,30 @@ class AiLevel:
             message (Message): The message object to be processed.
         """
 
-        if message.data['directive'] == 'generate-moves':
+        if message.data['directive'] == 'generate-plan':
             # Parse out the world model
             world = jsonpickle.decode(message.data['args'])
             goals = self.options['GOAL_LOCATIONS']
-
-            world.display()
 
             # Set the goals
             for goal in goals:
                 world.grid[goal[1]][goal[0]].goal = True
 
-            generate_moves(self.options["ARENA_SIZE"], world)
-            print("DONE!!!")
+            world.display()
+
+            robot_moves = generate_moves(self.options["ARENA_SIZE"], world)
+            print(robot_moves)
+            if robot_moves is None:
+                self.connections["MOV_LEVEL"][1].put(Message('AI_LEVEL', 'MOV_LEVEL', 'command', {
+                    'message': "Nothing left to move",
+                    'directive': "no-plan"
+                }))
+            else:
+                self.connections["MOV_LEVEL"][1].put(Message('AI_LEVEL', 'MOV_LEVEL', 'command', {
+                    'message': "Plan generated for single robot",
+                    'directive': "execute-plan",
+                    'args': robot_moves
+                }))
 
         elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # the level has been told to shutdown.  Kill all the children!!!

@@ -24,11 +24,11 @@ def generate_init_state(world_size_grid, world, robot):
         for col in range(world_size_grid):
             if world.grid[row][col].occupied is None:
                 init_array.append(('notOccupied', col, row))
-            elif world.grid[row][col].occupied.port_number is robot:
-                init_array.append(('at', world.grid[row][col].occupied.port_number, col, row))
-                init_robots.append(world.grid[row][col].occupied.port_number)
+            elif world.grid[row][col].occupied.robot_number is robot:
+                init_array.append(('at', world.grid[row][col].occupied.robot_number, col, row))
+                init_robots.append(world.grid[row][col].occupied.robot_number)
             else:
-                init_robots.append(world.grid[row][col].occupied.port_number)
+                init_robots.append(world.grid[row][col].occupied.robot_number)
         init_row.append(row)
         init_col.append(row)
 
@@ -160,12 +160,15 @@ def problem(verbose):
         return dist
 
     plan = planner(problem, heuristic=manhattan_distance_heuristic, verbose=verbose)
+    robot_and_move = []
     if plan is None:
         print('No Plan!')
     else:
         for action in plan:
-            print(action)
-
+            action_and_robot = (action.name, action.sig[1])  # This is returning the action name and the robot
+            robot_and_move.append(action_and_robot)
+    
+    return robot_and_move
 
 def start_algorithm():
     from optparse import OptionParser
@@ -177,5 +180,7 @@ def start_algorithm():
     # Parse arguments
     opts, args = parser.parse_args()
     st = time.time()
-    problem(opts.verbose)
+    robot_and_move = problem(opts.verbose)
     print("TOOK " + str((time.time()-st)/60) + " MINUTES")
+    print(robot_and_move)
+    return robot_and_move

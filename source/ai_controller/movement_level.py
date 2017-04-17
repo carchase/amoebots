@@ -110,7 +110,7 @@ class MovementLevel:
                 if self.aligned and not self.processing_plan:
                     self.connections['AI_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'command', {
                         'message': "Submitting world model for pathfinding plan",
-                        'directive': "generate-moves",
+                        'directive': "generate-plan",
                         'args': jsonpickle.encode(self.world_model)
                     }))
                     self.processing_plan = True
@@ -144,6 +144,9 @@ class MovementLevel:
                 'message': "Determine robot info"
             }))
 
+        elif message.data["directive"] == 'execute-plan':
+            self.process_plan(message.data['args'])
+
         elif message.category == 'command' and message.data['directive'] == 'failure':
             # if the item is a 'failure', remove the process from the CON_DICT
             if self.connections[message.origin] != None:
@@ -161,8 +164,6 @@ class MovementLevel:
 
             # End the com_level
             self.keep_running = False
-        elif message.data["directive"] == 'move-robots':
-            self.process_plan(message.data['plan'])
 
     def process_response(self, message):
         """
@@ -180,8 +181,6 @@ class MovementLevel:
                 self.sensors[message.origin] = Sensor(message.origin,
                                                       message.data['data']['type'])
         elif message.data["content"] == 'ping':
-            # print("OLD WORLD")
-            # self.world_model.display()
             # read position and heading
             robot = self.robots[message.origin]
             robot.position = ((message.data['data']['x'] * 100), (message.data['data']['y'] * 100))
@@ -196,8 +195,6 @@ class MovementLevel:
             sensor.received = True
             self.aligned = False
 
-            # print("NEW WORLD")
-            # self.world_model.display()
         elif message.data["content"] == 'move-result':
             robot = self.robots[message.origin]
             robot.queued_commands = robot.queued_commands - 1
@@ -387,7 +384,7 @@ class MovementLevel:
             self.robots[port_id].queued_commands += 1
 
             # get destination distance
-            distance = self.world_model.cm_per_tile
+            distance = round(self.world_model.cm_per_tile)
 
             # move to destination
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', port_id, 'movement', {
@@ -396,6 +393,10 @@ class MovementLevel:
                 'message': 'Move to destination'
             }))
             self.robots[port_id].queued_commands += 1
+
+        # Force everything to realign and then recalculate path
+        self.aligned = False
+        self.processing_plan = False
 
 def get_distance(old_position, new_position):
     """

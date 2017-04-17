@@ -164,8 +164,7 @@ def problem(verbose):
         print('No Plan!')
     else:
         for action in plan:
-            # action_and_robot = (action.name, action.sig[1])  # This is returning the action name and the robot
-            # print(action.name, action.sig[1])
+
             print(action)
 
 

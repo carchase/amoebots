@@ -161,7 +161,7 @@ class MovementLevel:
 
             # End the com_level
             self.keep_running = False
-        elif message.data["directive"] == 'pddl-plan':
+        elif message.data["directive"] == 'move-robots':
             self.process_plan(message.data['plan'])
 
     def process_response(self, message):
@@ -308,10 +308,6 @@ class MovementLevel:
         """
         tile_center = self.world_model.find_tile(robot).center
 
-        # When in doubt, the robot turns left because all angles are from true north (0 to 359)
-        turn_center_command = 3
-        turn_north_command = 3
-
         # get angle of center relative to north
         center_heading = get_angle(robot.position, tile_center)
 
@@ -321,22 +317,10 @@ class MovementLevel:
         angle_to_center = robot.heading - center_heading
 
         # make right turn center if left turn > 180
-        if angle_to_center < 0:
-            angle_to_center = abs(angle_to_center)
-            turn_center_command = switch_turn(turn_center_command)
-
-        if angle_to_center > 180:
-            angle_to_center = 360 - angle_to_center
-            turn_center_command = switch_turn(turn_center_command)
+        turn_center_command = get_turn(angle_to_center)
 
         # make right turn to north if left turn > 180
-        if center_heading < 0:
-            center_heading = abs(center_heading)
-            turn_north_command = switch_turn(turn_north_command)
-
-        if center_heading > 180:
-            center_heading = 360 - center_heading
-            turn_north_command = switch_turn(turn_north_command)
+        turn_north_command = get_turn(center_heading)
 
         # turn to center
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
@@ -377,27 +361,30 @@ class MovementLevel:
             # read command and robot's port id from the action schema
             command = action[0]
             port_id = action[1]
+            robot = self.robots[port_id]
+
+            # get destination angle
+            if command is "moveUp":
+                turn_dest = 0
+            elif command is "moveRight":
+                turn_dest = 90
+            elif command is "moveDown":
+                turn_dest = 180
+            elif command is "moveLeft":
+                turn_dest = 270
 
             # turn to destination
-            # assume robot is facing north
-            # (north-facing robots don't need to turn)
-            if command is "moveRight":
-                turn_command = 4
-                turn_magnitude = 90
-            elif command is "moveDown":
-                turn_command = 4
-                turn_magnitude = 180
-            elif command is "moveLeft":
-                turn_command = 3
-                turn_magnitude = 90
+            turn_magnitude = robot.heading - turn_dest
 
-            if command is not "moveUp":
-                self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', port_id, 'movement', {
-                    'command': turn_command,
-                    'magnitude': turn_magnitude,
-                    'message': 'Turn to destination'
-                }))
-                self.robots[port_id].queued_commands += 1
+            # make right turn center if left turn > 180
+            turn_command = get_turn(turn_magnitude)
+
+            self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', port_id, 'movement', {
+                'command': turn_command,
+                'magnitude': turn_magnitude,
+                'message': 'Turn to destination'
+            }))
+            self.robots[port_id].queued_commands += 1
 
             # get destination distance
             distance = self.world_model.cm_per_tile
@@ -409,25 +396,6 @@ class MovementLevel:
                 'message': 'Move to destination'
             }))
             self.robots[port_id].queued_commands += 1
-
-            # reface north (undue preceeding turns)
-            if command is "moveRight":
-                turn_command = 3
-                turn_magnitude = 90
-            elif command is "moveDown":
-                turn_command = 3
-                turn_magnitude = 180
-            elif command is "moveLeft":
-                turn_command = 4
-                turn_magnitude = 90
-
-            if command is not "moveUp":
-                self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', port_id, 'movement', {
-                    'command': turn_command,
-                    'magnitude': turn_magnitude,
-                    'message': 'Turn to north'
-                }))
-                self.robots[port_id].queued_commands += 1
 
 def get_distance(old_position, new_position):
     """
@@ -476,3 +444,18 @@ def switch_turn(old_turn):
         return 4
     else:
         return 3
+
+def get_turn(turn_magnitude):
+    # When in doubt, the robot turns left because all angles are from true north (0 to 359)
+    turn_command = 3
+
+    # make right turn if left turn > 180
+    if turn_magnitude < 0:
+        turn_magnitude = abs(turn_magnitude)
+        turn_command = switch_turn(turn_command)
+
+    if turn_magnitude > 180:
+        turn_magnitude = 360 - turn_magnitude
+        turn_command = switch_turn(turn_command)
+
+    return turn_command

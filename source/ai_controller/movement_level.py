@@ -180,16 +180,34 @@ class MovementLevel:
                                                     message.data['data']['type'])
                 self.sensors[message.origin] = Sensor(message.origin,
                                                       message.data['data']['type'])
+            elif message.data['data']['type'] == 'smores':
+                self.robots[message.origin] = Robot(message.origin,
+                                                    message.data['data']['type'])
+            elif message.data['data']['type'] == 'camera':
+                self.sensors[message.origin] = Sensor(message.origin,
+                                                      message.data['data']['type'])
+
+        elif message.data["content"] == 'sensor-camera':
+            # iterate over robots in the message
+            for color in message.data['data']:
+                # read position and heading
+                robot_id = get_robot(color)
+                robot = self.robots[robot_id]
+                robot.position = ((message.data[robot_id]['x'] * 100),
+                                  (message.data[robot_id]['y'] * 100))
+                robot.heading = message.data[robot_id]['heading']
+                self.update_tile(robot)
+
+            sensor = self.sensors[message.origin]
+            sensor.received = True
+            self.aligned = False
+
         elif message.data["content"] == 'ping':
             # read position and heading
             robot = self.robots[message.origin]
             robot.position = ((message.data['data']['x'] * 100), (message.data['data']['y'] * 100))
             robot.heading = message.data['data']['heading']
-            old_tile = self.world_model.find_tile(robot)
-            if old_tile != None:
-                old_tile.occupied = None
-            new_tile = self.world_model.get_tile_real_coords(robot.position)
-            new_tile.occupied = robot
+            self.update_tile(robot)
 
             sensor = self.sensors[message.origin]
             sensor.received = True
@@ -217,7 +235,14 @@ class MovementLevel:
                         'magnitude': 0,
                         'message': 'Get simulator sensor data'
                     }))
-                sensor.asked = True
+            elif not sensor.asked and sensor.sensor_type == 'camera':
+                self.connections['COM_LEVEL'][1].put(
+                    Message('MOVE_LEVEL', sensor.port_id, 'movement', {
+                        'command': 91,
+                        'magnitude': 0,
+                        'message': 'Get camera sensor data'
+                    }))
+            sensor.asked = True
 
     def ready_for_align(self):
         """
@@ -407,6 +432,19 @@ class MovementLevel:
         # Force everything to realign and then recalculate path
         self.aligned = False
         self.processing_plan = False
+
+    def update_tile(self, robot):
+        """
+        Update the which tile the robot is on.
+
+        Args:
+            robot (Robot): The robot to update
+        """
+        old_tile = self.world_model.find_tile(robot)
+        if old_tile != None:
+            old_tile.occupied = None
+        new_tile = self.world_model.get_tile_real_coords(robot.position)
+        new_tile.occupied = robot
 
 def get_distance(old_position, new_position):
     """

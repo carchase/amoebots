@@ -1,6 +1,7 @@
-import world_model
 import math
+
 import pddl_algorithm
+import world_model
 
 goal_position = []
 robot_position_and_object = []
@@ -15,22 +16,6 @@ def robot_goal_assignment(world_size_grid, world):
             if world.grid[row][col].occupied is not None:
                 robot_position_and_object.append((world.grid[row][col].position,
                                                   world.grid[row][col].occupied.robot_number))
-
-    print(robot_position_and_object)
-
-    # Check if anyone is at an existing goal
-    # for goal_index, goal in enumerate(goal_position):
-    #     for robot_index, robot in enumerate(robot_position_and_object):
-    #         if robot is None:
-    #             continue
-
-    #         if goal == robot[0]:
-    #             world.grid[goal[1]][goal[0]].robot_goal = robot[1]
-    #             goal_position[goal_index] = None
-    #             robot_position_and_object[robot_index] = None
-    #             break
-
-    # print(robot_position_and_object)
 
     # Loop over the goals
     for goal_index, goal in enumerate(goal_position):
@@ -49,18 +34,16 @@ def robot_goal_assignment(world_size_grid, world):
             if dist < dist_temp:
                 robot_with_shortest_distance = robot[1]
                 ele_with_robot = robot_index
+                dist_temp = dist
 
         # We have compared all robots, now assign the winner to the goal
         print(robot_with_shortest_distance, " to ", goal)
         world.grid[goal[1]][goal[0]].robot_goal = robot_with_shortest_distance
         robot_goal_and_position.append((robot_with_shortest_distance, goal[0], goal[1]))
-        dist_temp = dist
+
 
         robot_position_and_object[ele_with_robot] = None
         goal_position[goal_index] = None
-
-    print(robot_goal_and_position)
-
 
 def generate_moves(world_grid_size, world):
     if(len(robot_goal_and_position) == 0):

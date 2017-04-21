@@ -10,7 +10,7 @@ init_goal = []
 init_robots = []
 
 
-def generate_init_state(world_size_grid, world, robot):
+def generate_init_state(world_size_grid, world, robots):
     global init_array
     global init_row
     global init_col
@@ -24,7 +24,7 @@ def generate_init_state(world_size_grid, world, robot):
         for col in range(world_size_grid):
             if world.grid[row][col].occupied is None:
                 init_array.append(('notOccupied', col, row))
-            elif world.grid[row][col].occupied.robot_number is robot:
+            elif world.grid[row][col].occupied.robot_number in robots:
                 init_array.append(('at', world.grid[row][col].occupied.robot_number, col, row))
                 init_robots.append(world.grid[row][col].occupied.robot_number)
             else:
@@ -36,12 +36,11 @@ def generate_init_state(world_size_grid, world, robot):
         init_array.append(('isLeftOf', inc, inc + 1))
         init_array.append(('isAbove', inc, inc + 1))
 
-    print(init_robots)
-
-def generate_goal_state(robot, x, y):
+def generate_goal_state(robots):
     global init_goal
     init_goal = []
-    init_goal.append(('at', robot, x, y))
+    for robot in robots:
+        init_goal.append(('at', robot[0], robot[1], robot[2]))
 
 def problem(verbose):
     domain = Domain((
@@ -171,6 +170,7 @@ def problem(verbose):
     return robot_and_move
 
 def start_algorithm():
+
     from optparse import OptionParser
     parser = OptionParser(usage="Usage: %prog [options]")
     parser.add_option('-q', '--quiet',
@@ -182,5 +182,4 @@ def start_algorithm():
     st = time.time()
     robot_and_move = problem(opts.verbose)
     print("TOOK " + str((time.time()-st)/60) + " MINUTES")
-    print(robot_and_move)
     return robot_and_move

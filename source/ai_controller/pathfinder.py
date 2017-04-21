@@ -6,6 +6,7 @@ import world_model
 goal_position = []
 robot_position_and_object = []
 robot_goal_and_position = []
+bots_per_iteration = 3
 
 def robot_goal_assignment(world_size_grid, world):
 
@@ -46,19 +47,31 @@ def robot_goal_assignment(world_size_grid, world):
         goal_position[goal_index] = None
 
 def generate_moves(world_grid_size, world):
+
     if(len(robot_goal_and_position) == 0):
         robot_goal_assignment(world_grid_size, world)
 
+    robots = []
+    robot_goals = []
+
     for item in range(len(robot_goal_and_position)):
         print("robotID", robot_goal_and_position[item][0])
-        algorithm = pddl_algorithm
-        algorithm.generate_init_state(world_grid_size, world, robot_goal_and_position[item][0])
-        algorithm.generate_goal_state(robot_goal_and_position[item][0], robot_goal_and_position[item][1],
-                                      robot_goal_and_position[item][2])
-        robot_moves = algorithm.start_algorithm()
-        if len(robot_moves) > 0:
-            return robot_moves
-
+        robot_goals.append(robot_goal_and_position[item])
+        robots.append(robot_goal_and_position[item][0])
+        if len(robots) % bots_per_iteration == 0:
+            pddl_algorithm.generate_init_state(world_grid_size, world, robots)
+            pddl_algorithm.generate_goal_state(robot_goals)
+            robots = []
+            robot_goals = []
+            robot_moves = pddl_algorithm.start_algorithm()
+            if len(robot_moves) > 0:
+                return robot_moves
+        elif item == len(robot_goal_and_position) - 1: # It is the last one
+            pddl_algorithm.generate_init_state(world_grid_size, world, robots)
+            pddl_algorithm.generate_goal_state(robot_goals)
+            robot_moves = pddl_algorithm.start_algorithm()
+            if len(robot_moves) > 0:
+                return robot_moves
     return None
 
 # orig_world = world_model.Arena(5, 5)

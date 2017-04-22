@@ -98,58 +98,63 @@ String action(int act, int magnitude) {
     case 1:
       move(1, speed, 1);
       move(0, speed, 0);
-      message = jsonResponse("text", "Moving Forward " + String(magnitude) + " cm");
+      message = jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving forward " + String(magnitude) + " cm\"}");
       break;
     case 2:
       move(1, speed, 0);
       move(0, speed, 1);
-      message += jsonResponse("text", "Moving Backward " + String(magnitude) + " cm");
+      message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving backward " + String(magnitude) + " cm\"}");
       break;
     case 3:
       move(1, speed, 0);
       move(0, speed, 0);
-      message += jsonResponse("text", "Turning Left " + String(magnitude) + " degrees");
+      message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Turning left " + String(magnitude) + " degrees\"}");
       break;
     case 4:
       move(1, speed, 1);
       move(0, speed, 1);
-      message += jsonResponse("text", "Turning Right " + String(magnitude) + " degrees");
+      message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Turning right " + String(magnitude) + " degrees\"}");
       break;
     case 5:
       move(2, speed, 1);
       move(3, speed, 0);
-      message += jsonResponse("text", "Moving the arm in direction 1 " + String(magnitude) + " degrees");
+      message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving the arm down " + String(magnitude) + " degrees\"}");
       whichStop = 1;
       break;
     case 6:
       move(2, speed, 0);
       move(3, speed, 1);
-      message += jsonResponse("text", "Moving the arm in direction 2 " + String(magnitude) + " degrees");
+      message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving the arm up " + String(magnitude) + " degrees\"}");
       whichStop = 1;
       break;
     case 7:
       move(2, speed, 1);
       move(3, speed, 1);
-      message += jsonResponse("text", "Spin the arm in direction 1 " + String(magnitude) + " degrees");
+      message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Spin the arm clockwise " + String(magnitude) + " degrees\"}");
       whichStop = 1;
       break;
     case 8:
       move(2, speed, 0);
       move(3, speed, 0);
-      message += jsonResponse("text", "Spin the arm in direction 2 " + String(magnitude) + " degrees");
+      message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Spin the arm in counterclockwise " + String(magnitude) + " degrees\"}");
       whichStop = 1;
       break;
     case 9:
-      message += jsonResponse("text", "Move key out");
+      message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Move key out\"}");
       whichStop = 2;
       break;
     case 10:
-      message += jsonResponse("text", "Move key in");
+      message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Move key in\"}");
       whichStop = 2;
       break;
-    case 99:
-      message += jsonResponse("json", "{\"type\":\"smore\"}");
+    case 90:
+      message += jsonResponse("robot-info", "{\"type\":\"smores\"}");
       break;
+    case 99:
+      message += jsonResponse("ping", "{}");
+      break;
+    default:
+      message += jsonResponse("unsupported", "\"command not supported\"");
   }
 
   //delay is used to allow the motor to move for a predetermined
@@ -242,7 +247,7 @@ double getDelay(int cmd, int magnitude) {
 
 String jsonResponse(String content, String data) {
   String message = "";
-  if (content.equals("json")) {
+  if (!content.equals("text")) {
     message = "{\"content\":\"" + content + "\",\"data\":" + data + "}";
   }
   else {

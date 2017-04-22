@@ -43,12 +43,12 @@ class TCPIPControl(Robot):
         self.compass = None
 
         self.top_motor = self.getMotor("Bending Motor")
-        # top_motor.setPosition(float('inf'))
+        # top_motor.setPosition(float("inf"))
         top_wheel_motor = self.getMotor("Top Wheel Motor")
         self.left_motor = self.getMotor("Left Wheel Motor")
-        # left_motor.setPosition(float('inf'))
+        # left_motor.setPosition(float("inf"))
         self.right_motor = self.getMotor("Right Wheel Motor")
-        # right_motor.setPosition(float('inf'))
+        # right_motor.setPosition(float("inf"))
 
         self.top_conn = self.getConnector("top conn")
         self.top_conn.enablePresence(64)
@@ -72,51 +72,51 @@ class TCPIPControl(Robot):
         if cmd == 1:
             self.move(self.left_motor, velocity, 1)
             self.move(self.right_motor, velocity, 1)
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Moving forward ' + str(magnitude) + ' cm\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving forward " + str(magnitude) + " cm\"}")
         elif cmd == 2:
             self.move(self.left_motor, velocity, -1)
             self.move(self.right_motor, velocity, -1)
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Moving backward ' + str(magnitude) + ' cm\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving backward " + str(magnitude) + " cm\"}")
         elif cmd == 3:
             self.move(self.left_motor, velocity, 1)
             self.move(self.right_motor, velocity, -1)
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Turning left ' + str(magnitude) + ' degrees\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Turning left " + str(magnitude) + " degrees\"}")
         elif cmd == 4:
             self.move(self.left_motor, velocity, -1)
             self.move(self.right_motor, velocity, 1)
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Turning right ' + str(magnitude) + ' degrees\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Turning right " + str(magnitude) + " degrees\"}")
         elif cmd == 5:
             self.move(self.top_motor, velocity, 1)
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Moving the arm down ' + str(magnitude) + ' degrees\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving the arm down " + str(magnitude) + " degrees\"}")
             whichStop = 1
         elif cmd == 6:
             self.move(self.top_motor, velocity, -1)
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Moving the arm up ' + str(magnitude) + ' degrees\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving the arm up " + str(magnitude) + " degrees\"}")
             whichStop = 1
         elif cmd == 7:
             self.move(self.top_wheel_motor, velocity, 1)
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Spin the arm clockwise ' + str(magnitude) + ' degrees\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Spin the arm clockwise " + str(magnitude) + " degrees\"}")
             whichStop = 1
         elif cmd == 8:
             self.move(self.top_wheel_motor, velocity, -1)
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Spin the arm in counterclockwise ' + str(magnitude) + ' degrees\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Spin the arm in counterclockwise " + str(magnitude) + " degrees\"}")
             whichStop = 1
         elif cmd == 9:
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Move key out\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Move key out\"}")
             whichStop = 2
         elif cmd == 10:
-            message = self.jsonResponse('move-result', '{\"success\":true,\"message\":\"Move key in\"}')
+            message = self.jsonResponse("move-result", "{\"success\":true,\"message\":\"Move key in\"}")
             whichStop = 2
         elif cmd == 90:
-            message = self.jsonResponse('robot-info', '{\"type\":\"sim-smores\"}')
+            message = self.jsonResponse("robot-info", "{\"type\":\"sim-smores\"}")
         elif cmd == 99:
-            message = self.jsonResponse('ping', '{\"x\":' + str(self.getPosition(self.gps)[0]) + ',\"y\":' + str(self.getPosition(self.gps)[2]) + ',\"heading\":'+ str(self.getBearing(self.compass)) + '}')
+            message = self.jsonResponse("ping", "{\"x\":" + str(self.getPosition(self.gps)[0]) + ",\"y\":" + str(self.getPosition(self.gps)[2]) + ",\"heading\":"+ str(self.getBearing(self.compass)) + "}")
         else:
-            message = self.jsonResponse('unsupported', '\"command not supported\"')
+            message = self.jsonResponse("unsupported", "\"command not supported\"")
 
 
         # delay is used to allow the motor to move for a predetermined
-        # amount of time before it's turned off
+        # amount of time before it"s turned off
         self.step(self.getDelay(cmd, magnitude))
 
         # indicates which stop function is called
@@ -129,31 +129,31 @@ class TCPIPControl(Robot):
         return message
 
     def move(self, motor, speed, direction):
-        ''' Moves motor specific speed and direction
+        """ Moves motor specific speed and direction
 
         Args:
             speed (int): 0 is off, 255 is full speed
             direction(int): 1 clockwise, -1 counter-clockwise
-        '''
-        motor.setPosition(float('inf'))
+        """
+        motor.setPosition(float("inf"))
         motor.setVelocity(direction * speed)
 
     def getPosition(self, gps):
-        '''
+        """
         Returns the position of the given gps in a 3d vector <x, y, z>
 
         Args:
             gps (GPS): the gps module on the robot
-        '''
+        """
         return gps.getValues()
 
     def getBearing(self, compass):
-        '''
+        """
         Returns the bearing of the given compass in degrees
 
         Args:
             compass (Compass): the compass module on the robot
-        '''
+        """
         # get compass value as matrix
         north = compass.getValues()
         # convert to degrees
@@ -164,28 +164,28 @@ class TCPIPControl(Robot):
         return bearing
 
     def jsonResponse(self, content, data):
-        '''
+        """
         Generates a json message to return to the communication level
 
         Args:
             content (string): the content type to tag the json object
             data (string): the data to place inside the json object
-        '''
-        if content != 'text':
+        """
+        if content != "text":
             message = "{\"content\":\"" + content + "\",\"data\":" + data + "}"
         else:
             message = "{\"content\":\"" + content + "\",\"data\":\"" + data + "\"}"
         return message
 
     def getDelay(self, cmd, magnitude):
-        '''
+        """
         Finds the duration of a movement command, given the base speed, to move
         the specified magnitude
 
         Args:
             cmd (int): the given command
             magnitude (int): the distance to move
-        '''
+        """
         if cmd == 1 or cmd == 2:
             return int(((1.0 * magnitude) / cmPerSecond) * 1000)
         elif cmd == 3 or cmd == 4:
@@ -203,26 +203,26 @@ class TCPIPControl(Robot):
         return host, port
 
     def get_address(self):
-        # The host gethostbyname method is only working on my (Ben Smith's) computer because the
-        # host that it's connecting to is my own computer. This will need to change if the connection
+        # The host gethostbyname method is only working on my (Ben Smith"s) computer because the
+        # host that it"s connecting to is my own computer. This will need to change if the connection
         # is external.
         host, port = socket.gethostbyname(socket.gethostname()), 5000
-        # host, port = '10.100.239.200', 5000
-        data = (b'{\"type\": \"SMORES\", \"ip\": \"' + bytes(socket.gethostbyname(socket.gethostname())) + b'\"}')
+        # host, port = "10.100.239.200", 5000
+        data = (b"{\"type\": \"SMORES\", \"ip\": \"" + bytes(socket.gethostbyname(socket.gethostname())) + b"\"}")
 
         # create a socket (SOCK_STREAM means a TCP socket)
-        print 'before socket connection'
+        print "before socket connection"
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print 'after socket connection'
+        print "after socket connection"
         # connect to the server and send data
         sock.connect((host, port))
-        sock.send(data + '\n')
+        sock.send(data + "\n")
 
         # receive data from the server and shut down.
         received = str(sock.recv(1024)).split()
 
-        print 'Sent:        {}'.format(data)
-        print 'Received:    {}'.format(received[0] + ', ' + received[1])
+        print "Sent:        {}".format(data)
+        print "Received:    {}".format(received[0] + ", " + received[1])
 
         return received
 
@@ -240,9 +240,9 @@ class TCPIPControl(Robot):
         print "connection to: ", conn
         while True:
             data = conn.recv(1024).strip()
-            data = data.split(' ')
+            data = data.split(" ")
 
-            print 'Putting command into the queue.'
+            print "Putting command into the queue."
             fromTCPQueue.put(data)
             fromTCPLock.release()
 
@@ -254,7 +254,7 @@ class TCPIPControl(Robot):
             conn.send(bytes(response))
 
     def run(self):
-        print 'Inside the run method.'
+        print "Inside the run method."
 
         address = self.get_address()
 
@@ -289,7 +289,7 @@ class TCPIPControl(Robot):
 
             command = fromTCPQueue.get()
 
-            print "Commands from queue: ", command[0], '...', command[1] #, '...', command[2]
+            print "Commands from queue: ", command[0], "...", command[1] #, "...", command[2]
             # The first two commands are sent to the command function using the command
             # type and then the velocity.
             response = self.handle_input(int(command[0]), int(command[1]))# /100, int(command[2]))
@@ -298,7 +298,7 @@ class TCPIPControl(Robot):
 
             # The command will execute for the specified duration of time.
             # self.step(int(command[2]))
-            print 'loop executed'
+            print "loop executed"
 
 # This is the main program of your controller.
 # It creates an instance of your Robot subclass, launches its

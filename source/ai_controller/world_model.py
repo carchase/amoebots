@@ -100,7 +100,8 @@ class Robot:
     and can be either simulator or real robots.
     """
     number = 0
-    def __init__(self, port_id, robot_type):
+    def __init__(self, robot_id, port_id, robot_type):
+        self.robot_id = robot_id
         self.port_id = port_id
         self.robot_type = robot_type
         self.position = (0, 0)

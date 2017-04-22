@@ -39,10 +39,10 @@ int PWMD = 9;
 
 //Magnitude constants
 int speed = 150;
-int cmPerSecond = 1;
-int degPerSecond = 1;
-int topDegPerSecond = 1;
-int topSpinDegPerSecond = 1;
+double cmPerSecond = 3.5;
+double degPerSecond = 33.33;
+double topDegPerSecond = 33.33;
+double topSpinDegPerSecond = 33.33;
 
 
 void setup() {
@@ -96,23 +96,23 @@ String action(int act, int magnitude) {
 
   switch (act) {
     case 1:
-      move(1, speed, 1);
-      move(0, speed, 0);
+      move(1, speed, 0);
+      move(0, speed, 1);
       message = jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving forward " + String(magnitude) + " cm\"}");
       break;
     case 2:
-      move(1, speed, 0);
-      move(0, speed, 1);
+      move(1, speed, 1);
+      move(0, speed, 0);
       message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Moving backward " + String(magnitude) + " cm\"}");
       break;
     case 3:
-      move(1, speed, 0);
-      move(0, speed, 0);
+      move(1, speed, 1);
+      move(0, speed, 1);
       message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Turning left " + String(magnitude) + " degrees\"}");
       break;
     case 4:
-      move(1, speed, 1);
-      move(0, speed, 1);
+      move(1, speed, 0);
+      move(0, speed, 0);
       message += jsonResponse("move-result", "{\"success\":true,\"message\":\"Turning right " + String(magnitude) + " degrees\"}");
       break;
     case 5:
@@ -148,7 +148,7 @@ String action(int act, int magnitude) {
       whichStop = 2;
       break;
     case 90:
-      message += jsonResponse("robot-info", "{\"type\":\"smores\"}");
+      message += jsonResponse("robot-info", "{\"type\":\"smores\", \"id\":\"smores2\"}");
       break;
     case 99:
       message += jsonResponse("ping", "{}");

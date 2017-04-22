@@ -35,11 +35,9 @@ class MovementLevel:
         self.world_model = Arena(options["ARENA_SIZE"], options["ARENA_SIZE_CM"])
         self.robots = dict()
         self.sensors = dict()
-        self.robot_colors = dict()      # in the form color : port
         self.aligned = False
         self.processing_plan = False
         self.scramble_robots = False
-        self.calibrating_color = None   # the color to be calibrated, or None
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -178,13 +176,13 @@ class MovementLevel:
         if message.data["content"] == 'robot-info':
             # Configure the movement level to control this device
             if message.data['data']['type'] == 'sim-smores':
-                self.robots[message.origin] = Robot(message.origin,
+                self.robots[message.origin] = Robot(message.origin, message.data['data']['id'],
                                                     message.data['data']['type'])
                 self.sensors[message.origin] = Sensor(message.origin,
                                                       message.data['data']['type'])
 
             elif message.data['data']['type'] == 'smores':
-                self.robots[message.origin] = Robot(message.origin,
+                self.robots[message.origin] = Robot(message.origin, message.data['data']['id'],
                                                     message.data['data']['type'])
 
             elif message.data['data']['type'] == 'camera':
@@ -193,22 +191,11 @@ class MovementLevel:
 
         elif message.data["content"] == 'sensor-camera':
             # iterate over robots in the message
-            for color in message.data['data']:
-                # check if color is registered in movement level
-                if color not in self.robot_colors:
-                    # calibrate the robot's color
-                    self.associate_robot_color(color, message.origin)
-                    continue
-
-                # if we're calibrating this color,
-                # add the port to the color dictionary
-                if self.calibrating_color == color:
-                    self.robot_colors[color] = message.origin
-                    self.calibrating_color = None
+            for robot_id in message.data['data']:
+                # get robot associated with robot_id
+                robot = self.get_robot(robot_id)
 
                 # read position and heading
-                robot_id = self.robot_colors[color]
-                robot = self.robots[robot_id]
                 robot.position = ((message.data[robot_id]['x'] * 100),
                                   (message.data[robot_id]['y'] * 100))
                 robot.heading = message.data[robot_id]['heading']
@@ -462,14 +449,17 @@ class MovementLevel:
         new_tile = self.world_model.get_tile_real_coords(robot.position)
         new_tile.occupied = robot
 
-    def associate_robot_color(self, color, port_id):
-        # send move command to the port id to pick it up on sensor
-        self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', port_id, 'movement', {
-            'command': 1,
-            'magnitude': 1,
-            'message': 'Move to destination'
-        }))
-        self.calibrating_color = color
+    def get_robot(self, robot_id):
+        """
+        Get the robot associated with the given robot id
+
+        Args:
+            robot_id (int): the robot id to search for
+        """
+        for port_id, robot in self.robots.items():
+            if robot_id == robot.robot_id:
+                return robot
+        return None
 
 def get_distance(old_position, new_position):
     """

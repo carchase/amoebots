@@ -37,7 +37,8 @@ OPTIONS = {
     'FREAKOUT_ITERATIONS': 1, # The number of actions a robot should take when freaking out
     'colors': ['Orange', 'Green', 'Purple', 'Yellow', 'Red', 'Blue', 'Light Blue'], #colors that will be searched for in blob detection of camera process
     'minColors': [[0, 67, 122], [48, 37, 1], [113, 85, 153], [43, 0, 177], [155, 37, 117], [108, 119, 170], [90, 102, 228]], #minimum value for corresponding colors
-    'maxColors': [[20, 255, 255], [83, 255, 255], [134, 149, 202], [84, 41, 190], [179, 251, 255], [116, 183, 218], [114, 181, 255]] #maximum value for corresponding colors
+    'maxColors': [[20, 255, 255], [83, 255, 255], [134, 149, 202], [84, 41, 190], [179, 251, 255], [116, 183, 218], [114, 181, 255]], #maximum value for corresponding colors
+    'robot_ids': [[1, 'Blue'], [2, 'Yellow'], [3, 'Green']]
 }
 # ******************************************************************************
 

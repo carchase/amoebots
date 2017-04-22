@@ -25,13 +25,28 @@ class CameraProcess:
     """
 
     def __init__(self, options):
+        #options as defined in main.py
         self.options = options
+        #stores the number of robots available
         self.length = len(self.options['colors'])
+        #blob detection
         self.detector = None
+        #dictionary that holds the data to be sent back to the movement_level
         self.robots = {}
-        self.message = {}
-        self.iterations = 10
-        self.get_message = True
+        #value to scale the pixel data properly
+        self.scaler = 0
+        #distance between orange squares
+        self.arena_size = 82.55
+        #temporary storage for recieved messages
+        self.movement_message = {}
+        #number of iterations the camera should do before responding with data
+        self.camera_iterations = 50
+        #stores the number of iterations completed
+        self.iterations = 0
+        #flag that is set to True when a message is recieved and false when a response has been sent
+        self.get_message = False
+        #left/front translations for grid
+        self.translate = {}
         self.cam_input = None
         self.com_input = None
         self.keep_running = True
@@ -52,11 +67,11 @@ class CameraProcess:
         line2 = np.sqrt((points[1].pt[0] - points[2].pt[0]) * (points[1].pt[0] - points[2].pt[0]) + (points[1].pt[1] - points[2].pt[1]) * (points[1].pt[1] - points[2].pt[1]))
         line3 = np.sqrt((points[0].pt[0] - points[2].pt[0]) * (points[0].pt[0] - points[2].pt[0]) + (points[0].pt[1] - points[2].pt[1]) * (points[0].pt[1] - points[2].pt[1]))
     
-        euclidean_distance = [[line1], [line2], [line3]]
-        # print('\t\t\tEuclidean_distance:\t' + str(euclidean_distance))
+        euclidean_distance = [line1, line2, line3]
     
         if euclidean_distance[0] > euclidean_distance[1]:
             front_index = 0
+            self.scaler = float(euclidean_distance[1]) / self.arena_size
             if euclidean_distance[0] > euclidean_distance[2]:
                 corner_index = 2
                 left_index = 1
@@ -64,10 +79,12 @@ class CameraProcess:
                 corner_index = 1
                 left_index = 2
         elif euclidean_distance[1] > euclidean_distance[2]:
+            self.scaler = float(euclidean_distance[0]) / self.arena_size
             corner_index = 0
             front_index = 1
             left_index = 2
         else:
+            self.scaler = float(euclidean_distance[0]) / self.arena_size
             corner_index = 1
             front_index = 0
             left_index = 2
@@ -76,10 +93,19 @@ class CameraProcess:
         front = [points[front_index].pt[0], points[front_index].pt[1]]
         left = [points[left_index].pt[0], points[left_index].pt[1]]
         
-        slope1 = (front[1] - corner[1]) / (front[0] - corner[0])
-        slope2 = (left[1] - corner[1]) / (left[0] - corner[0])
-        angle1 = math.degrees(-math.atan(slope1))
-        angle2 = math.degrees(-math.atan(slope2))
+        try:
+            slope1 = (front[1] - corner[1]) / (front[0] - corner[0])
+        except ZeroDivisionError as err:
+            angle1 = 0
+        else:
+            angle1 = math.degrees(-math.atan(slope1))
+
+        try:
+            slope2 = (left[1] - corner[1]) / (left[0] - corner[0])
+        except ZeroDivisionError as err:
+            angle2 = 0
+        else:
+            angle2 = math.degrees(-math.atan(slope2))
         
         angle = 0
         
@@ -107,10 +133,12 @@ class CameraProcess:
                 
         if angle1 > angle2:
             angle2, angle1 = angle1, angle2
+            front, left = left, front
             
         if angle2 > 225:
             if angle1 < 135:
                 angle = angle2
+                front, left = left, front
             else:
                 angle = angle1
         else:
@@ -119,7 +147,27 @@ class CameraProcess:
         center = [(front[0] + left[0]) / 2, (front[1] + left[1]) / 2]
         
         goal = [center[0], center[1], angle]
-    
+        
+        matrix = [[math.cos(math.radians(angle)), math.sin(math.radians(angle))], [-math.sin(math.radians(angle)), math.cos(math.radians(angle))]]
+
+        front[0] -= center[0]
+        left[0] -= center[0]
+        front[1] -= center[1]
+        left[1] -= center[1]
+
+        front[0] = (front[0] * matrix[0][0]) + (front[1] * matrix[0][1])
+        front[1] = (front[0] * matrix[1][0]) + (front[1] * matrix[1][1])
+        left[0] = (left[0] * matrix[0][0]) + (left[1] * matrix[0][1])
+        left[1] = (left[0] * matrix[1][0]) + (left[1] * matrix[1][1])
+
+        front[0] += center[0]
+        left[0] += center[0]
+        front[1] += center[1]
+        left[1] += center[1]
+        
+        self.translate['front'] = front
+        self.translate['left'] = left
+
         return goal
         
     #capture the location and orientation of the robots
@@ -129,13 +177,13 @@ class CameraProcess:
         corner_index = -1
         front_index = -1
         left_index = -1
+
         
         line1 = np.sqrt((points[0].pt[0] - points[1].pt[0]) * (points[0].pt[0] - points[1].pt[0]) + (points[0].pt[1] - points[1].pt[1]) * (points[0].pt[1] - points[1].pt[1]))
         line2 = np.sqrt((points[1].pt[0] - points[2].pt[0]) * (points[1].pt[0] - points[2].pt[0]) + (points[1].pt[1] - points[2].pt[1]) * (points[1].pt[1] - points[2].pt[1]))
         line3 = np.sqrt((points[0].pt[0] - points[2].pt[0]) * (points[0].pt[0] - points[2].pt[0]) + (points[0].pt[1] - points[2].pt[1]) * (points[0].pt[1] - points[2].pt[1]))
         
         euclidean_distance = [[line1], [line2], [line3]]
-        # print('\t\t\tEuclidean_distance:\t' + str(euclidean_distance))
         
         if euclidean_distance[0] > euclidean_distance[1]:
             front_index = 0
@@ -158,10 +206,19 @@ class CameraProcess:
         front = [points[front_index].pt[0], points[front_index].pt[1]]
         left = [points[left_index].pt[0], points[left_index].pt[1]]
         
-        slope1 = (front[1] - corner[1]) / (front[0] - corner[0])
-        slope2 = (left[1] - corner[1]) / (left[0] - corner[0])
-        angle1 = math.degrees(-math.atan(slope1))
-        angle2 = math.degrees(-math.atan(slope2))
+        try:
+            slope1 = (front[1] - corner[1]) / (front[0] - corner[0])
+        except ZeroDivisionError as err:
+            angle1 = 0
+        else:
+            angle1 = math.degrees(-math.atan(slope1))
+
+        try:
+            slope2 = (left[1] - corner[1]) / (left[0] - corner[0])
+        except ZeroDivisionError as err:
+            angle2 = 0
+        else:
+            angle2 = math.degrees(-math.atan(slope2))
         
         angle = 0
         
@@ -189,10 +246,12 @@ class CameraProcess:
                 
         if angle1 > angle2:
             angle2, angle1 = angle1, angle2
+            front, left = left, front
             
         if angle2 > 225:
             if angle1 < 135:
                 angle = angle2
+                front, left = left, front
             else:
                 angle = angle1
         else:
@@ -200,7 +259,7 @@ class CameraProcess:
         
         center = [(front[0] + left[0]) / 2, (front[1] + left[1]) / 2]
         
-        goal = [center[0], center[1], angle]
+        goal = [center[0], center[1], 360 - angle]
         
         x = goal[0] - orange[0]
         y = goal[1] - orange[1]
@@ -217,8 +276,14 @@ class CameraProcess:
         goal[0] += orange[0]
         goal[1] += orange[1]
 
-        dic['x'] = goal[0]
-        dic['y'] = goal[1]
+
+        goal[1] -= self.translate['front'][1]
+        goal[0] -= self.translate['left'][0]
+
+
+        dic = {}
+        dic['x'] = goal[0] / self.scaler
+        dic['y'] = goal[1] / self.scaler
         dic['heading'] = goal[2]
 
         return dic
@@ -258,7 +323,9 @@ class CameraProcess:
 
             if self.get_message:
                 if self.iterations == 0:
-                    self.process_movement(message)
+                    self.process_movement(self.movement_message)
+                    self.get_message = False
+                    self.movement_message = None
                 else:
                     self.iterations -= 1
 
@@ -276,10 +343,10 @@ class CameraProcess:
 
                     # check if the message is a movement command
                     elif message.category == 'movement':
-                        self.get_Message = True
+                        self.get_message = True
                         self.robots = {}
-                        self.message = message
-                        self.iterations = 10
+                        self.movement_message = message
+                        self.iterations = self.camera_iterations
 
             success, img = self.capture.read()
 
@@ -291,7 +358,7 @@ class CameraProcess:
                 self.keep_running = False
                 break
 
-#image processing
+            #image processing
             img_with_keypoints = img
             orange = []
             locations = []
@@ -355,9 +422,16 @@ class CameraProcess:
             message (Message): The message object to be processed.
         """
 
-        if message.data.command == 91:
+        if message.data['command'] == 90:
             # Send back the sensor camera data
-            self.com_input.put(Message('CAM_PROCESS', 'MOV_LEVEL', 'info', {
+            self.com_input.put(Message('CAM_PROCESS', 'MOV_LEVEL', 'response', {
+                'content': 'robot-info', 
+                'data': { 'type': 'camera' }
+            }))
+
+        elif message.data['command'] == 91:
+            # Send back the sensor camera data
+            self.com_input.put(Message('CAM_PROCESS', 'MOV_LEVEL', 'response', {
                 'content': 'sensor-camera', 
                 'data': self.robots
             }))

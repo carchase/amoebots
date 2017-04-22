@@ -192,31 +192,34 @@ class MovementLevel:
                                                       message.data['data']['type'])
 
         elif message.data["content"] == 'sensor-camera':
-            # iterate over robots in the message
-            for color in message.data['data']:
-                # check if color is registered in movement level
-                if color not in self.robot_colors:
-                    # calibrate the robot's color
-                    self.associate_robot_color(color, message.origin)
-                    continue
+            print("*** sensor data")
+            print(message.data["data"])
+            self.sensors[message.origin].asked = False
+            # # iterate over robots in the message
+            # for color in message.data['data']:
+            #     # check if color is registered in movement level
+            #     if color not in self.robot_colors:
+            #         # calibrate the robot's color
+            #         self.associate_robot_color(color, message.origin)
+            #         continue
 
-                # if we're calibrating this color,
-                # add the port to the color dictionary
-                if self.calibrating_color == color:
-                    self.robot_colors[color] = message.origin
-                    self.calibrating_color = None
+            #     # if we're calibrating this color,
+            #     # add the port to the color dictionary
+            #     if self.calibrating_color == color:
+            #         self.robot_colors[color] = message.origin
+            #         self.calibrating_color = None
 
-                # read position and heading
-                robot_id = self.robot_colors[color]
-                robot = self.robots[robot_id]
-                robot.position = ((message.data[robot_id]['x'] * 100),
-                                  (message.data[robot_id]['y'] * 100))
-                robot.heading = message.data[robot_id]['heading']
-                self.update_tile(robot)
+            #     # read position and heading
+            #     robot_id = self.robot_colors[color]
+            #     robot = self.robots[robot_id]
+            #     robot.position = ((message.data[robot_id]['x'] * 100),
+            #                       (message.data[robot_id]['y'] * 100))
+            #     robot.heading = message.data[robot_id]['heading']
+            #     self.update_tile(robot)
 
-            sensor = self.sensors[message.origin]
-            sensor.received = True
-            self.aligned = False
+            # sensor = self.sensors[message.origin]
+            # sensor.received = True
+            # self.aligned = False
 
         elif message.data["content"] == 'ping':
             # read position and heading

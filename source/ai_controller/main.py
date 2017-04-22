@@ -31,13 +31,14 @@ OPTIONS = {
     'MOV_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between mov event loop iterations
     'AI_LOOP_SLEEP_INTERVAL': .001, # Number of seconds that between AI event loop iterations
     'ARENA_SIZE': 5, # The number of tiles on one side of the arena
-    'ARENA_SIZE_CM': 86, # The square wall size of the arena
-    'MAX_CNTR_MISALIGNMENT': 1, # The distance from a centerpoint that is acceptable error for robot
-    'MAX_NORTH_MISALIGNMENT': 1, # The degrees off of north that is acceptable error for robot
+    'ARENA_SIZE_CM': 82.55, # The square wall size of the arena
+    'MAX_CNTR_MISALIGNMENT': 3, # The distance from a centerpoint that is acceptable error for robot
+    'MAX_NORTH_MISALIGNMENT': 5, # The degrees off of north that is acceptable error for robot
     'FREAKOUT_ITERATIONS': 1, # The number of actions a robot should take when freaking out
     'colors': ['Orange', 'smores3', 'smores2', 'smores1', 'Light Blue'], #colors that will be searched for in blob detection of camera process
     'minColors': [[0, 67, 122], [48, 37, 1], [113, 85, 153], [108, 119, 170], [90, 102, 228]], #minimum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
-    'maxColors': [[20, 255, 255], [83, 255, 255], [134, 149, 202], [116, 183, 218], [114, 181, 255]] #maximum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
+    'maxColors': [[20, 255, 255], [83, 255, 255], [134, 149, 202], [116, 183, 218], [114, 181, 255]], #maximum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
+    'CAMERA_ITERATIONS': 50
 }
 # ******************************************************************************
 

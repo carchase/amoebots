@@ -36,11 +36,11 @@ class CameraProcess:
         #value to scale the pixel data properly
         self.scaler = 0
         #distance between orange squares
-        self.arena_size = 82.55
+        self.arena_size = self.options['ARENA_SIZE_CM']
         #temporary storage for recieved messages
         self.movement_message = {}
         #number of iterations the camera should do before responding with data
-        self.camera_iterations = 50
+        self.camera_iterations = self.options['CAMERA_ITERATIONS']
         #stores the number of iterations completed
         self.iterations = 0
         #flag that is set to True when a message is recieved and false when a response has been sent

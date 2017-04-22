@@ -190,31 +190,45 @@ class MovementLevel:
                                                       message.data['data']['type'])
 
         elif message.data["content"] == 'sensor-camera':
-            # iterate over robots in the message
-            for robot_id in message.data['data']:
-                # get robot associated with robot_id
-                robot = self.get_robot(robot_id)
-
-                # read position and heading
-                robot.position = ((message.data[robot_id]['x'] * 100),
-                                  (message.data[robot_id]['y'] * 100))
-                robot.heading = message.data[robot_id]['heading']
-                self.update_tile(robot)
-
+            print(message.data["data"])
             sensor = self.sensors[message.origin]
-            sensor.received = True
-            self.aligned = False
+            
+            if message.data["data"] == {}:
+                sensor.asked = False
+            else:
+                # iterate over robots in the message
+                for robot_id in message.data['data']:
+                    print(robot_id)
+                    # get robot associated with robot_id
+                    robot = self.get_robot(robot_id)
+
+                    if robot != None:
+                        # read position and heading
+                        robot.position = ((message.data["data"][robot_id]['x']),
+                                        (message.data["data"][robot_id]['y']))
+                        robot.heading = message.data["data"][robot_id]['heading']
+                        self.update_tile(robot)
+
+                sensor.received = True
+                self.aligned = False
 
         elif message.data["content"] == 'ping':
             # read position and heading
             robot = self.robots[message.origin]
-            robot.position = ((message.data['data']['x'] * 100), (message.data['data']['y'] * 100))
-            robot.heading = message.data['data']['heading']
-            self.update_tile(robot)
+            
+            # make sure that the robot is in position
+            if robot.robot_type == "sim-smores":
+                robot.position = ((message.data['data']['x'] * 100), (message.data['data']['y'] * 100))
+                robot.heading = message.data['data']['heading']
+                self.update_tile(robot)
 
-            sensor = self.sensors[message.origin]
-            sensor.received = True
-            self.aligned = False
+                sensor = self.sensors[message.origin]
+                sensor.received = True
+                self.aligned = False
+            # elif robot.robot_type == "smores":
+            #     sensor = self.sensors["CAM_PROCESS"]
+            #     sensor.asked = False
+            #     sensor.received = False
 
         elif message.data["content"] == 'move-result':
             robot = self.robots[message.origin]
@@ -225,11 +239,20 @@ class MovementLevel:
                 sensor = self.sensors[message.origin]
                 sensor.asked = False
                 sensor.received = False
+            elif robot.queued_commands == 0 and robot.robot_type == "smores":
+                sensor = self.sensors["CAM_PROCESS"]
+                sensor.asked = False
+                sensor.received = False
 
     def check_sensors(self):
         """
         Send position and heading update commands to all sensors.
         """
+
+        # Make sure that all the robots have checked
+        if len(self.robots) < self.options["NUMBER_OF_DEVICES"]:
+            return False
+
         for port_id, sensor in self.sensors.items():
             if not sensor.asked and sensor.sensor_type == 'sim-smores':
                 self.connections['COM_LEVEL'][1].put(
@@ -263,6 +286,7 @@ class MovementLevel:
             if robot.queued_commands > 0:
                 return False
             if self.world_model.find_tile(robot) is None:
+                print("FREAK OUT", robot.robot_id)
                 # Robots need to be shaken apart
                 self.scramble_robots = True
                 return False

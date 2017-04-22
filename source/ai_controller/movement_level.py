@@ -176,13 +176,13 @@ class MovementLevel:
         if message.data["content"] == 'robot-info':
             # Configure the movement level to control this device
             if message.data['data']['type'] == 'sim-smores':
-                self.robots[message.origin] = Robot(message.origin, message.data['data']['id'],
+                self.robots[message.origin] = Robot(None, message.origin,
                                                     message.data['data']['type'])
                 self.sensors[message.origin] = Sensor(message.origin,
                                                       message.data['data']['type'])
 
             elif message.data['data']['type'] == 'smores':
-                self.robots[message.origin] = Robot(message.origin, message.data['data']['id'],
+                self.robots[message.origin] = Robot(message.data['data']['id'], message.origin,
                                                     message.data['data']['type'])
 
             elif message.data['data']['type'] == 'camera':

@@ -39,10 +39,10 @@ int PWMD = 9;
 
 //Magnitude constants
 int speed = 75;
-int cmPerSecond = 1;
-int degPerSecond = 1;
-int topDegPerSecond = 1;
-int topSpinDegPerSecond = 1;
+double cmPerSecond = 3.2;
+double degPerSecond = 31.50;
+double topDegPerSecond = 31.50;
+double topSpinDegPerSecond = 31.50;
 
 
 void setup() {
@@ -148,7 +148,7 @@ String action(int act, int magnitude) {
       whichStop = 2;
       break;
     case 90:
-      message += jsonResponse("robot-info", "{\"type\":\"smores\"}");
+      message += jsonResponse("robot-info", "{\"type\":\"smores\", \"id\":\"smores1\"}");
       break;
     case 99:
       message += jsonResponse("ping", "{}");

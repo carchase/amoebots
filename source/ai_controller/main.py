@@ -17,7 +17,7 @@ OPTIONS = {
     'DUMP_MSGS_TO_MAIN': False, # Show all messages in main log output
     'RAISE_ERRORS_AFTER_CATCH': True, # Raises errors after catching
     'NUMBER_OF_DEVICES': 5, # Number of devices that the controller expects to use
-    'CAMERA_ID': 1, # The location of the camera as viewed by openCV. Built-in webcam is always 0.
+    'CAMERA_ID': 0, # The location of the camera as viewed by openCV. Built-in webcam is always 0.
     'BAUD': 115200, # Baud rate used by the COM ports
     'TCP_LISTENER_IP': socket.gethostbyname(socket.gethostname()), # Hostname the TCP listener uses
     'TCP_LISTENER_PORT': 5000, # Port the TCP listener uses
@@ -34,7 +34,10 @@ OPTIONS = {
     'ARENA_SIZE_CM': 86, # The square wall size of the arena
     'MAX_CNTR_MISALIGNMENT': 1, # The distance from a centerpoint that is acceptable error for robot
     'MAX_NORTH_MISALIGNMENT': 1, # The degrees off of north that is acceptable error for robot
-    'FREAKOUT_ITERATIONS': 1 # The number of actions a robot should take when freaking out
+    'FREAKOUT_ITERATIONS': 1, # The number of actions a robot should take when freaking out
+    'colors': ['Orange', 'Green', 'Purple', 'Yellow', 'Red', 'Blue', 'Light Blue'], #colors that will be searched for in blob detection of camera process
+    'minColors': [[0, 67, 122], [48, 37, 1], [113, 85, 153], [43, 0, 177], [155, 37, 117], [108, 119, 170], [90, 102, 228]], #minimum value for corresponding colors
+    'maxColors': [[20, 255, 255], [83, 255, 255], [134, 149, 202], [84, 41, 190], [179, 251, 255], [116, 183, 218], [114, 181, 255]] #maximum value for corresponding colors
 }
 # ******************************************************************************
 

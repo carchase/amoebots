@@ -68,6 +68,12 @@ class CommunicationLevel:
         camera_process.start()
         self.connections['CAM_PROCESS'] = ['running', camera_input, camera_process]
 
+        # register the camera with movement
+        self.connections['MOV_LEVEL'][1].put(Message('CAM_PROCESS', 'MAIN_LEVEL', 'command', {
+            'message': "Adding the camera sensor process",
+            'directive': "add"
+        }))
+
         # infinite loop to keep checking the queue for information
         while self.keep_running:
             try:

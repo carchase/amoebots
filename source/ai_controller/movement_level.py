@@ -190,20 +190,24 @@ class MovementLevel:
                                                       message.data['data']['type'])
 
         elif message.data["content"] == 'sensor-camera':
-            # iterate over robots in the message
-            for robot_id in message.data['data']:
-                # get robot associated with robot_id
-                robot = self.get_robot(robot_id)
+            print("*** sensor data")
+            print(message.data["data"])
+            self.sensors[message.origin].asked = False
 
-                # read position and heading
-                robot.position = ((message.data[robot_id]['x'] * 100),
-                                  (message.data[robot_id]['y'] * 100))
-                robot.heading = message.data[robot_id]['heading']
-                self.update_tile(robot)
+            # # iterate over robots in the message
+            # for robot_id in message.data['data']:
+            #     # get robot associated with robot_id
+            #     robot = self.get_robot(robot_id)
 
-            sensor = self.sensors[message.origin]
-            sensor.received = True
-            self.aligned = False
+            #     # read position and heading
+            #     robot.position = ((message.data[robot_id]['x'] * 100),
+            #                       (message.data[robot_id]['y'] * 100))
+            #     robot.heading = message.data[robot_id]['heading']
+            #     self.update_tile(robot)
+
+            # sensor = self.sensors[message.origin]
+            # sensor.received = True
+            # self.aligned = False
 
         elif message.data["content"] == 'ping':
             # read position and heading

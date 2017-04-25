@@ -104,6 +104,20 @@ class Arena:
                     return tile
         return None
 
+    def find_robot_goal(self, robot):
+        """
+        Finds the goal for a given robot.
+
+        Args:
+            robot (Robot): The robot whose goal to search for
+        """
+
+        for row in self.grid:
+            for tile in row:
+                if tile.robot_goal is robot:
+                    return tile
+        return None
+
     def display(self):
         """
         Displays the grid. "o" tiles are open, "g" tiles are goals, "r" tiles are robots,

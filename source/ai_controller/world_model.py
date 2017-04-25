@@ -203,6 +203,5 @@ class Tile:
     def __init__(self, x, y, cm_per_tile):
         self.occupied = None
         self.goal = False
-        self.robot_goal = None
         self.position = (x, y)
         self.center = ((x + 0.5) * cm_per_tile, (y + 0.5) * cm_per_tile)

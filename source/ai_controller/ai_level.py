@@ -8,7 +8,7 @@ View the full repository here https://github.com/car-chase/amoebots
 
 from time import sleep
 import jsonpickle
-from pathfinder import generate_moves
+from pathfinder import Pathfinder
 from message import Message
 
 class AiLevel:
@@ -108,7 +108,9 @@ class AiLevel:
 
             world.display()
 
-            robot_moves = generate_moves(self.options["ARENA_SIZE"], world)
+            # Create the pathfinder
+            pathfinder = Pathfinder(self.options)
+            robot_moves = pathfinder.generate_moves(world)
             print(robot_moves)
             if robot_moves is None:
                 self.connections["MOV_LEVEL"][1].put(Message('AI_LEVEL', 'MOV_LEVEL', 'command', {

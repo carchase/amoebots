@@ -103,12 +103,20 @@ class AiLevel:
             # Parse out the world model
             world = jsonpickle.decode(message.data['args'])
 
-            world.display()
+            self.connections["MAIN_LEVEL"][1].put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {
+                'message':"Path requested, current state of the world:\n" + world.to_string()
+            }))
 
             # Get the moves
+            start_time = time.time()
             robot_moves = self.generate_moves(world)
 
-            print(robot_moves)
+            # Log the AI result
+            self.connections["MAIN_LEVEL"][1].put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {
+                'message':"Pathfinding took " + str((time.time()-start_time)/60) +
+                          " minutes\nMoves: " + str(robot_moves)
+            }))
+
             if robot_moves is None:
                 self.connections["MOV_LEVEL"][1].put(Message('AI_LEVEL', 'MOV_LEVEL', 'command', {
                     'message': "Nothing left to move",
@@ -132,18 +140,24 @@ class AiLevel:
             # End the com_level
             self.keep_running = False
 
-    def robot_goal_assignment(self, world):
+    def robot_goal_assignment(self, world_grid):
+        """
+        Assigns robots to the goal that is nearest to them.
+
+        Args:
+            world (Tile[][]): A 2D array containing the current world state.
+        """
         goal_positions = [] # [(goal_x, goal_y)]
         robot_and_position = [] # [(robot_number, (robot_x, robot_y))]
         robot_and_goal = [] # [(robot_number, (goal_x, goal_y))]
 
         for row in range(self.options["ARENA_SIZE"]):
             for col in range(self.options["ARENA_SIZE"]):
-                if world.grid[row][col].goal is True:
-                    goal_positions.append(world.grid[row][col].position)
-                if world.grid[row][col].occupied is not None:
-                    robot_and_position.append((world.grid[row][col].occupied.robot_number,
-                                               world.grid[row][col].position))
+                if world_grid[row][col].goal is True:
+                    goal_positions.append(world_grid[row][col].position)
+                if world_grid[row][col].occupied is not None:
+                    robot_and_position.append((world_grid[row][col].occupied.robot_number,
+                                               world_grid[row][col].position))
 
         # Loop over the goals
         for goal_index, goal in enumerate(goal_positions):
@@ -165,7 +179,6 @@ class AiLevel:
                     closest_distance = dist
 
             # We have compared all robots, now assign the winner to the goal
-            print(closest_robot, " to ", goal)
             robot_and_goal.append((closest_robot, goal))
 
             robot_and_position[ele_with_robot] = None
@@ -174,21 +187,25 @@ class AiLevel:
         return robot_and_goal
 
     def generate_moves(self, world):
-        robot_and_goal = self.robot_goal_assignment(world)
+        """
+        Generates the moves to get the robot to a goal state.  It is iterative and can handle
+        robots in batches.  The more robots per iteration, the slower the processing.
+
+        Args:
+            world (Arena): The object containing the current state of the world.
+        """
+        robot_and_goal = self.robot_goal_assignment(world.grid)
 
         robot_goals = []
 
         for index, entry in enumerate(robot_and_goal):
-            print("robotID", entry[0])
             robot_goals.append(entry)
             # Process if it has hit the necesssary iterations or if it is the last robot
             if(len(robot_goals) % self.options["ROBOTS_PLANNED_PER_ITERATION"] == 0
                or index == len(robot_and_goal) - 1):
                 pathfinder = Pathfinder(self.options, world.grid, robot_goals)
                 robot_goals = []
-                start_time = time.time()
                 robot_moves = pathfinder.start_algorithm()
-                print("TOOK " + str((time.time()-start_time)/60) + " MINUTES")
                 if len(robot_moves) > 0:
                     return robot_moves
         return None

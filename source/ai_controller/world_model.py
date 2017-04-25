@@ -118,24 +118,25 @@ class Arena:
                     return tile
         return None
 
-    def display(self):
+    def to_string(self):
         """
-        Displays the grid. "o" tiles are open, "g" tiles are goals, "r" tiles are robots,
-        and "R" tiles are robots that are on goals.
+        Generates the state of the world as a string. "o" tiles are open, "g" tiles are goals,
+        "r" tiles are robots, and "R" tiles are robots that are on goals.
         """
         line = ""
         for row in self.grid:
             for tile in row:
                 if tile.occupied != None and tile.goal:
-                    line = line + "R "
+                    line += "R "
                 elif tile.occupied != None:
-                    line = line + "r "
+                    line += "r "
                 elif tile.goal:
-                    line = line + "g "
+                    line += "g "
                 else:
-                    line = line + "o "
-            print(line)
-            line = ""
+                    line += "o "
+            line += "\n"
+
+        return line
 
 class Robot:
     """

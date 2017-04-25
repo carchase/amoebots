@@ -10,18 +10,35 @@ from __future__ import print_function
 from pyddl import Domain, Problem, Action, neg, planner
 
 class Pathfinder:
+    """
+    The PDDL processor that generates the moves necessary to get robots from their initial states
+    to their goal states.  This level performs the pathfinding on the world and generates the
+    commands for the robot to execute.
 
+    Args:
+        options (dict): The dictionary containing the program settings.
+        world_grid (Tile[][]) The 2D array containing the current state of the world.
+        robot_goal_positions (tuple[]) An array of tuples mapping robots to their goal positions.
+
+    Attributes:
+        options (dict): The dictionary containing the program settings.
+        init_row (list): The list containing all the row numbers.
+        init_col (list): The list containing all the column numbers.
+        init_state (list): The list containing the current state of the world in PDDL.
+        init_robots (list): The list containing all the robot ID numbers.
+        init_goals (list): The list containing the goal state.
+    """
     def __init__(self, options, world_grid, robot_goal_positions):
         self.init_row = []
         self.init_col = []
-        self.init_occupied = []
+        self.init_state = []
         self.init_robots = []
         self.init_goals = []
         self.options = options
 
         # Determine which robots_numbers are active
         active_robots = []
-        for index, robot in enumerate(robot_goal_positions):
+        for robot in robot_goal_positions:
             active_robots.append(robot[0])
 
         # Parse the world to generate the initial state
@@ -31,7 +48,15 @@ class Pathfinder:
         self.generate_goal_state(robot_goal_positions)
 
     def generate_init_state(self, world_size, world_grid, active_robots):
-        self.init_occupied = []
+        """
+        Generates the initial PDDL state of the world
+
+        Args:
+            world_size (int): The dictionary containing the program settings.
+            world_grid (Tile[][]) The 2D array containing the current state of the world.
+            active_robots (tuple[]) An array of the robot numbers to consider when solving.
+        """
+        self.init_state = []
         self.init_row = []
         self.init_col = []
         self.init_robots = []
@@ -39,9 +64,10 @@ class Pathfinder:
         for row in range(world_size):
             for col in range(world_size):
                 if world_grid[row][col].occupied is None:
-                    self.init_occupied.append(('notOccupied', col, row))
+                    self.init_state.append(('notOccupied', col, row))
                 elif world_grid[row][col].occupied.robot_number in active_robots:
-                    self.init_occupied.append(('at', world_grid[row][col].occupied.robot_number, col, row))
+                    self.init_state.append(('at', world_grid[row][col].occupied.robot_number,
+                                            col, row))
                     self.init_robots.append(world_grid[row][col].occupied.robot_number)
                 else:
                     self.init_robots.append(world_grid[row][col].occupied.robot_number)
@@ -49,15 +75,26 @@ class Pathfinder:
             self.init_col.append(row)
 
         for inc in range(world_size):
-            self.init_occupied.append(('isLeftOf', inc, inc + 1))
-            self.init_occupied.append(('isAbove', inc, inc + 1))
+            self.init_state.append(('isLeftOf', inc, inc + 1))
+            self.init_state.append(('isAbove', inc, inc + 1))
 
     def generate_goal_state(self, robots):
+        """
+        Generates the initial PDDL state of the world
+
+        Args:
+            world_size (int): The dictionary containing the program settings.
+            world_grid (Tile[][]) The 2D array containing the current state of the world.
+            active_robots (tuple[]) An array of the robot numbers to consider when solving.
+        """
         self.init_goal = []
         for robot in robots:
             self.init_goal.append(('at', robot[0], robot[1][0], robot[1][1]))
 
-    def problem(self, verbose):
+    def start_algorithm(self):
+        """
+        Initiates the PDDL processing.  Returns the moves with the robot numbers.
+        """
         domain = Domain((
             Action(
                 'moveLeft',
@@ -148,49 +185,20 @@ class Pathfinder:
                 'robot': tuple(self.init_robots),
             },
             init=(
-                tuple(self.init_occupied)
+                tuple(self.init_state)
             ),
             goal=(
                 tuple(self.init_goal)
             )
         )
 
-        def to_coordinates(state):
-            grid = {}
-            #for p in state:
-            #    if p[0] == 'at':
-            #        grid[p[1]] = (p[2], p[3])
-            return grid
+        plan = planner(problem, verbose=None)
 
-        goal_coords = to_coordinates(problem.goals)
-
-        def manhattan_distance_heuristic(state):
-            state_coords = to_coordinates(state.predicates)
-            dist = 0
-            for k in goal_coords.keys():
-                c1, r1 = goal_coords[k]
-                c2, r2 = state_coords[k]
-                dist += (abs(c1 - c2) + abs(r1 - r2))
-            return dist
-
-        plan = planner(problem, heuristic=manhattan_distance_heuristic, verbose=verbose)
+        # Parse out the moves
         robot_and_move = []
-        if plan is None:
-            print('No Plan!')
-        else:
+        if plan is not None:
             for action in plan:
-                action_and_robot = (action.name, action.sig[1])  # This is returning the action name and the robot
+                action_and_robot = (action.name, action.sig[1]) # The action name and the robot
                 robot_and_move.append(action_and_robot)
-        
-        return robot_and_move
 
-    def start_algorithm(self):
-        from optparse import OptionParser
-        parser = OptionParser(usage="Usage: %prog [options]")
-        parser.add_option('-q', '--quiet', action='store_false', dest='verbose', default=True, 
-                          help="don't print statistics to stdout")
-
-        # Parse arguments
-        opts, args = parser.parse_args()
-        robot_and_move = self.problem(opts.verbose)
         return robot_and_move

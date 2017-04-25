@@ -120,9 +120,10 @@ class BotProcess:
 
                             mov_str = str(command) + " " + str(magnitude)
 
-                            self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
-                                'message': 'Given command: ' + mov_str
-                            }))
+                            if self.options["SHOW_BOT_COMMUNICATIONS"]:
+                                self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                                    'message': 'Given command: ' + mov_str
+                                }))
 
                             connection.write(bytes(mov_str, "utf-8"))
 
@@ -192,9 +193,10 @@ class BotProcess:
 
                         mov_str = str(command) + " " + str(magnitude)
 
-                        self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
-                            'message': 'Given command: ' + mov_str
-                        }))
+                        if self.options["SHOW_BOT_COMMUNICATIONS"]:
+                            self.com_input.put(Message(self.address, 'MAIN_LEVEL', 'info', {
+                                'message': 'Given command: ' + mov_str
+                            }))
 
                         # send data on the socket
                         connection.send(bytes(mov_str, "utf-8"))

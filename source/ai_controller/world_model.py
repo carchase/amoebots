@@ -14,6 +14,7 @@ class Arena:
     Args:
         arena_size (int): The size of the arena in tiles (ex: 5 for a 5x5 grid arena)
         arena_size_cm (double): The actual physical size of the arena in cm
+        goal_positions (list): A list of the goal position tuples
 
     Attributes:
         width (int): The width of the arena in tiles
@@ -24,7 +25,7 @@ class Arena:
         grid (Tile[]): The world model grid, a self.width x self.height array of Tiles
     """
 
-    def __init__(self, arena_size, arena_size_cm):
+    def __init__(self, arena_size, arena_size_cm, goal_positions):
         self.width = arena_size
         self.height = arena_size
         self.width_cm = arena_size_cm
@@ -36,6 +37,10 @@ class Arena:
             self.grid.append([])
             for col in range(self.width):
                 self.grid[row].append(Tile(col, row, self.cm_per_tile))
+
+        # Set the goals
+        for goal in goal_positions:
+            self.grid[goal[1]][goal[0]].goal = True
 
     def in_bounds(self, position):
         """
@@ -113,24 +118,25 @@ class Arena:
                     return tile
         return None
 
-    def display(self):
+    def to_string(self):
         """
-        Displays the grid. "o" tiles are open, "g" tiles are goals, "r" tiles are robots,
-        and "R" tiles are robots that are on goals.
+        Generates the state of the world as a string. "o" tiles are open, "g" tiles are goals,
+        "r" tiles are robots, and "R" tiles are robots that are on goals.
         """
         line = ""
         for row in self.grid:
             for tile in row:
                 if tile.occupied != None and tile.goal:
-                    line = line + "R "
+                    line += "R "
                 elif tile.occupied != None:
-                    line = line + "r "
+                    line += "r "
                 elif tile.goal:
-                    line = line + "g "
+                    line += "g "
                 else:
-                    line = line + "o "
-            print(line)
-            line = ""
+                    line += "o "
+            line += "\n"
+
+        return line
 
 class Robot:
     """

@@ -109,7 +109,7 @@ class MovementLevel:
                     self.align_robots()
 
                 # Send message to move into formation
-                if self.aligned and not self.processing_plan:
+                if self.ready_for_formation():
                     self.connections['AI_LEVEL'][1].put(
                         Message('MOV_LEVEL', 'AI_LEVEL', 'command', {
                             'message': "Submitting world model for pathfinding plan",
@@ -148,7 +148,16 @@ class MovementLevel:
             }))
 
         elif message.data["directive"] == 'execute-plan':
+            # Plan found, so execute it.
             self.process_plan(message.data['args'])
+
+            # Force everything to realign and then recalculate path
+            self.aligned = False
+            self.processing_plan = False
+
+        elif message.data["directive"] == 'no-plan':
+            # No plan so let the program continue
+            self.processing_plan = False
 
         elif message.category == 'command' and message.data['directive'] == 'failure':
             # if the item is a 'failure', remove the process from the CON_DICT
@@ -314,6 +323,22 @@ class MovementLevel:
                 return False
 
         return True
+
+    def ready_for_formation(self):
+        """
+        Determine if we need to find a path for a formation.
+        """
+
+
+        if not self.aligned or self.processing_plan:
+            return False
+
+        # If a robot is not on its goal, return false.
+        for port_id, robot in self.robots.items():
+            if not self.world_model.find_tile(robot).goal:
+                return True
+
+        return False
 
     def align_robots(self):
         """
@@ -483,10 +508,6 @@ class MovementLevel:
             # update robot heading
             robot_obj.heading = turn_dest
             # TODO: update robot with real heading
-
-        # Force everything to realign and then recalculate path
-        self.aligned = False
-        self.processing_plan = False
 
     def update_tile(self, robot):
         """

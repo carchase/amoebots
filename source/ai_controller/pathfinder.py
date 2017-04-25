@@ -1,92 +1,84 @@
+'''
+This file is part of the amoebots project developed under the IPFW Senior Design Capstone.
+
+Created on April 15, 2017
+
+View the full repository here https://github.com/car-chase/amoebots
+'''
+
 import math
-
 import pddl_algorithm
-import world_model
-
-goal_position = []
-robot_position_and_object = []
-robot_goal_and_position = []
-bots_per_iteration = 3
-
-def robot_goal_assignment(world_size_grid, world):
-
-    for row in range(world_size_grid):
-        for col in range(world_size_grid):
-            if world.grid[row][col].goal is True:
-                goal_position.append(world.grid[row][col].position)
-            if world.grid[row][col].occupied is not None:
-                robot_position_and_object.append((world.grid[row][col].position,
-                                                  world.grid[row][col].occupied.robot_number))
-
-    # Loop over the goals
-    for goal_index, goal in enumerate(goal_position):
-
-        # The farthest away a robot can possibly be
-        dist_temp = float("inf")
-
-        # Loop over each robot for the goal
-        for robot_index, robot in enumerate(robot_position_and_object):
-            if robot is None:
-                continue
-
-            dist = math.hypot(robot[0][0] - goal[0],   # x2 - x1
-                              robot[0][1] - goal[1])   # y2 - y1
-
-            if dist < dist_temp:
-                robot_with_shortest_distance = robot[1]
-                ele_with_robot = robot_index
-                dist_temp = dist
-
-        # We have compared all robots, now assign the winner to the goal
-        print(robot_with_shortest_distance, " to ", goal)
-        world.grid[goal[1]][goal[0]].robot_goal = robot_with_shortest_distance
-        robot_goal_and_position.append((robot_with_shortest_distance, goal[0], goal[1]))
 
 
-        robot_position_and_object[ele_with_robot] = None
-        goal_position[goal_index] = None
+class Pathfinder:
 
-def generate_moves(world_grid_size, world):
+    def __init__(self, options):
+        self.options = options
 
-    if(len(robot_goal_and_position) == 0):
-        robot_goal_assignment(world_grid_size, world)
+    def robot_goal_assignment(self, world):
+        goal_positions = [] # [(goal_x, goal_y)]
+        robot_and_position = [] # [(robot_number, (robot_x, robot_y))]
+        robot_and_goal = [] # [(robot_number, (goal_x, goal_y))]
 
-    robots = []
-    robot_goals = []
+        for row in range(self.options["ARENA_SIZE"]):
+            for col in range(self.options["ARENA_SIZE"]):
+                if world.grid[row][col].goal is True:
+                    goal_positions.append(world.grid[row][col].position)
+                if world.grid[row][col].occupied is not None:
+                    robot_and_position.append((world.grid[row][col].occupied.robot_number,
+                                               world.grid[row][col].position))
 
-    for item in range(len(robot_goal_and_position)):
-        print("robotID", robot_goal_and_position[item][0])
-        robot_goals.append(robot_goal_and_position[item])
-        robots.append(robot_goal_and_position[item][0])
-        if len(robots) % bots_per_iteration == 0:
-            pddl_algorithm.generate_init_state(world_grid_size, world, robots)
-            pddl_algorithm.generate_goal_state(robot_goals)
-            robots = []
-            robot_goals = []
-            robot_moves = pddl_algorithm.start_algorithm()
-            if len(robot_moves) > 0:
-                return robot_moves
-        elif item == len(robot_goal_and_position) - 1: # It is the last one
-            pddl_algorithm.generate_init_state(world_grid_size, world, robots)
-            pddl_algorithm.generate_goal_state(robot_goals)
-            robot_moves = pddl_algorithm.start_algorithm()
-            if len(robot_moves) > 0:
-                return robot_moves
-    return None
+        # Loop over the goals
+        for goal_index, goal in enumerate(goal_positions):
 
-# orig_world = world_model.Arena(5, 5)
-# world_size_grid = 5
-# for robot in range(world_size_grid):
-#     init_robots.append(world_model.Robot(robot, 0))
+            # The farthest away a robot can possibly be
+            closest_distance = float("inf")
 
-# orig_world.grid[0][0].occupied = init_robots[0]
-# orig_world.grid[0][4].occupied = init_robots[1]
-# orig_world.grid[4][0].occupied = init_robots[2]
-# orig_world.grid[4][4].occupied = init_robots[3]
-# orig_world.grid[2][2].occupied = init_robots[4]
-# orig_world.grid[2][1].goal = True
-# orig_world.grid[2][2].goal = True
-# orig_world.grid[2][3].goal = True
-# orig_world.grid[1][2].goal = True
-# orig_world.grid[3][2].goal = True
-# generate_moves(world_size_grid, orig_world)
+            # Loop over each robot for the goal
+            for index, entry in enumerate(robot_and_position):
+                if entry is None:
+                    continue
+
+                dist = math.hypot(entry[1][0] - goal[0],   # x2 - x1
+                                  entry[1][1] - goal[1])   # y2 - y1
+
+                if dist < closest_distance:
+                    closest_robot = entry[0]
+                    ele_with_robot = index
+                    closest_distance = dist
+
+            # We have compared all robots, now assign the winner to the goal
+            print(closest_robot, " to ", goal)
+            robot_and_goal.append((closest_robot, goal))
+
+            robot_and_position[ele_with_robot] = None
+            goal_positions[goal_index] = None
+
+        return robot_and_goal
+
+    def generate_moves(self, world):
+
+        robot_and_goal = self.robot_goal_assignment(world)
+
+        robots = []
+        robot_goals = []
+
+        for index, entry in enumerate(robot_and_goal):
+            print("robotID", entry[0])
+            robots.append(entry[0])
+            robot_goals.append(entry)
+            if len(robots) % self.options["ROBOTS_PLANNED_PER_ITERATION"] == 0:
+                pddl_algorithm.generate_init_state(self.options["ARENA_SIZE"], world, robots)
+                pddl_algorithm.generate_goal_state(robot_goals)
+                robots = []
+                robot_goals = []
+                robot_moves = pddl_algorithm.start_algorithm()
+                if len(robot_moves) > 0:
+                    return robot_moves
+            elif index == len(robot_and_goal) - 1: # It is the last one
+                pddl_algorithm.generate_init_state(self.options["ARENA_SIZE"], world, robots)
+                pddl_algorithm.generate_goal_state(robot_goals)
+                robot_moves = pddl_algorithm.start_algorithm()
+                if len(robot_moves) > 0:
+                    return robot_moves
+        return None

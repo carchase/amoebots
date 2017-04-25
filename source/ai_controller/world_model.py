@@ -10,6 +10,18 @@ class Arena:
     """
     The world model representation of the webots arena. The purpose of the world model
     is to represent the world in a way the AI level can understand and process.
+
+    Args:
+        arena_size (int): The size of the arena in tiles (ex: 5 for a 5x5 grid arena)
+        arena_size_cm (double): The actual physical size of the arena in cm
+
+    Attributes:
+        width (int): The width of the arena in tiles
+        height (int): The height of the arena in tiles
+        width (float): The width of the arena in cm
+        height (float): The width of the arena in cm
+        cm_per_tile (float): The conversion factor between the size of a tile and cm
+        grid (Tile[]): The world model grid, a self.width x self.height array of Tiles
     """
 
     def __init__(self, arena_size, arena_size_cm):
@@ -28,18 +40,27 @@ class Arena:
     def in_bounds(self, position):
         """
         Determine if a position is in or out of bounds
+
+        Args:
+            position (Tuple): The grid position to check against the world model grid
         """
         return 0 <= position[0] < self.width and 0 <= position[1] < self.height
 
     def in_bounds_real_coords(self, coordinates):
         """
         Determine if the cm coordinates are in in_bounds
+
+        Args:
+            coordinates (Tuple): The real coordinates to check against the world model grid
         """
         return 0 <= coordinates[0] < self.width_cm and 0 <= coordinates[1] < self.height_cm
 
     def neighbors(self, tile):
         """
         Get all neighbors of a given tile
+
+        Args:
+            tile (Tile): The tile whose neighbors to find
         """
         (x_cor, y_cor) = tile.position
         coords = [(x_cor+1, y_cor), (x_cor, y_cor-1), (x_cor-1, y_cor), (x_cor, y_cor+1)]
@@ -52,6 +73,9 @@ class Arena:
     def get_tile_real_coords(self, coordinates):
         """
         Get the tile that contains the real world position cm coordinates.
+
+        Args:
+            coordinates (Tuple): The real coordinates to check against the world model grid
         """
         if self.in_bounds_real_coords(coordinates):
             return self.grid[
@@ -98,6 +122,20 @@ class Robot:
     """
     Representation of a robot in the world model. Each robot has a real position and heading,
     and can be either simulator or real robots.
+
+    Args:
+        robot_id (int): The number used to identify the robot
+        port_id (int): The COM port used to communicate with the robot
+        robot_type (string): The type of robot, either a simulator SMORES or a real SMORES
+
+    Attributes:
+        robot_id (int): The number used to identify the robot
+        port_id (int): The COM port used to communicate with the robot
+        robot_type (string): The type of robot, either a simulator SMORES or a real SMORES
+        position (Tuple): The position of the robot in the arena (in cm)
+        heading (float): The direction the robot is facing, in degrees CCW from North
+        queued_commands (int): The number of commands given to the robot that are waiting to execute
+        robot_number (int): The number used to identify the robot
     """
     number = 0
     def __init__(self, robot_id, port_id, robot_type):
@@ -114,6 +152,16 @@ class Sensor:
     """
     Representation of a sensor in the world model. Sensors record the position and heading
     of the robots. In the case of the simulator, sensors are the robots themselves.
+
+    Args:
+        port_id (int): The COM port used to communicate with the sensor
+        sensor_type (string): The type of sensor, either a simulator SMORES or a real camera
+
+    Attributes:
+        port_id (int): The COM port used to communicate with the sensor
+        sensor_type (string): The type of sensor, either a simulator SMORES or a real camera
+        asked (bool): Boolean that tracks whether the sensor has been polled for an update
+        recieved (bool): Boolean that tracks whether the sensor has responded to an update request
     """
     def __init__(self, port_id, sensor_type):
         self.port_id = port_id
@@ -125,10 +173,21 @@ class Tile:
     """
     The world model representation of an individual tile in the world model grid.
     Each tile can contain up to one robot and one goal.
+
+    Args:
+        x (int): The tile's horizontal position in the world model grid
+        y (int): The tile's vertical position in the world model grid
+        cm_per_tile (float): The conversion factor between the size of a tile and cm
+
+    Attributes:
+        occupied (Robot): The robot occupying the tile (None if the tile is open)
+        goal (bool): Whether or not the tile is a goal
+        robot_goal (Robot): The Robot assigned to this goal tile (None if this tile is not a goal)
+        position (Tuple): The tile's position in the world model grid
+        center (Tuple): The real coordinates of the tile's center, in cm
     """
     def __init__(self, x, y, cm_per_tile):
-        self.occupied = None   # is a Robot if tile is occupied by that robot
+        self.occupied = None
         self.goal = False
-        self.robot_goal = None
         self.position = (x, y)
         self.center = ((x + 0.5) * cm_per_tile, (y + 0.5) * cm_per_tile)

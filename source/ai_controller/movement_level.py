@@ -108,11 +108,12 @@ class MovementLevel:
 
                 # Send message to move into formation
                 if self.aligned and not self.processing_plan:
-                    self.connections['AI_LEVEL'][1].put(Message('MOV_LEVEL', 'AI_LEVEL', 'command', {
-                        'message': "Submitting world model for pathfinding plan",
-                        'directive': "generate-plan",
-                        'args': jsonpickle.encode(self.world_model)
-                    }))
+                    self.connections['AI_LEVEL'][1].put(
+                        Message('MOV_LEVEL', 'AI_LEVEL', 'command', {
+                            'message': "Submitting world model for pathfinding plan",
+                            'directive': "generate-plan",
+                            'args': jsonpickle.encode(self.world_model)
+                        }))
                     self.processing_plan = True
 
                 sleep(self.options["MOV_LOOP_SLEEP_INTERVAL"])
@@ -136,8 +137,8 @@ class MovementLevel:
             message (Message): The message object to be processed.
         """
 
+        # Determine what kind of connection this is
         if message.data['directive'] == 'add':
-            # Determine what kind of connection this is
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', message.origin, 'movement', {
                 'command': 90,
                 'magnitude': 0,
@@ -173,6 +174,7 @@ class MovementLevel:
         Args:
             message (Message): The message object to be processed.
         """
+
         if message.data["content"] == 'robot-info':
             # Configure the movement level to control this device
             if message.data['data']['type'] == 'sim-smores':
@@ -192,7 +194,7 @@ class MovementLevel:
         elif message.data["content"] == 'sensor-camera':
             print(message.data["data"])
             sensor = self.sensors[message.origin]
-            
+
             if message.data["data"] == {}:
                 sensor.asked = False
             else:
@@ -202,47 +204,47 @@ class MovementLevel:
                     # get robot associated with robot_id
                     robot = self.get_robot(robot_id)
 
-                    if robot != None:
+                    if robot is not None:
                         # read position and heading
-                        robot.position = ((message.data["data"][robot_id]['x']),
-                                        (message.data["data"][robot_id]['y']))
-                        robot.heading = message.data["data"][robot_id]['heading']
-                        self.update_tile(robot)
+                        new_position = (message.data["data"][robot_id]['x'],
+                                        message.data["data"][robot_id]['y'])
+                        print(new_position)
+                        if new_position is not None:
+                            robot.position = new_position
+                            robot.heading = message.data["data"][robot_id]['heading']
+                            self.update_tile(robot)
 
                 sensor.received = True
                 self.aligned = False
 
         elif message.data["content"] == 'ping':
-            # read position and heading
             robot = self.robots[message.origin]
-            
+
             # make sure that the robot is in position
             if robot.robot_type == "sim-smores":
-                robot.position = ((message.data['data']['x'] * 100), (message.data['data']['y'] * 100))
-                robot.heading = message.data['data']['heading']
-                self.update_tile(robot)
+                new_position = ((message.data['data']['x'] * 100),
+                                (message.data['data']['y'] * 100))
+                if new_position is not None:
+                    robot.position = new_position
+                    robot.heading = message.data['data']['heading']
+                    self.update_tile(robot)
 
                 sensor = self.sensors[message.origin]
                 sensor.received = True
                 self.aligned = False
-            # elif robot.robot_type == "smores":
-            #     sensor = self.sensors["CAM_PROCESS"]
-            #     sensor.asked = False
-            #     sensor.received = False
 
         elif message.data["content"] == 'move-result':
             robot = self.robots[message.origin]
-            robot.queued_commands = robot.queued_commands - 1
+            robot.queued_commands -= 1
 
             # If it's done moving, ask for it's position again.
             if robot.queued_commands == 0 and robot.robot_type == "sim-smores":
                 sensor = self.sensors[message.origin]
-                sensor.asked = False
-                sensor.received = False
             elif robot.queued_commands == 0 and robot.robot_type == "smores":
                 sensor = self.sensors["CAM_PROCESS"]
-                sensor.asked = False
-                sensor.received = False
+
+            sensor.asked = False
+            sensor.received = False
 
     def check_sensors(self):
         """
@@ -251,8 +253,9 @@ class MovementLevel:
 
         # Make sure that all the robots have checked
         if len(self.robots) < self.options["NUMBER_OF_DEVICES"]:
-            return False
+            return
 
+        # Iterate through all the sensors to poll them for updated data
         for port_id, sensor in self.sensors.items():
             if not sensor.asked and sensor.sensor_type == 'sim-smores':
                 self.connections['COM_LEVEL'][1].put(
@@ -275,6 +278,7 @@ class MovementLevel:
         Determine if all the sensors have been read and the robots are
         ready for the alignment process.
         """
+
         if len(self.robots) < self.options["NUMBER_OF_DEVICES"]:
             return False
 
@@ -293,12 +297,12 @@ class MovementLevel:
 
         return True
 
-
     def align_robots(self):
         """
         Iterate through all the robots and check if they are misaligned to their
         tiles. If so the misaligned robots are realigned.
         """
+
         misaligned = 0
         for port_id, robot in self.robots.items():
             # align to grid if necessary
@@ -321,6 +325,7 @@ class MovementLevel:
         Args:
             Destination (int): the port id of the robot to shake out
         """
+
         self.robots[destination].queued_commands = self.options['FREAKOUT_ITERATIONS'] * 2
         for count in range(self.options['FREAKOUT_ITERATIONS']):
             # Generate turn command
@@ -355,7 +360,11 @@ class MovementLevel:
         Args:
             Robot (Robot): the robot to align the the tile center
         """
+
         tile_center = self.world_model.find_tile(robot).center
+        if tile_center is None:
+            print("Count not find tile center in alignment for robot ", robot.robot_id)
+            return
 
         # get angle of center relative to north
         center_heading = get_angle(robot.position, tile_center)
@@ -455,6 +464,7 @@ class MovementLevel:
 
             # update robot heading
             robot_obj.heading = turn_dest
+            # TODO: update robot with real heading
 
         # Force everything to realign and then recalculate path
         self.aligned = False
@@ -467,6 +477,7 @@ class MovementLevel:
         Args:
             robot (Robot): The robot to update
         """
+
         # find the old and new tiles for the robot
         old_tile = self.world_model.find_tile(robot)
         new_tile = self.world_model.get_tile_real_coords(robot.position)
@@ -493,10 +504,12 @@ class MovementLevel:
         Args:
             robot_id (int): the robot id to search for
         """
+
         for port_id, robot in self.robots.items():
             if robot_id == robot.robot_id:
                 return robot
         return None
+# End class MovementLevel
 
 def get_distance(old_position, new_position):
     """
@@ -506,6 +519,7 @@ def get_distance(old_position, new_position):
         old_position (Tuple): first position, in the form (row, col)
         new_position (Tuple): second position, in the form (row, col)
     """
+
     return math.sqrt((new_position[0] - old_position[0]) ** 2 +
                      (new_position[1] - old_position[1]) ** 2)
 
@@ -521,6 +535,7 @@ def get_angle(old_position, new_position):
         new_position (Tuple): second position, towards which the intersecting line
         is calculated, in the form (row, col)
     """
+
     # calculate slope of line between old and new positions
     rise = (new_position[1] - old_position[1])
     run = (new_position[0] - old_position[0])
@@ -541,13 +556,22 @@ def switch_turn(old_turn):
     Args:
         old_turn (int): the turn to switch (3 = left, 4 = right)
     """
+
     if old_turn == 3:
         return 4
     else:
         return 3
 
 def get_turn(turn_magnitude):
-    # When in doubt, the robot turns left because all angles are from true north (0 to 359)
+    """
+    Determine whether the robot should make a left or right turn depending on the
+    turn magnitude it must make.
+
+    Args:
+        turn_magnitude (double): the magnitude of the turn
+    """
+
+    # By default, the robot turns left because all angles are from true north (0 to 359)
     turn_command = 3
 
     # make right turn if left turn > 180

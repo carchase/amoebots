@@ -35,9 +35,9 @@ OPTIONS = {
     'MAX_CNTR_MISALIGNMENT': 3, # The distance from a centerpoint that is acceptable error for robot
     'MAX_NORTH_MISALIGNMENT': 5, # The degrees off of north that is acceptable error for robot
     'FREAKOUT_ITERATIONS': 1, # The number of actions a robot should take when freaking out
-    'colors': ['Orange', 'smores3', 'smores2', 'smores1', 'Light Blue'], #colors that will be searched for in blob detection of camera process
-    'minColors': [[0, 67, 122], [48, 37, 1], [113, 85, 153], [108, 119, 170], [90, 102, 228]], #minimum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
-    'maxColors': [[20, 255, 255], [83, 255, 255], [134, 149, 202], [116, 183, 218], [114, 181, 255]], #maximum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
+    'colors': ['Orange', 'smores3', 'smores2', 'smores1'], #colors that will be searched for in blob detection of camera process
+    'minColors': [[0, 78, 121], [40, 37, 98], [118, 51, 93], [96, 111, 143]], #minimum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
+    'maxColors': [[20, 144, 176], [81, 127, 195], [166, 204, 223], [117, 203, 244]], #maximum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
     'CAMERA_ITERATIONS': 50
 }
 # ******************************************************************************

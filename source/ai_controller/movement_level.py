@@ -161,13 +161,13 @@ class MovementLevel:
 
         elif message.category == 'command' and message.data['directive'] == 'failure':
 
-            if self.robots[message.origin] is not None:
+            if self.robots.get(message.origin) is not None:
                 # Set the connection error for a robot
                 self.robots[message.origin].connection_error = True
                 # If it is a simulator robot, set it's sensor connection error too.
                 if self.robots[message.origin].robot_type == 'sim-smores':
                     self.sensors[message.origin].connection_error = True
-            elif self.sensors[message.origin] is not None:
+            elif self.sensors.get(message.origin) is not None:
                 # Set the connection error for a sensor
                 self.sensors[message.origin].connection_error = True
 
@@ -201,14 +201,16 @@ class MovementLevel:
 
             elif message.data['data']['type'] == 'smores':
                 # Check if new robot is actually a recovered connection and update it
+                print("reconnect")
                 for port_id, robot in self.robots.items():
                     if robot.robot_id == message.data['data']['id']:
+                        print("recovered")
                         robot.connection_error = False
                         robot.port_id = message.origin
                         del self.robots[port_id]
                         self.robots[message.origin] = robot
 
-                if self.robots.get(message.origin) is not None:
+                if self.robots.get(message.origin) is None:
                     self.robots[message.origin] = Robot(message.data['data']['id'], message.origin,
                                                         message.data['data']['type'])
 
@@ -225,15 +227,18 @@ class MovementLevel:
                                                       message.data['data']['type'])
 
         elif message.data["content"] == 'sensor-camera':
-            print(message.data["data"])
             sensor = self.sensors[message.origin]
+
+            if self.options['SHOW_SENSOR_DUMPS']:
+                self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'info', {
+                    'message': 'Data received from the sensor camera\n' + str(message.data["data"])
+                }))
 
             if message.data["data"] == {}:
                 sensor.asked = False
             else:
                 # iterate over robots in the message
                 for robot_id in message.data['data']:
-                    print(robot_id)
                     # get robot associated with robot_id
                     robot = self.get_robot(robot_id)
 
@@ -241,7 +246,6 @@ class MovementLevel:
                         # read position and heading
                         new_position = (message.data["data"][robot_id]['x'],
                                         message.data["data"][robot_id]['y'])
-                        print(new_position)
                         if new_position is not None:
                             robot.position = new_position
                             robot.heading = message.data["data"][robot_id]['heading']
@@ -251,7 +255,12 @@ class MovementLevel:
                 self.aligned = False
 
         elif message.data["content"] == 'ping':
-            robot = self.robots[message.origin]
+            robot = self.robots.get(message.origin)
+            if robot is None:
+                self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'error', {
+                    'message': 'Could not find the robot for the ping ' + message.origin
+                }))
+                return
 
             # make sure that the robot is in position
             if robot.robot_type == "sim-smores":
@@ -338,7 +347,6 @@ class MovementLevel:
             elif robot.queued_commands > 0:
                 return False
             elif self.world_model.find_tile(robot) is None:
-                print("FREAK OUT", robot.robot_id)
                 # Robots need to be shaken apart
                 self.scramble_robots = True
                 return False
@@ -354,10 +362,15 @@ class MovementLevel:
         if not self.aligned or self.processing_plan:
             return False
 
-        # If a robot is not on its goal, return false.
+        # If a robot is not on its goal, return that it is ready.
         for port_id, robot in self.robots.items():
             if not self.world_model.find_tile(robot).goal:
                 return True
+
+        # Recheck the sensors
+        for sensor_id, sensor in self.sensors.items():
+            sensor.asked = False
+            sensor.received = False
 
         return False
 
@@ -370,14 +383,21 @@ class MovementLevel:
         misaligned = 0
         for port_id, robot in self.robots.items():
             # align to grid if necessary
-            if ((robot.heading > self.options['MAX_NORTH_MISALIGNMENT'] and
-                 robot.heading < (360 - self.options['MAX_NORTH_MISALIGNMENT'])) or
-                    abs(robot.position[0] - self.world_model.find_tile(robot).center[0])
-                    > self.options['MAX_CNTR_MISALIGNMENT']
-                    or abs(robot.position[1] - self.world_model.find_tile(robot).center[1])
-                    > self.options['MAX_CNTR_MISALIGNMENT']):
+            off_center = get_distance(robot.position, self.world_model.find_tile(robot).center)
+
+            if (off_center > self.options['MAX_CNTR_MISALIGNMENT'] or
+                    (robot.heading > self.options['MAX_NORTH_MISALIGNMENT'] and
+                     robot.heading < (360 - self.options['MAX_NORTH_MISALIGNMENT']))
+               ):
                 misaligned += 1
                 self.aligned = False
+
+                self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'info', {
+                    'message': 'Robot ' + str(robot.robot_id) + ' is ' + str(off_center) +
+                               ' cm off center with a heading of ' + str(robot.heading) +
+                               ' degrees. Alignment in progress.'
+                }))
+
                 self.align(robot)
         if misaligned == 0:
             self.aligned = True
@@ -389,6 +409,10 @@ class MovementLevel:
         Args:
             Destination (int): the port id of the robot to shake out
         """
+
+        self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'info', {
+            'message': 'Tile conflict, freakout in progress.'
+        }))
 
         self.robots[destination].queued_commands = self.options['FREAKOUT_ITERATIONS'] * 2
         for count in range(self.options['FREAKOUT_ITERATIONS']):
@@ -427,7 +451,9 @@ class MovementLevel:
 
         tile_center = self.world_model.find_tile(robot).center
         if tile_center is None:
-            print("Count not find tile center in alignment for robot ", robot.robot_id)
+            self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'error', {
+                'message': 'Error aligning, no tile center found for ' + robot.robot_id
+            }))
             return
 
         # get angle of center relative to north
@@ -544,7 +570,10 @@ class MovementLevel:
 
         # if a new tile can't be found, don't update the tile
         if new_tile is None:
-            print("could not find tile for " + robot.robot_id)
+            self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'error', {
+                'message': 'Could not find a tile for ' + robot.robot_id
+            }))
+            self.scramble_robots = True
             return
         # if old and new tile are the same, don't update anything
         if new_tile == old_tile:

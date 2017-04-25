@@ -104,7 +104,7 @@ class AiLevel:
             world = jsonpickle.decode(message.data['args'])
 
             self.connections["MAIN_LEVEL"][1].put(Message('AI_LEVEL', 'MAIN_LEVEL', 'info', {
-                'message':"Path requested, current state of the world:\n" + world.to_string()
+                'message':"Path requested for world:\n" + world.to_string()
             }))
 
             # Get the moves

@@ -4,10 +4,10 @@ Created on Apr 3, 2017
 @author: trevb
 '''
 
-import cv2
-import numpy as np
 import math
 import sys
+import cv2
+import numpy as np
 from message import Message
 
 class CameraProcess:
@@ -28,7 +28,7 @@ class CameraProcess:
         #options as defined in main.py
         self.options = options
         #stores the number of robots available
-        self.length = len(self.options['colors'])
+        self.length = len(self.options['COLORS'])
         #blob detection
         self.detector = None
         #dictionary that holds the data to be sent back to the movement_level
@@ -51,9 +51,14 @@ class CameraProcess:
         self.com_input = None
         self.keep_running = True
         self.capture = None
-        
-    #capture the location and orientation of the arena
-    def arenaOrientation(self, points):
+
+    def localize_arena(self, points):
+        """
+        Calculates the location and orientation of the arena.
+
+        Args:
+            points (list): The list containing the location of the arena points.
+        """
 
         if len(points) != 3:
             return None
@@ -62,13 +67,16 @@ class CameraProcess:
         corner_index = -1
         front_index = -1
         left_index = -1
-    
-        line1 = np.sqrt((points[0].pt[0] - points[1].pt[0]) * (points[0].pt[0] - points[1].pt[0]) + (points[0].pt[1] - points[1].pt[1]) * (points[0].pt[1] - points[1].pt[1]))
-        line2 = np.sqrt((points[1].pt[0] - points[2].pt[0]) * (points[1].pt[0] - points[2].pt[0]) + (points[1].pt[1] - points[2].pt[1]) * (points[1].pt[1] - points[2].pt[1]))
-        line3 = np.sqrt((points[0].pt[0] - points[2].pt[0]) * (points[0].pt[0] - points[2].pt[0]) + (points[0].pt[1] - points[2].pt[1]) * (points[0].pt[1] - points[2].pt[1]))
-    
+
+        line1 = np.sqrt((points[0].pt[0] - points[1].pt[0]) * (points[0].pt[0] - points[1].pt[0]) +
+                        (points[0].pt[1] - points[1].pt[1]) * (points[0].pt[1] - points[1].pt[1]))
+        line2 = np.sqrt((points[1].pt[0] - points[2].pt[0]) * (points[1].pt[0] - points[2].pt[0]) +
+                        (points[1].pt[1] - points[2].pt[1]) * (points[1].pt[1] - points[2].pt[1]))
+        line3 = np.sqrt((points[0].pt[0] - points[2].pt[0]) * (points[0].pt[0] - points[2].pt[0]) +
+                        (points[0].pt[1] - points[2].pt[1]) * (points[0].pt[1] - points[2].pt[1]))
+
         euclidean_distance = [line1, line2, line3]
-    
+
         if euclidean_distance[0] > euclidean_distance[1]:
             front_index = 0
             self.scaler = float(euclidean_distance[1]) / self.arena_size
@@ -88,27 +96,27 @@ class CameraProcess:
             corner_index = 1
             front_index = 0
             left_index = 2
-        
+
         corner = [points[corner_index].pt[0], points[corner_index].pt[1]]
         front = [points[front_index].pt[0], points[front_index].pt[1]]
         left = [points[left_index].pt[0], points[left_index].pt[1]]
-        
+
         try:
             slope1 = (front[1] - corner[1]) / (front[0] - corner[0])
-        except ZeroDivisionError as err:
+        except ZeroDivisionError:
             angle1 = 0
         else:
             angle1 = math.degrees(-math.atan(slope1))
 
         try:
             slope2 = (left[1] - corner[1]) / (left[0] - corner[0])
-        except ZeroDivisionError as err:
+        except ZeroDivisionError:
             angle2 = 0
         else:
             angle2 = math.degrees(-math.atan(slope2))
-        
+
         angle = 0
-        
+
         if angle1 > 0:
             if front[1] < corner[1]:
                 angle1 += 270
@@ -119,7 +127,7 @@ class CameraProcess:
                 angle1 = 90 + angle1
             else:
                 angle1 = 270 + angle1
-                
+
         if angle2 > 0:
             if left[1] < corner[1]:
                 angle2 += 270
@@ -130,11 +138,11 @@ class CameraProcess:
                 angle2 = 90 + angle2
             else:
                 angle2 = 90 + 270
-                
+
         if angle1 > angle2:
             angle2, angle1 = angle1, angle2
             front, left = left, front
-            
+
         if angle2 > 225:
             if angle1 < 135:
                 angle = angle2
@@ -143,12 +151,13 @@ class CameraProcess:
                 angle = angle1
         else:
             angle = angle1
-        
+
         center = [(front[0] + left[0]) / 2, (front[1] + left[1]) / 2]
-        
+
         goal = [center[0], center[1], angle]
-        
-        matrix = [[math.cos(math.radians(angle)), math.sin(math.radians(angle))], [-math.sin(math.radians(angle)), math.cos(math.radians(angle))]]
+
+        matrix = [[math.cos(math.radians(angle)), math.sin(math.radians(angle))],
+                  [-math.sin(math.radians(angle)), math.cos(math.radians(angle))]]
 
         front[0] -= center[0]
         left[0] -= center[0]
@@ -164,27 +173,35 @@ class CameraProcess:
         left[0] += center[0]
         front[1] += center[1]
         left[1] += center[1]
-        
+
         self.translate['front'] = front
         self.translate['left'] = left
 
         return goal
-        
-    #capture the location and orientation of the robots
-    def orientation(self, points, orange):
-    
+
+    def localize_robot(self, points, arena_location):
+        """
+        Calculates the location and orientation of a robot.
+
+        Args:
+            points (list): The list containing the location of the robot points.
+            arena_location (list): The list containing the orientation and location of the arena.
+        """
+
         # 0 for first keypoint, 1 for second, 2 for third, -1 for uninitialized
         corner_index = -1
         front_index = -1
         left_index = -1
 
-        
-        line1 = np.sqrt((points[0].pt[0] - points[1].pt[0]) * (points[0].pt[0] - points[1].pt[0]) + (points[0].pt[1] - points[1].pt[1]) * (points[0].pt[1] - points[1].pt[1]))
-        line2 = np.sqrt((points[1].pt[0] - points[2].pt[0]) * (points[1].pt[0] - points[2].pt[0]) + (points[1].pt[1] - points[2].pt[1]) * (points[1].pt[1] - points[2].pt[1]))
-        line3 = np.sqrt((points[0].pt[0] - points[2].pt[0]) * (points[0].pt[0] - points[2].pt[0]) + (points[0].pt[1] - points[2].pt[1]) * (points[0].pt[1] - points[2].pt[1]))
-        
+        line1 = np.sqrt((points[0].pt[0] - points[1].pt[0]) * (points[0].pt[0] - points[1].pt[0]) +
+                        (points[0].pt[1] - points[1].pt[1]) * (points[0].pt[1] - points[1].pt[1]))
+        line2 = np.sqrt((points[1].pt[0] - points[2].pt[0]) * (points[1].pt[0] - points[2].pt[0]) +
+                        (points[1].pt[1] - points[2].pt[1]) * (points[1].pt[1] - points[2].pt[1]))
+        line3 = np.sqrt((points[0].pt[0] - points[2].pt[0]) * (points[0].pt[0] - points[2].pt[0]) +
+                        (points[0].pt[1] - points[2].pt[1]) * (points[0].pt[1] - points[2].pt[1]))
+
         euclidean_distance = [[line1], [line2], [line3]]
-        
+
         if euclidean_distance[0] > euclidean_distance[1]:
             front_index = 0
             if euclidean_distance[0] > euclidean_distance[2]:
@@ -201,27 +218,27 @@ class CameraProcess:
             corner_index = 1
             front_index = 0
             left_index = 2
-        
+
         corner = [points[corner_index].pt[0], points[corner_index].pt[1]]
         front = [points[front_index].pt[0], points[front_index].pt[1]]
         left = [points[left_index].pt[0], points[left_index].pt[1]]
-        
+
         try:
             slope1 = (front[1] - corner[1]) / (front[0] - corner[0])
-        except ZeroDivisionError as err:
+        except ZeroDivisionError:
             angle1 = 0
         else:
             angle1 = math.degrees(-math.atan(slope1))
 
         try:
             slope2 = (left[1] - corner[1]) / (left[0] - corner[0])
-        except ZeroDivisionError as err:
+        except ZeroDivisionError:
             angle2 = 0
         else:
             angle2 = math.degrees(-math.atan(slope2))
-        
+
         angle = 0
-        
+
         if angle1 > 0:
             if front[1] < corner[1]:
                 angle1 += 270
@@ -232,7 +249,7 @@ class CameraProcess:
                 angle1 = 90 + angle1
             else:
                 angle1 = 270 + angle1
-                
+
         if angle2 > 0:
             if left[1] < corner[1]:
                 angle2 += 270
@@ -243,11 +260,11 @@ class CameraProcess:
                 angle2 = 90 + angle2
             else:
                 angle2 = 90 + 270
-                
+
         if angle1 > angle2:
             angle2, angle1 = angle1, angle2
             front, left = left, front
-            
+
         if angle2 > 225:
             if angle1 < 135:
                 angle = angle2
@@ -256,25 +273,32 @@ class CameraProcess:
                 angle = angle1
         else:
             angle = angle1
-        
+
         center = [(front[0] + left[0]) / 2, (front[1] + left[1]) / 2]
-        
+
         goal = [center[0], center[1], 360 - angle]
-        
-        x = goal[0] - orange[0]
-        y = goal[1] - orange[1]
-        goal[2] -= orange[2]
+
+        x_pos = goal[0] - arena_location[0]
+        y_pos = goal[1] - arena_location[1]
+        goal[2] -= arena_location[2]
         if goal[2] < 0:
             goal[2] += 360
         elif goal[2] >= 360:
             goal[2] -= 360
-        
-        matrix = [[math.cos(math.radians(orange[2])), math.sin(math.radians(orange[2]))], [-math.sin(math.radians(orange[2])), math.cos(math.radians(orange[2]))]]
-        goal[0] = (x * matrix[0][0]) + (y * matrix[0][1])
-        goal[1] = (x * matrix[1][0]) + (y * matrix[1][1])
-        
-        goal[0] += orange[0]
-        goal[1] += orange[1]
+
+        matrix = [[
+            math.cos(math.radians(arena_location[2])),
+            math.sin(math.radians(arena_location[2]))
+        ], [
+            -math.sin(math.radians(arena_location[2])),
+            math.cos(math.radians(arena_location[2]))
+        ]]
+
+        goal[0] = (x_pos * matrix[0][0]) + (y_pos * matrix[0][1])
+        goal[1] = (x_pos * matrix[1][0]) + (y_pos * matrix[1][1])
+
+        goal[0] += arena_location[0]
+        goal[1] += arena_location[1]
 
 
         goal[1] -= self.translate['front'][1]
@@ -287,18 +311,20 @@ class CameraProcess:
         dic['heading'] = goal[2]
 
         return dic
-        
-    def blobDetector(self):
-        blobParams = cv2.SimpleBlobDetector_Params()
-        blobParams.filterByColor = True
-        blobParams.blobColor = 255
-        blobParams.filterByArea = True
-        blobParams.minArea = 10
-        blobParams.filterByCircularity = False
-        blobParams.filterByConvexity = False
-        blobParams.filterByInertia = False
-        return cv2.SimpleBlobDetector_create(blobParams)
-        
+
+    def blob_detector(self):
+        """
+        Creates a blob detector for the process to use.
+        """
+        blob_params = cv2.SimpleBlobDetector_Params()
+        blob_params.filterByColor = True
+        blob_params.blobColor = 255
+        blob_params.filterByArea = True
+        blob_params.minArea = 10
+        blob_params.filterByCircularity = False
+        blob_params.filterByConvexity = False
+        blob_params.filterByInertia = False
+        return cv2.SimpleBlobDetector_create(blob_params)
 
     def cam_process_main(self, cam_input, com_input):
         """
@@ -313,7 +339,7 @@ class CameraProcess:
         self.cam_input = cam_input
         self.com_input = com_input
         self.capture = cv2.VideoCapture(self.options['CAMERA_ID'])
-        self.detector = self.blobDetector()
+        self.detector = self.blob_detector()
 
         self.com_input.put(Message('CAM_PROCESS', 'MAIN_LEVEL', 'info', {
             'message': 'CAM_PROCESS is running'
@@ -360,16 +386,16 @@ class CameraProcess:
 
             #image processing
             img_with_keypoints = img
-            orange = []
-            locations = []
-            
+            arena_position = []
+
             hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            
+
             for index in range(self.length):
-                mask = cv2.inRange(hsv, tuple(self.options['minColors'][index]), tuple(self.options['maxColors'][index]))
-                res = cv2.bitwise_and(img, img, mask= mask)
+                mask = cv2.inRange(hsv, tuple(self.options['MIN_COLORS'][index]),
+                                   tuple(self.options['MAX_COLORS'][index]))
+                cv2.bitwise_and(img, img, mask=mask)
                 keypoints = self.detector.detect(mask)
-                
+
                 #checks if the index is for the arena then checks if there
                 #are enough points to calculate the orientation of the arena
                 #if there are not, set index to the length to break out of this
@@ -377,15 +403,15 @@ class CameraProcess:
                 img_with_keypoints = cv2.drawKeypoints(img_with_keypoints, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
                 if index == 0:
-                    orange = self.arenaOrientation(keypoints)
-                    if  orange is None:
+                    arena_position = self.localize_arena(keypoints)
+                    if  arena_position is None:
                         index = self.length
 
                 else:
                     #if there are 3 keypoints then calculate the location
                     #and orientation for that object
-                    if len(keypoints) == 3 and orange is not None:
-                        self.robots[self.options['colors'][index]] = self.orientation(keypoints, orange)
+                    if len(keypoints) == 3 and arena_position is not None:
+                        self.robots[self.options['COLORS'][index]] = self.localize_robot(keypoints, arena_position)
 
             cv2.imshow('frame', img_with_keypoints)
             cv2.waitKey(1)
@@ -425,13 +451,13 @@ class CameraProcess:
         if message.data['command'] == 90:
             # Send back the sensor camera data
             self.com_input.put(Message('CAM_PROCESS', 'MOV_LEVEL', 'response', {
-                'content': 'robot-info', 
-                'data': { 'type': 'camera' }
+                'content': 'robot-info',
+                'data': {'type': 'camera'}
             }))
 
         elif message.data['command'] == 91:
             # Send back the sensor camera data
             self.com_input.put(Message('CAM_PROCESS', 'MOV_LEVEL', 'response', {
-                'content': 'sensor-camera', 
+                'content': 'sensor-camera',
                 'data': self.robots
             }))

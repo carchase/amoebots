@@ -13,11 +13,12 @@ from main_level import MainLevel
 
 # ***************** Constants used to configure the controller *****************
 OPTIONS = {
-    'GOAL_LOCATIONS': [(2, 1), (2, 2), (2, 3)], # The locations of the goal states.
+    'GOAL_LOCATIONS': [(1, 2), (2, 1), (2, 2), (2, 3), (3, 2)], # The locations of the goal states.
     'DUMP_MSGS_TO_MAIN': False, # Show all messages in main log output
     'RAISE_ERRORS_AFTER_CATCH': True, # Raises errors after catching
+    'ROBOTS_PLANNED_PER_ITERATION': 3, # The number of robot paths to plan by the pddl per iteration
     'NUMBER_OF_DEVICES': 3, # Number of devices that the controller expects to use
-    'CAMERA_ID': 0, # The location of the camera as viewed by openCV. Built-in webcam is always 0.
+    'CAMERA_ID': 1, # The location of the camera as viewed by openCV. Built-in webcam is always 0.
     'BAUD': 115200, # Baud rate used by the COM ports
     'TCP_LISTENER_IP': socket.gethostbyname(socket.gethostname()), # Hostname the TCP listener uses
     'TCP_LISTENER_PORT': 5000, # Port the TCP listener uses
@@ -35,9 +36,9 @@ OPTIONS = {
     'MAX_CNTR_MISALIGNMENT': 3, # The distance from a centerpoint that is acceptable error for robot
     'MAX_NORTH_MISALIGNMENT': 5, # The degrees off of north that is acceptable error for robot
     'FREAKOUT_ITERATIONS': 1, # The number of actions a robot should take when freaking out
-    'colors': ['Orange', 'smores3', 'smores2', 'smores1', 'Light Blue'], #colors that will be searched for in blob detection of camera process
-    'minColors': [[0, 67, 122], [48, 37, 1], [113, 85, 153], [108, 119, 170], [90, 102, 228]], #minimum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
-    'maxColors': [[20, 255, 255], [83, 255, 255], [134, 149, 202], [116, 183, 218], [114, 181, 255]], #maximum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
+    'COLORS': ['Orange', 'smores3', 'smores2', 'smores1', 'Light Blue'], #colors that will be searched for in blob detection of camera process
+    'MIN_COLORS': [[0, 67, 122], [48, 37, 1], [113, 85, 153], [108, 119, 170], [90, 102, 228]], #minimum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
+    'MAX_COLORS': [[20, 255, 255], [83, 255, 255], [134, 149, 202], [116, 183, 218], [114, 181, 255]], #maximum value for corresponding colors [0] arena (orange) [1] smores3 (green) [2] smores2 (purple) [3] smores1 (blue) [3] available (light blue)
     'CAMERA_ITERATIONS': 50
 }
 # ******************************************************************************

@@ -9,7 +9,6 @@ init_col = []
 init_goal = []
 init_robots = []
 
-
 def generate_init_state(world_size_grid, world, robots):
     global init_array
     global init_row
@@ -40,7 +39,7 @@ def generate_goal_state(robots):
     global init_goal
     init_goal = []
     for robot in robots:
-        init_goal.append(('at', robot[0], robot[1], robot[2]))
+        init_goal.append(('at', robot[0], robot[1][0], robot[1][1]))
 
 def problem(verbose):
     domain = Domain((

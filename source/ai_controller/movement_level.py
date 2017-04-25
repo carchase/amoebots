@@ -160,26 +160,16 @@ class MovementLevel:
             self.processing_plan = False
 
         elif message.category == 'command' and message.data['directive'] == 'failure':
-            # if the item is a 'failure', remove the process from the CON_DICT
-            if self.connections[message.origin] != None:
-                del self.connections[message.origin]
 
-            # TODO: Cleanup sensor/robot failure
-            # if self.robots[message.origin] is not None:
-            #     robot = self.robots[message.origin]
-            #     # free the tile the robot is on, if applicable
-            #     robot_tile = self.world_model.find_tile(robot)
-            #     if robot_tile is not None:
-            #         robot_tile.occupied = None
-            #     robot_goal = self.world_model.find_robot_goal(robot)
-            #     if robot_goal is not None:
-            #         robot_goal.robot_goal = None
-            #     if robot.robot_type == 'sim-smores':
-            #         # delete associated sensor for simulator robot
-            #         self.sensors.pop(message.origin)
-            #     self.robots.pop(message.origin)
-            # elif self.sensors[message.origin] is not None:
-            #     self.sensors.pop(message.origin)
+            if self.robots[message.origin] is not None:
+                # Set the connection error for a robot
+                self.robots[message.origin].connection_error = True
+                # If it is a simulator robot, set it's sensor connection error too.
+                if self.robots[message.origin].robot_type == 'sim-smores':
+                    self.sensors[message.origin].connection_error = True
+            elif self.sensors[message.origin] is not None:
+                # Set the connection error for a sensor
+                self.sensors[message.origin].connection_error = True
 
         elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # The level has been told to shutdown.  Kill all the children!!!
@@ -210,10 +200,27 @@ class MovementLevel:
                                                       message.data['data']['type'])
 
             elif message.data['data']['type'] == 'smores':
-                self.robots[message.origin] = Robot(message.data['data']['id'], message.origin,
-                                                    message.data['data']['type'])
+                # Check if new robot is actually a recovered connection and update it
+                for port_id, robot in self.robots.items():
+                    if robot.robot_id == message.data['data']['id']:
+                        robot.connection_error = False
+                        robot.port_id = message.origin
+                        del self.robots[port_id]
+                        self.robots[message.origin] = robot
+
+                if self.robots.get(message.origin) is not None:
+                    self.robots[message.origin] = Robot(message.data['data']['id'], message.origin,
+                                                        message.data['data']['type'])
 
             elif message.data['data']['type'] == 'camera':
+                # Check if new sensor is actually a recovered connection and update it
+                for port_id, sensor in self.sensors.items():
+                    if sensor.sensor_type == 'camera':
+                        sensor.connection_error = False
+                        self.sensors.pop(port_id)
+                        self.sensors[message.origin] = sensor
+                        return
+
                 self.sensors[message.origin] = Sensor(message.origin,
                                                       message.data['data']['type'])
 
@@ -278,9 +285,19 @@ class MovementLevel:
         Send position and heading update commands to all sensors.
         """
 
-        # Make sure that all the robots have checked
+        # Make sure that all the robots have checked in
         if len(self.robots) < self.options["NUMBER_OF_DEVICES"]:
             return
+
+        # Make sure that there are no errored robots
+        for port_id, robot in self.robots.items():
+            if robot.connection_error:
+                return
+
+        # Make sure that there are no errored sensors
+        for port_id, sensor in self.sensors.items():
+            if sensor.connection_error:
+                return
 
         # Iterate through all the sensors to poll them for updated data
         for port_id, sensor in self.sensors.items():
@@ -310,13 +327,17 @@ class MovementLevel:
             return False
 
         for sensor_id, sensor in self.sensors.items():
-            if not sensor.received:
+            if sensor.connection_error:
+                return False
+            elif not sensor.received:
                 return False
 
         for port_id, robot in self.robots.items():
-            if robot.queued_commands > 0:
+            if robot.connection_error:
                 return False
-            if self.world_model.find_tile(robot) is None:
+            elif robot.queued_commands > 0:
+                return False
+            elif self.world_model.find_tile(robot) is None:
                 print("FREAK OUT", robot.robot_id)
                 # Robots need to be shaken apart
                 self.scramble_robots = True

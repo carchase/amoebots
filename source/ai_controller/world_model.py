@@ -166,6 +166,7 @@ class Robot:
         self.heading = 0
         self.queued_commands = 0
         self.robot_number = Robot.number
+        self.connection_error = False
         Robot.number += 1
 
 class Sensor:
@@ -188,6 +189,7 @@ class Sensor:
         self.sensor_type = sensor_type
         self.asked = False
         self.received = False
+        self.connection_error = False
 
 class Tile:
     """

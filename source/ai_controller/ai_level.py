@@ -7,6 +7,8 @@ View the full repository here https://github.com/car-chase/amoebots
 '''
 
 from time import sleep
+import time
+import math
 import jsonpickle
 from pathfinder import Pathfinder
 from message import Message
@@ -100,17 +102,12 @@ class AiLevel:
         if message.data['directive'] == 'generate-plan':
             # Parse out the world model
             world = jsonpickle.decode(message.data['args'])
-            goals = self.options['GOAL_LOCATIONS']
-
-            # Set the goals
-            for goal in goals:
-                world.grid[goal[1]][goal[0]].goal = True
 
             world.display()
 
-            # Create the pathfinder
-            pathfinder = Pathfinder(self.options)
-            robot_moves = pathfinder.generate_moves(world)
+            # Get the moves
+            robot_moves = self.generate_moves(world)
+
             print(robot_moves)
             if robot_moves is None:
                 self.connections["MOV_LEVEL"][1].put(Message('AI_LEVEL', 'MOV_LEVEL', 'command', {
@@ -134,3 +131,64 @@ class AiLevel:
 
             # End the com_level
             self.keep_running = False
+
+    def robot_goal_assignment(self, world):
+        goal_positions = [] # [(goal_x, goal_y)]
+        robot_and_position = [] # [(robot_number, (robot_x, robot_y))]
+        robot_and_goal = [] # [(robot_number, (goal_x, goal_y))]
+
+        for row in range(self.options["ARENA_SIZE"]):
+            for col in range(self.options["ARENA_SIZE"]):
+                if world.grid[row][col].goal is True:
+                    goal_positions.append(world.grid[row][col].position)
+                if world.grid[row][col].occupied is not None:
+                    robot_and_position.append((world.grid[row][col].occupied.robot_number,
+                                               world.grid[row][col].position))
+
+        # Loop over the goals
+        for goal_index, goal in enumerate(goal_positions):
+
+            # The farthest away a robot can possibly be
+            closest_distance = float("inf")
+
+            # Loop over each robot for the goal
+            for index, entry in enumerate(robot_and_position):
+                if entry is None:
+                    continue
+
+                dist = math.hypot(entry[1][0] - goal[0],   # x2 - x1
+                                  entry[1][1] - goal[1])   # y2 - y1
+
+                if dist < closest_distance:
+                    closest_robot = entry[0]
+                    ele_with_robot = index
+                    closest_distance = dist
+
+            # We have compared all robots, now assign the winner to the goal
+            print(closest_robot, " to ", goal)
+            robot_and_goal.append((closest_robot, goal))
+
+            robot_and_position[ele_with_robot] = None
+            goal_positions[goal_index] = None
+
+        return robot_and_goal
+
+    def generate_moves(self, world):
+        robot_and_goal = self.robot_goal_assignment(world)
+
+        robot_goals = []
+
+        for index, entry in enumerate(robot_and_goal):
+            print("robotID", entry[0])
+            robot_goals.append(entry)
+            # Process if it has hit the necesssary iterations or if it is the last robot
+            if(len(robot_goals) % self.options["ROBOTS_PLANNED_PER_ITERATION"] == 0
+               or index == len(robot_and_goal) - 1):
+                pathfinder = Pathfinder(self.options, world.grid, robot_goals)
+                robot_goals = []
+                start_time = time.time()
+                robot_moves = pathfinder.start_algorithm()
+                print("TOOK " + str((time.time()-start_time)/60) + " MINUTES")
+                if len(robot_moves) > 0:
+                    return robot_moves
+        return None

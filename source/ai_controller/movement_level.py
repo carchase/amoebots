@@ -467,11 +467,24 @@ class MovementLevel:
         Args:
             robot (Robot): The robot to update
         """
+        # find the old and new tiles for the robot
         old_tile = self.world_model.find_tile(robot)
-        if old_tile != None:
-            old_tile.occupied = None
         new_tile = self.world_model.get_tile_real_coords(robot.position)
+
+        # if a new tile can't be found, don't update the tile
+        if new_tile is None:
+            print("could not find tile for " + robot.robot_id)
+            return
+        # if old and new tile are the same, don't update anything
+        if new_tile == old_tile:
+            return
+
+        # if robot has moved, update the new tile to hold the robot
         new_tile.occupied = robot
+
+        # if robot has an old tile (hasn't just been added), set it to be unoccupied again
+        if old_tile is not None:
+            old_tile.occupied = None
 
     def get_robot(self, robot_id):
         """

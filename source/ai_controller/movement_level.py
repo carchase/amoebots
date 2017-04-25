@@ -154,6 +154,21 @@ class MovementLevel:
                 del self.connections[message.origin]
 
             # TODO: Cleanup sensor/robot failure
+            # if self.robots[message.origin] is not None:
+            #     robot = self.robots[message.origin]
+            #     # free the tile the robot is on, if applicable
+            #     robot_tile = self.world_model.find_tile(robot)
+            #     if robot_tile is not None:
+            #         robot_tile.occupied = None
+            #     robot_goal = self.world_model.find_robot_goal(robot)
+            #     if robot_goal is not None:
+            #         robot_goal.robot_goal = None
+            #     if robot.robot_type == 'sim-smores':
+            #         # delete associated sensor for simulator robot
+            #         self.sensors.pop(message.origin)
+            #     self.robots.pop(message.origin)
+            # elif self.sensors[message.origin] is not None:
+            #     self.sensors.pop(message.origin)
 
         elif message.data['directive'] == 'shutdown' and message.origin == 'MAIN_LEVEL':
             # The level has been told to shutdown.  Kill all the children!!!
@@ -240,11 +255,12 @@ class MovementLevel:
             # If it's done moving, ask for it's position again.
             if robot.queued_commands == 0 and robot.robot_type == "sim-smores":
                 sensor = self.sensors[message.origin]
+                sensor.asked = False
+                sensor.received = False
             elif robot.queued_commands == 0 and robot.robot_type == "smores":
                 sensor = self.sensors["CAM_PROCESS"]
-
-            sensor.asked = False
-            sensor.received = False
+                sensor.asked = False
+                sensor.received = False
 
     def check_sensors(self):
         """

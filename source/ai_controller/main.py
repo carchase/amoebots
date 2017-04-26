@@ -13,7 +13,7 @@ from main_level import MainLevel
 
 # ***************** Constants used to configure the controller *****************
 OPTIONS = {
-    'GOAL_LOCATIONS': [(1, 2), (2, 2), (2, 3)], # The locations of the goal states.
+    'GOAL_LOCATIONS': [(2, 1), (2, 2), (2, 3)], # The locations of the goal states.
     'DUMP_MSGS_TO_MAIN': False, # Forward all messages in main log output
     'SHOW_BOT_COMMUNICATIONS': False, # Show traffic between bot processes and bots
     'SHOW_SENSOR_DUMPS': True, # Show the sensor data received

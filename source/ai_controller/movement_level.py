@@ -274,6 +274,10 @@ class MovementLevel:
                 sensor = self.sensors[message.origin]
                 sensor.received = True
                 self.aligned = False
+            elif robot.robot_type == "smores" and robot.robot_number == 0:
+                sensor = self.sensors["CAM_PROCESS"]
+                sensor.asked = False
+                sensor.received = False
 
         elif message.data["content"] == 'move-result':
             robot = self.robots[message.origin]
@@ -366,11 +370,6 @@ class MovementLevel:
         for port_id, robot in self.robots.items():
             if not self.world_model.find_tile(robot).goal:
                 return True
-
-        # Recheck the sensors
-        for sensor_id, sensor in self.sensors.items():
-            sensor.asked = False
-            sensor.received = False
 
         return False
 

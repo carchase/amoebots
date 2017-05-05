@@ -324,6 +324,8 @@ class CameraProcess:
         blob_params.filterByCircularity = False
         blob_params.filterByConvexity = False
         blob_params.filterByInertia = False
+        blob_params.merging = False
+        blob_params.grouping = False
         return cv2.SimpleBlobDetector_create(blob_params)
 
     def cam_process_main(self, cam_input, com_input):

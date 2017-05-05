@@ -39,7 +39,7 @@ class MovementLevel:
         self.sensors = dict()
         self.aligned = False
         self.processing_plan = False
-        self.scramble_robots = False
+        self.scramble_robots = 0
 
     def movement_level_main(self, mov_input, com_input, ai_input, main_input):
         """
@@ -96,10 +96,10 @@ class MovementLevel:
                         self.connections["MAIN_LEVEL"][1].put(message)
 
                 # Scramble robot positions if necessary
-                if self.scramble_robots:
+                if self.scramble_robots >= 5:
                     for port_id, robot in self.robots.items():
                         self.freakout(port_id)
-                    self.scramble_robots = False
+                    self.scramble_robots = 0
 
                 # Check the sensors
                 self.check_sensors()
@@ -274,10 +274,6 @@ class MovementLevel:
                 sensor = self.sensors[message.origin]
                 sensor.received = True
                 self.aligned = False
-            elif robot.robot_type == "smores" and robot.robot_number == 0:
-                sensor = self.sensors["CAM_PROCESS"]
-                sensor.asked = False
-                sensor.received = False
 
         elif message.data["content"] == 'move-result':
             robot = self.robots[message.origin]
@@ -289,6 +285,11 @@ class MovementLevel:
                 sensor.asked = False
                 sensor.received = False
             elif robot.queued_commands == 0 and robot.robot_type == "smores":
+                # Make sure that all the robots are done moving
+                for port_id, robot in self.robots.items():
+                    if robot.queued_commands != 0:
+                        return
+
                 sensor = self.sensors["CAM_PROCESS"]
                 sensor.asked = False
                 sensor.received = False
@@ -352,7 +353,7 @@ class MovementLevel:
                 return False
             elif self.world_model.find_tile(robot) is None:
                 # Robots need to be shaken apart
-                self.scramble_robots = True
+                self.scramble_robots = 5
                 return False
 
         return True
@@ -370,6 +371,12 @@ class MovementLevel:
         for port_id, robot in self.robots.items():
             if not self.world_model.find_tile(robot).goal:
                 return True
+
+        sensor = self.sensors.get("CAM_PROCESS")
+        if sensor is not None and sensor.asked and sensor.received:
+            print("asking")
+            sensor.asked = False
+            sensor.received = False
 
         return False
 
@@ -481,7 +488,7 @@ class MovementLevel:
         # move to center
         self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', robot.port_id, 'movement', {
             'command': 1,
-            'magnitude': abs(round(distance_to_center)),
+            'magnitude': abs(int(distance_to_center)),
             'message': 'Move to center'
         }))
         robot.queued_commands += 1
@@ -541,7 +548,7 @@ class MovementLevel:
             self.robots[port_id].queued_commands += 1
 
             # get destination distance
-            distance = round(self.world_model.cm_per_tile)
+            distance = int(self.world_model.cm_per_tile)
 
             # move to destination
             self.connections['COM_LEVEL'][1].put(Message('MOV_LEVEL', port_id, 'movement', {
@@ -572,8 +579,10 @@ class MovementLevel:
             self.connections["MAIN_LEVEL"][1].put(Message('MOV_LEVEL', 'MAIN_LEVEL', 'error', {
                 'message': 'Could not find a tile for ' + robot.robot_id
             }))
-            self.scramble_robots = True
+            self.scramble_robots += 1
             return
+        else:
+            self.Scramble = 0
         # if old and new tile are the same, don't update anything
         if new_tile == old_tile:
             return
